@@ -5,6 +5,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8080"
+    environment:
+      - OPEN_ROUTE_SERVICE_URL=${OPEN_ROUTE_SERVICE_URL}
+      - OPEN_ROUTE_SERVICE_APIKEY=${OPEN_ROUTE_SERVICE_APIKEY}
+      - NOMINATIM_URL=${NOMINATIM_URL}
     develop:
       watch:
         - action: rebuild
@@ -17,6 +21,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8080"
+    environment:
+      - OVERPASS_URL=${OVERPASS_URL}
     develop:
       watch:
         - action: rebuild

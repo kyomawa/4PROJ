@@ -4,13 +4,14 @@ using System.Text.Json;
 
 namespace traffic_service.Services
 {
-    public class TrafficService(HttpClient httpClient) : ITrafficService
+    public class TrafficService(HttpClient httpClient, IConfiguration configuration) : ITrafficService
     {
+        private string _overpassURL = configuration["OVERPASS_URL"];
         public async Task<JsonObject> GetRoadDetails(string road, string lat_min, string lon_min, string lat_max, string lon_max)
         {
             var query = $"[out:json];way[\"name\"=\"{road}\"][\"highway\"]({lat_min},{lon_min},{lat_max},{lon_max});out body;>;out skel qt;";
 
-            var response = await httpClient.PostAsync("https://overpass-api.de/api/interpreter", new StringContent(query));
+            var response = await httpClient.PostAsync(_overpassURL, new StringContent(query));
 
             /*if (!response.IsSuccessStatusCode)
             {

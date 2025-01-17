@@ -6,16 +6,17 @@ using navigation_service.DTO;
 
 namespace navigation_service.Services.ItineraryService
 {
-    public class ItineraryService(HttpClient httpClient, ILocationService locationService) : InterfaceItineraryService
+    public class ItineraryService(HttpClient httpClient, ILocationService locationService, IConfiguration configuration) : InterfaceItineraryService
     {
+        private string _openRouteServiceUrl = configuration["OPEN_ROUTE_SERVICE_URL"];
+        private string _openRouteServiceApiKey = configuration["OPEN_ROUTE_SERVICE_APIKEY"];
+
         public async Task<JsonObject> GetItinerary(string departure, string departure_type, string arrival, string arrival_type, string method)
         {
             LocationDto departureCoordinate = await GetLocationData(departure, departure_type);
             LocationDto arrivalCoordinate = await GetLocationData(arrival, arrival_type);
 
-            string url = $"https://api.openrouteservice.org/v2/directions/{method}?api_key=5b3ce3597851110001cf6248af27e75ca54745eab2506910ad971eee&start={departureCoordinate.Longitude},{departureCoordinate.Latitude}&end={arrivalCoordinate.Longitude},{arrivalCoordinate.Latitude}";
-
-            HttpResponseMessage response = await httpClient.GetAsync(url);
+            HttpResponseMessage response = await httpClient.GetAsync($"{_openRouteServiceUrl}/directions/{method}?api_key={_openRouteServiceApiKey}&start={departureCoordinate.Longitude},{departureCoordinate.Latitude}&end={arrivalCoordinate.Longitude},{arrivalCoordinate.Latitude}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
 

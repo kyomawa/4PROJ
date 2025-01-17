@@ -7,12 +7,13 @@ using navigation_service.DTO;
 
 namespace navigation_service.Services.LocationService
 {
-    public class LocationService(HttpClient httpClient, IMapper mapper) : ILocationService
+    public class LocationService(HttpClient httpClient, IMapper mapper, IConfiguration configuration) : ILocationService
     {
+        private string _nominatimUrl = configuration["NOMINATIM_URL"];
         public async Task<ApiResponse<List<LocationDto>>> ConvertToGeoPoint(string type, string value)
         {
             httpClient.DefaultRequestHeaders.Add("User-Agent", "laynz-api/1.0 (contact: victorperezpro14@gmail.com)");
-            HttpResponseMessage response = await httpClient.GetAsync($"https://nominatim.openstreetmap.org/search?{type}={value}&format=json");
+            HttpResponseMessage response = await httpClient.GetAsync($"{_nominatimUrl}/search?{type}={value}&format=json");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
