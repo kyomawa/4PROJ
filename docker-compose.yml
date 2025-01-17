@@ -1,0 +1,32 @@
+services:
+  navigation-service:
+    build:
+      context: ./navigation-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./navigation-service
+    networks:
+      - backend
+  traffic-service:
+    build:
+      context: ./traffic-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./traffic-service
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
+  database:
+    driver: bridge

@@ -1,0 +1,6 @@
+@navigation_service_HostAddress = http://localhost:5198
+
+GET {{navigation_service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
