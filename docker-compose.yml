@@ -8,7 +8,8 @@ services:
     environment:
       - OPEN_ROUTE_SERVICE_URL=${OPEN_ROUTE_SERVICE_URL}
       - OPEN_ROUTE_SERVICE_APIKEY=${OPEN_ROUTE_SERVICE_APIKEY}
-      - NOMINATIM_URL=${NOMINATIM_URL}
+      - GEOAPIFY_URL=${GEOAPIFY_URL}
+      - GEOAPIFY_APIKEY=${GEOAPIFY_APIKEY}
     develop:
       watch:
         - action: rebuild

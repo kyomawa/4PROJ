@@ -11,9 +11,9 @@ namespace navigation_service.Controllers
     public class LocationController(ILocationService locationService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<List<LocationDto>>>> GeoLocation([FromQuery(Name = "type")] string type, [FromQuery(Name = "value")] string value)
+        public async Task<ActionResult<ApiResponse<List<LocationDto>>>> GeoLocation([FromQuery(Name = "text")] string text)
         {
-            var response = await locationService.ConvertToGeoPoint(type, value);
+            var response = await locationService.ConvertToGeoPoint(text);
             return response;
         }
     }

@@ -9,15 +9,19 @@ namespace navigation_service.Services.LocationService
 {
     public class LocationService(HttpClient httpClient, IMapper mapper, IConfiguration configuration) : ILocationService
     {
-        private string _nominatimUrl = configuration["NOMINATIM_URL"];
-        public async Task<ApiResponse<List<LocationDto>>> ConvertToGeoPoint(string type, string value)
+        private string _geoapifyUrl = configuration["GEOAPIFY_URL"];
+        private string _geoapifyApiKey = configuration["GEOAPIFY_APIKEY"];
+        public async Task<ApiResponse<List<LocationDto>>> ConvertToGeoPoint(string text)
         {
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "laynz-api/1.0 (contact: victorperezpro14@gmail.com)");
-            HttpResponseMessage response = await httpClient.GetAsync($"{_nominatimUrl}/search?{type}={value}&format=json");
-
+            HttpResponseMessage response = await httpClient.GetAsync($"{_geoapifyUrl}/search?text={text}&format=json&apiKey={_geoapifyApiKey}");
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
-            var geoObjects = JsonSerializer.Deserialize<List<JsonObject>>(jsonResponse);
+            Console.WriteLine(jsonResponse);
+
+            JsonNode locationObject = JsonNode.Parse(jsonResponse);
+            JsonArray resultsArray = locationObject["results"]?.AsArray();
+
+            var geoObjects = JsonSerializer.Deserialize<List<JsonObject>>(resultsArray);
 
             if (geoObjects == null || geoObjects.Count == 0)
             {

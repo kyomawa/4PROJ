@@ -1,9 +1,10 @@
-﻿using navigation_service.DTO;
+﻿using Microsoft.AspNetCore.Mvc;
+using navigation_service.DTO;
 
 namespace navigation_service.Services.ItineraryService
 {
     public interface InterfaceItineraryService
     {
-        public Task<ItineraryDto> GetItinerary(string departure, string departure_type, string arrival, string arrival_type, string method);
+        public Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string method);
     }
 }

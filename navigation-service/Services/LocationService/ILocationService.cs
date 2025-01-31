@@ -5,6 +5,6 @@ namespace navigation_service.Services.LocationService
 {
     public interface ILocationService
     {
-        public Task<ApiResponse<List<LocationDto>>> ConvertToGeoPoint(string type, string value);
+        public Task<ApiResponse<List<LocationDto>>> ConvertToGeoPoint(string text);
     }
 }

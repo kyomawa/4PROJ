@@ -12,12 +12,22 @@ namespace navigation_service
             .ForMember(dest => dest.PlaceId, opt => opt.MapFrom(src => src["place_id"]))
             .ForMember(dest => dest.Latitude, opt => opt.MapFrom(src => Convert.ToDouble(src["lat"].ToString())))
             .ForMember(dest => dest.Longitude, opt => opt.MapFrom(src => Convert.ToDouble(src["lon"].ToString())))
-            .ForMember(dest => dest.Importance, opt => opt.MapFrom(src => Convert.ToDouble(src["importance"].ToString())))
-            .ForMember(dest => dest.AddressType, opt => opt.MapFrom(src => src["addresstype"]))
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src["name"]))
-            .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src["display_name"]))
-            .ForMember(dest => dest.BoundingBox, opt => opt.MapFrom(src => src["boundingbox"].AsArray()
-                .Select(x => x.ToString()).ToList()));
+            .ForMember(dest => dest.Formatted, opt => opt.MapFrom(src => src["formatted"]))
+            .ForMember(dest => dest.WayNumber, opt => opt.MapFrom(src => src["housenumber"])) // return not defined if way number is empty ?
+            .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src["street"]))
+            .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src["postcode"]))
+            .ForMember(dest => dest.City, opt => opt.MapFrom(src => src["city"]))
+            .ForMember(dest => dest.Borough, opt => opt.MapFrom(src => src["suburb"]))
+            .ForMember(dest => dest.Area, opt => opt.MapFrom(src => src["state"]))
+            .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src["country"]))
+            .ForMember(dest => dest.BoundingBox, opt => opt.MapFrom(src =>
+                src["bbox"] is JsonObject ?
+                    new List<double> {
+                        Convert.ToDouble(src["bbox"]["lon1"].ToString()),
+                        Convert.ToDouble(src["bbox"]["lat1"].ToString()),
+                        Convert.ToDouble(src["bbox"]["lon2"].ToString()),
+                        Convert.ToDouble(src["bbox"]["lat2"].ToString())
+                    } : new List<double>()));
 
             CreateMap<JsonObject, StepDto>()
                 .ForMember(dest => dest.Distance, opt => opt.MapFrom(src => Convert.ToDouble(src["distance"].ToString())))

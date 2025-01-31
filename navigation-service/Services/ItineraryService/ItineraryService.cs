@@ -4,6 +4,7 @@ using navigation_service.Services.LocationService;
 using navigation_service.Exceptions;
 using navigation_service.DTO;
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 
 namespace navigation_service.Services.ItineraryService
 {
@@ -12,12 +13,10 @@ namespace navigation_service.Services.ItineraryService
         private string _openRouteServiceUrl = configuration["OPEN_ROUTE_SERVICE_URL"];
         private string _openRouteServiceApiKey = configuration["OPEN_ROUTE_SERVICE_APIKEY"];
 
-        public async Task<ItineraryDto> GetItinerary(string departure, string departure_type, string arrival, string arrival_type, string method)
+        public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string method)
         {
-            LocationDto departureCoordinate = await GetLocationData(departure, departure_type);
-            LocationDto arrivalCoordinate = await GetLocationData(arrival, arrival_type);
-
-            HttpResponseMessage response = await httpClient.GetAsync($"{_openRouteServiceUrl}/directions/{method}?api_key={_openRouteServiceApiKey}&start={departureCoordinate.Longitude},{departureCoordinate.Latitude}&end={arrivalCoordinate.Longitude},{arrivalCoordinate.Latitude}");
+            Console.WriteLine("URI = " + $"{_openRouteServiceUrl}/directions/{method}?api_key={_openRouteServiceApiKey}&start={departure_lon},{departure_lat}&end={arrival_lon},{arrival_lat}");
+            HttpResponseMessage response = await httpClient.GetAsync($"{_openRouteServiceUrl}/directions/{method}?api_key={_openRouteServiceApiKey}&start={departure_lon},{departure_lat}&end={arrival_lon},{arrival_lat}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
@@ -29,8 +28,6 @@ namespace navigation_service.Services.ItineraryService
             {
                 try
                 {
-/*                    return jsonResponse;
- */                 Console.WriteLine(jsonResponse);
                     JsonObject itinerary = JsonSerializer.Deserialize<JsonObject>(jsonResponse);
                     return mapper.Map<ItineraryDto>(itinerary);
                 }
@@ -45,7 +42,7 @@ namespace navigation_service.Services.ItineraryService
             }
         }
 
-        private async Task<LocationDto> GetLocationData(string location, string location_type)
+/*        private async Task<LocationDto> GetLocationData(string location, string location_type)
         {
             var locationResponse = await locationService.ConvertToGeoPoint(location_type, location);
             if (!locationResponse.Success || locationResponse.Data == null || !locationResponse.Data.Any())
@@ -55,6 +52,6 @@ namespace navigation_service.Services.ItineraryService
             var locationCoordinate = locationResponse.Data.First();
 
             return locationCoordinate;
-        }
+        }*/
     }
 }

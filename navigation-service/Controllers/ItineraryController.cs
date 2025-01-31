@@ -13,11 +13,11 @@ namespace navigation_service.Controllers
     public class ItineraryController(InterfaceItineraryService itineraryService, ILocationService locationService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<ItineraryDto>>> CalculateItinerary([FromQuery] string departure, [FromQuery] string departure_type, [FromQuery] string arrival, [FromQuery] string arrival_type, string method)
+        public async Task<ActionResult<ApiResponse<ItineraryDto>>> CalculateItinerary([FromQuery] double departure_lon, [FromQuery] double departure_lat, [FromQuery] double arrival_lon, [FromQuery] double arrival_lat, [FromQuery] string method)
         {
             try
             {
-                var response = await itineraryService.GetItinerary(departure, departure_type, arrival, arrival_type, method);
+                var response = await itineraryService.GetItinerary(departure_lon, departure_lat, arrival_lon, arrival_lat, method);
                 return new ApiResponse<ItineraryDto> { Data = response, Message = "Request successfully executed" };
             } catch (Exception ex)
             {
