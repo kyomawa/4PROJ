@@ -16,9 +16,9 @@ services:
           path: ./navigation-service
     networks:
       - backend
-  traffic-service:
+  incident-service:
     build:
-      context: ./traffic-service
+      context: ./incident-service
       dockerfile: Dockerfile
     ports:
       - "8082:8080"
@@ -27,9 +27,22 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./traffic-service
+          path: ./incident-service
     networks:
       - backend
+  db-service:
+    image: 'mysql:8.0'
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3305:3306"
+    networks:
+      - backend
+    volumes:
+      - mysql:/var/lib/mysql
 networks:
   backend:
     driver: bridge
@@ -37,3 +50,5 @@ networks:
     driver: bridge
   database:
     driver: bridge
+volumes: 
+  mysql:
