@@ -17,22 +17,40 @@ namespace incident_service.Repository
             var incident = await dataContext.Incidents.FindAsync(id);
             return incident;
         }
-        public Task<Incident> Create(PostIncidentDto postIncidentDto)
+        public async Task<Incident> Create(PostIncidentDto postIncidentDto)
         {
-            throw new NotImplementedException();
-        }
-        public Task<Incident> AddDislike(string id)
-        {
-            throw new NotImplementedException();
-        }
+            var incident = new Incident
+            {
+                Type = postIncidentDto.Type,
+                Longitude = postIncidentDto.Longitude,
+                Latitude = postIncidentDto.Latitude,
+                CreationDate = DateTime.Now
+            };
 
-        public Task<Incident> AddLike(string id)
-        {
-            throw new NotImplementedException();
+            var createdIncident = await dataContext.Incidents.AddAsync(incident);
+            await dataContext.SaveChangesAsync();
+            return createdIncident.Entity;
         }
-        public Task<Incident> Delete(string id)
+        public async Task<Incident> AddLike(string id)
         {
-            throw new NotImplementedException();
+            var incident = await Get(id);
+            incident.Like++;
+            await dataContext.SaveChangesAsync();
+            return incident;
+        }
+        public async Task<Incident> AddDislike(string id)
+        {
+            var incident = await Get(id);
+            incident.Like--;
+            await dataContext.SaveChangesAsync();
+            return incident;
+        }
+        public async Task<Incident> Delete(string id)
+        {
+            var incident = await Get(id);
+            var removedIncident = dataContext.Incidents.Remove(incident);
+            await dataContext.SaveChangesAsync();
+            return removedIncident.Entity;
         }
     }
 }

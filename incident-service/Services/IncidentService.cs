@@ -4,10 +4,12 @@ using System.Text.Json;
 using incident_service.DTO.Incident;
 using incident_service.Repository;
 using incident_service.Enums;
+using AutoMapper;
+using incident_service.Models;
 
 namespace incident_service.Services
 {
-    public class IncidentService(HttpClient httpClient, IConfiguration configuration, InterfaceIncidentRepository incidentRepository) : InterfaceIncidentService
+    public class IncidentService(HttpClient httpClient, IConfiguration configuration, InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
     {
 /*        private string _overpassURL = configuration["OVERPASS_URL"];
         public async Task<JsonObject> GetRoadDetails(string road, string lat_min, string lon_min, string lat_max, string lon_max)
@@ -47,18 +49,18 @@ namespace incident_service.Services
         public async Task<List<IncidentDto>> GetAll()
         {
             var incidents = await incidentRepository.GetAll();
-            return incidents;
+            return mapper.Map<List<IncidentDto>>(incidents);
         }
         public async Task<IncidentDto> Get(string id)
         {
             var incident = await incidentRepository.Get(id);
-            return incident;
+            return mapper.Map<IncidentDto>(incident);
         }
 
         public async Task<IncidentDto> Create(PostIncidentDto postIncidentDto)
         {
             var incident = await incidentRepository.Create(postIncidentDto);
-            return incident;
+            return mapper.Map<IncidentDto>(incident);
         }
 
         public async Task<IncidentDto> Update(PutIncidentDto putIncidentDto)
@@ -72,7 +74,7 @@ namespace incident_service.Services
             {
                 incident = await incidentRepository.AddDislike(putIncidentDto.Id);
             }
-            return incident;
+            return mapper.Map<IncidentDto>(incident);
         }
 
         public Task<IncidentDto> Delete(string id)

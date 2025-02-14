@@ -12,4 +12,3 @@ namespace incident_service.Contexts
 
     }
 }
-}
