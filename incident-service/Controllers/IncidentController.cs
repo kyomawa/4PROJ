@@ -1,39 +1,82 @@
 ﻿using incident_service.DTO.Incident;
-using Microsoft.AspNetCore.Http;
 using incident_service.Services;
 using Microsoft.AspNetCore.Mvc;
+using incident_service.Models;
 
 namespace incident_service.Controllers
 {
-    public class IncidentController(InterfaceIncidentService incidentService) : Controller
+    [ApiController]
+    [Route("incident")]
+    public class IncidentController(InterfaceIncidentService incidentService) : ControllerBase
     {
-        // GET: IncidentController
-        public ActionResult GetAll()
+        [HttpGet]
+        public async Task<ApiResponse<List<IncidentDto>>> GetAll()
         {
-            return View();
+            try
+            {
+                var response = await incidentService.GetAll();
+                return new ApiResponse<List<IncidentDto>> { Data = response};
+            } catch (Exception ex)
+            {
+                return new ApiResponse<List<IncidentDto>> { Success = false, Message = ex.Message, StatusCode = 500 };
+            }
         }
-        public ActionResult Get(int id)
+
+        [HttpGet("{id}")]
+        public async Task<ApiResponse<IncidentDto>> Get(string id)
         {
-            return View();
+            try
+            {
+                var response = await incidentService.Get(id);
+                return new ApiResponse<IncidentDto> { Data = response };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+            }
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] PostIncidentDto postIncidentDto)
+        public async Task<ApiResponse<IncidentDto>> Create([FromBody] PostIncidentDto postIncidentDto)
         {
-            return View();
+            try
+            {
+                var response = await incidentService.Create(postIncidentDto);
+                return new ApiResponse<IncidentDto> { Data = response };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+            }
         }
 
 
         [HttpPut("{id}")]
-        public ActionResult Update([FromBody] PutIncidentDto putIncidentDto)
+        public async Task<ApiResponse<IncidentDto>> Update([FromBody] PutIncidentDto putIncidentDto)
         {
-            return View();
+            try
+            {
+                var response = await incidentService.Update(putIncidentDto);
+                return new ApiResponse<IncidentDto> { Data = response };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+            }
         }
 
         [HttpDelete("{id}")]
-        public ActionResult Delete(int id)
+        public async Task<ApiResponse<IncidentDto>> Delete(string id)
         {
-            return View();
+            try
+            {
+                var response = await incidentService.Delete(id);
+                return new ApiResponse<IncidentDto> { Data = response };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+            }
         }
     }
 }

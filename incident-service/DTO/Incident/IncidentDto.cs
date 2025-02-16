@@ -8,6 +8,6 @@
         public double Latitude { get; set; }
         public int Like { get; set; }
         public int Dislike { get; set; }
-        public string Date { get; init; }
+        public DateTime CreationDate { get; init; }
     }
 }

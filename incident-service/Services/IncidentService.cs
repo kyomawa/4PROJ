@@ -9,7 +9,7 @@ using incident_service.Models;
 
 namespace incident_service.Services
 {
-    public class IncidentService(HttpClient httpClient, IConfiguration configuration, InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
+    public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
     {
 /*        private string _overpassURL = configuration["OVERPASS_URL"];
         public async Task<JsonObject> GetRoadDetails(string road, string lat_min, string lon_min, string lat_max, string lon_max)
@@ -65,7 +65,7 @@ namespace incident_service.Services
 
         public async Task<IncidentDto> Update(PutIncidentDto putIncidentDto)
         {
-            var incident = new IncidentDto();
+            Incident incident = null;
             if (putIncidentDto.Reaction == ReactionType.Like)
             {
                 incident = await incidentRepository.AddLike(putIncidentDto.Id);
@@ -77,10 +77,10 @@ namespace incident_service.Services
             return mapper.Map<IncidentDto>(incident);
         }
 
-        public Task<IncidentDto> Delete(string id)
+        public async Task<IncidentDto> Delete(string id)
         {
-            var incident = incidentRepository.Delete(id);
-            return incident;
+            var incident = await incidentRepository.Delete(id);
+            return mapper.Map<IncidentDto>(incident);
         }
     }
 }

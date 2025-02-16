@@ -23,7 +23,10 @@ services:
     ports:
       - "8082:8080"
     environment:
-      - OVERPASS_URL=${OVERPASS_URL}
+        OVERPASS_URL: ${OVERPASS_URL}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     develop:
       watch:
         - action: rebuild
