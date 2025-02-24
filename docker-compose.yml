@@ -6,8 +6,8 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - OPEN_ROUTE_SERVICE_URL=${OPEN_ROUTE_SERVICE_URL}
-      - OPEN_ROUTE_SERVICE_APIKEY=${OPEN_ROUTE_SERVICE_APIKEY}
+      - TOMTOM_URL=${TOMTOM_URL}
+      - TOMTOM_APIKEY=${TOMTOM_APIKEY}
       - GEOAPIFY_URL=${GEOAPIFY_URL}
       - GEOAPIFY_APIKEY=${GEOAPIFY_APIKEY}
     develop:
@@ -23,7 +23,6 @@ services:
     ports:
       - "8082:8080"
     environment:
-        OVERPASS_URL: ${OVERPASS_URL}
         MYSQL_DATABASE: ${MYSQL_DATABASE}
         MYSQL_USER: ${MYSQL_USER}
         MYSQL_PASSWORD: ${MYSQL_PASSWORD}
