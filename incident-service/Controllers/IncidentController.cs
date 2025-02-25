@@ -23,7 +23,7 @@ namespace incident_service.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ApiResponse<IncidentDto>> Get(string id)
+        public async Task<ApiResponse<IncidentDto>> Get(Guid id)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace incident_service.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ApiResponse<IncidentDto>> Delete(string id)
+        public async Task<ApiResponse<IncidentDto>> Delete(Guid id)
         {
             try
             {

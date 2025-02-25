@@ -12,7 +12,7 @@ namespace incident_service.Repository
             var incidents = await dataContext.Incidents.ToListAsync();
             return incidents;
         }
-        public async Task<Incident> Get(string id)
+        public async Task<Incident> Get(Guid id)
         {
             var incident = await dataContext.Incidents.FindAsync(id);
             return incident;
@@ -31,21 +31,21 @@ namespace incident_service.Repository
             await dataContext.SaveChangesAsync();
             return createdIncident.Entity;
         }
-        public async Task<Incident> AddLike(string id)
+        public async Task<Incident> AddLike(Guid id)
         {
             var incident = await Get(id);
             incident.Like++;
             await dataContext.SaveChangesAsync();
             return incident;
         }
-        public async Task<Incident> AddDislike(string id)
+        public async Task<Incident> AddDislike(Guid id)
         {
             var incident = await Get(id);
             incident.Like--;
             await dataContext.SaveChangesAsync();
             return incident;
         }
-        public async Task<Incident> Delete(string id)
+        public async Task<Incident> Delete(Guid id)
         {
             var incident = await Get(id);
             var removedIncident = dataContext.Incidents.Remove(incident);

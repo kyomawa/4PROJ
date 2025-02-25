@@ -6,6 +6,7 @@ using incident_service.Repository;
 using incident_service.Enums;
 using AutoMapper;
 using incident_service.Models;
+using incident_service.Exceptions;
 
 namespace incident_service.Services
 {
@@ -16,7 +17,7 @@ namespace incident_service.Services
             var incidents = await incidentRepository.GetAll();
             return mapper.Map<List<IncidentDto>>(incidents);
         }
-        public async Task<IncidentDto> Get(string id)
+        public async Task<IncidentDto> Get(Guid id)
         {
             var incident = await incidentRepository.Get(id);
             return mapper.Map<IncidentDto>(incident);
@@ -26,6 +27,7 @@ namespace incident_service.Services
         {
             var incident = await incidentRepository.Create(postIncidentDto);
             return mapper.Map<IncidentDto>(incident);
+
         }
 
         public async Task<IncidentDto> Update(PutIncidentDto putIncidentDto)
@@ -42,8 +44,11 @@ namespace incident_service.Services
             return mapper.Map<IncidentDto>(incident);
         }
 
-        public async Task<IncidentDto> Delete(string id)
+        public async Task<IncidentDto> Delete(Guid id)
         {
+            // get user role
+            // if admin delete
+            // else deny
             var incident = await incidentRepository.Delete(id);
             return mapper.Map<IncidentDto>(incident);
         }

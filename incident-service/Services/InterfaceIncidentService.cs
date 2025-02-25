@@ -7,10 +7,10 @@ namespace incident_service.Services
     public interface InterfaceIncidentService
     {
         public Task<List<IncidentDto>> GetAll();
-        public Task<IncidentDto> Get(string id);
+        public Task<IncidentDto> Get(Guid id);
         public Task<IncidentDto> Create(PostIncidentDto postIncidentDto);
         public Task<IncidentDto> Update([FromBody] PutIncidentDto putIncidentDto);
-        public Task<IncidentDto> Delete(string id);
+        public Task<IncidentDto> Delete(Guid id);
 
     }
 }

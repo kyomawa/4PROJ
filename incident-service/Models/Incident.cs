@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using incident_service.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace incident_service.Models
@@ -7,11 +8,11 @@ namespace incident_service.Models
     public class Incident
     {
         [Key]
-        public string Id { get; init; }
+        public Guid Id { get; init; }
 
         [Required]
         [Column("Type")]
-        public string Type { get; set; }
+        public IncidentType Type { get; set; }
 
         [Required]
         [Column("Longitude")]

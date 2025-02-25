@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddEnvironmentVariables();
-
 var connectionString = builder.Configuration.GetConnectionString("ProdConnection");
 
 var mysqlDatabase = Environment.GetEnvironmentVariable("MYSQL_DATABASE");

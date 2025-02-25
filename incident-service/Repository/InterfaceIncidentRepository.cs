@@ -6,10 +6,10 @@ namespace incident_service.Repository
     public interface InterfaceIncidentRepository
     {
         public Task<List<Incident>> GetAll();
-        public Task<Incident> Get(string id);
+        public Task<Incident> Get(Guid id);
         public Task<Incident> Create(PostIncidentDto postIncidentDto);
-        public Task<Incident> AddLike(string id);
-        public Task<Incident> AddDislike(string id);
-        public Task<Incident> Delete(string id);
+        public Task<Incident> AddLike(Guid id);
+        public Task<Incident> AddDislike(Guid id);
+        public Task<Incident> Delete(Guid id);
     }
 }

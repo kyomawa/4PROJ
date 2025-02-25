@@ -12,7 +12,7 @@ using incident_service.Contexts;
 namespace incident_service.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250225091442_InitialCreate")]
+    [Migration("20250225105523_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -27,8 +27,9 @@ namespace incident_service.Migrations
 
             modelBuilder.Entity("incident_service.Models.Incident", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime(6)")
