@@ -2,6 +2,7 @@
 using incident_service.Services;
 using Microsoft.AspNetCore.Mvc;
 using incident_service.Models;
+using incident_service.DTO.BoundingBox;
 
 namespace incident_service.Controllers
 {
@@ -17,6 +18,20 @@ namespace incident_service.Controllers
                 var response = await incidentService.GetAll();
                 return new ApiResponse<List<IncidentDto>> { Data = response};
             } catch (Exception ex)
+            {
+                return new ApiResponse<List<IncidentDto>> { Success = false, Message = ex.Message, StatusCode = 500 };
+            }
+        }
+
+        [HttpGet("bounding-box")]
+        public async Task<ApiResponse<List<IncidentDto>>> GetByBoundingBox([FromQuery] BoundingBoxDto boundingBoxDto)
+        { 
+            try
+            {
+                var response = await incidentService.GetByBoundingBox(boundingBoxDto);
+                return new ApiResponse<List<IncidentDto>> { Data = response };
+            }
+            catch (Exception ex)
             {
                 return new ApiResponse<List<IncidentDto>> { Success = false, Message = ex.Message, StatusCode = 500 };
             }

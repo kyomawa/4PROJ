@@ -13,12 +13,12 @@ namespace navigation_service.Controllers
     public class ItineraryController(InterfaceItineraryService itineraryService, ILocationService locationService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<ItineraryDto>>> CalculateItinerary([FromQuery] double departure_lon, [FromQuery] double departure_lat, [FromQuery] double arrival_lon, [FromQuery] double arrival_lat, [FromQuery] string travelMode)
+        public async Task<ActionResult<ApiResponse<ItineraryDto>>> CalculateItinerary([FromQuery] double departure_lon, [FromQuery] double departure_lat, [FromQuery] double arrival_lon, [FromQuery] double arrival_lat, [FromQuery] string travelMethod , [FromQuery] string routeType)
         {
             try
             {
-                var response = await itineraryService.GetItinerary(departure_lon, departure_lat, arrival_lon, arrival_lat, travelMode);
-                return new ApiResponse<ItineraryDto> { Data = response, Message = "Request successfully executed" };
+                var response = await itineraryService.GetItinerary(departure_lon, departure_lat, arrival_lon, arrival_lat, travelMethod, routeType);
+                return new ApiResponse<ItineraryDto> { Data = response };
             } catch (Exception ex)
             {
                 return new ApiResponse<ItineraryDto> { Success = false, Message = ex.Message, StatusCode = (ex.GetType() == typeof(LocationNotFoundException)) ? ((LocationNotFoundException)ex).StatusCode : 500, Errors = new List<string> { ex.GetType().ToString() } };

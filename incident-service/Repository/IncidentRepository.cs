@@ -1,4 +1,5 @@
 ﻿using incident_service.Contexts;
+using incident_service.DTO.BoundingBox;
 using incident_service.DTO.Incident;
 using incident_service.Models;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,15 @@ namespace incident_service.Repository
             var incidents = await dataContext.Incidents.ToListAsync();
             return incidents;
         }
+        public async Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox)
+        {
+            var incidents = await dataContext.Incidents
+                .Where(i => i.Latitude >= boundingBox.MinLat && i.Latitude <= boundingBox.MaxLat && i.Longitude >= boundingBox.MinLon && i.Longitude <= boundingBox.MaxLon)
+                .ToListAsync();
+
+            return incidents;
+        }
+
         public async Task<Incident> Get(Guid id)
         {
             var incident = await dataContext.Incidents.FindAsync(id);
@@ -52,5 +62,6 @@ namespace incident_service.Repository
             await dataContext.SaveChangesAsync();
             return removedIncident.Entity;
         }
+
     }
 }

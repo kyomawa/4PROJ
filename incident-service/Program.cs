@@ -21,6 +21,7 @@ connectionString = connectionString
     .Replace("${MYSQL_USER}", mysqlUser)
     .Replace("${MYSQL_PASSWORD}", mysqlPassword);
 
+
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
@@ -31,6 +32,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddAuthorization();
+builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<InterfaceIncidentService, IncidentService>();
 builder.Services.AddScoped<InterfaceIncidentRepository, IncidentRepository>();

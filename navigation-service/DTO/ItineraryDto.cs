@@ -7,6 +7,6 @@
         public double Duration { get; set; }
         public List<StepDto> Steps { get; set; }
         public List<CoordinateDto> Coordinates { get; set; }
-
+        public List<IncidentDto> Incidents { get; set; } = new List<IncidentDto>();
     }
 }

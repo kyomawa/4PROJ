@@ -1,8 +1,10 @@
-﻿using System.Text.Json.Nodes;
-using System.Text.Json;
+﻿using System.Text.Json;
+using System.Net.Http.Headers;
 using navigation_service.Services.LocationService;
 using navigation_service.DTO;
 using AutoMapper;
+using navigation_service.Models;
+using System.Text.Json.Nodes;
 
 namespace navigation_service.Services.ItineraryService
 {
@@ -10,32 +12,116 @@ namespace navigation_service.Services.ItineraryService
     {
         private string _tomtomUrl = configuration["TOMTOM_URL"];
         private string _tomtomApiKey = configuration["TOMTOM_APIKEY"];
-
-        public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMode)
+        private static readonly Dictionary<string, double> IncidentSizes = new()
         {
-            HttpResponseMessage response = await httpClient.GetAsync($"{_tomtomUrl}/calculateRoute/{departure_lat}%2C{departure_lon}%3A{arrival_lat}%2C{arrival_lon}/json?instructionsType=text&traffic=true&travelMode={travelMode}&key={_tomtomApiKey}&language=fr");
+            { "Crash", 0.003 },
+            { "Bottling", 0.002 },
+            { "ClosedRoad", 0.005 },
+            { "PoliceControl", 0.001 },
+            { "Obstacle", 0.002 }
+        };
 
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-            // calc best itinerary with incidents and road data
-            // foreach route getIncidents(route)
-            //
-
-            if (response.IsSuccessStatusCode)
+        public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMethod, string routeType)
+        {
+            var itineraryBoundingBox = GetBoundingBox(new List<(double Latitude, double Longitude)>
             {
-                try
-                {
-                    JsonObject itinerary = JsonSerializer.Deserialize<JsonObject>(jsonResponse);
-                    return mapper.Map<ItineraryDto>(itinerary);
-                }
-                catch (JsonException ex)
-                {
-                    throw new Exception("Erreur lors de la désérialisation de la réponse JSON.", ex);
-                }
+                (departure_lat, departure_lon),
+                (arrival_lat, arrival_lon)
+            });
+
+            var incidents = await GetIncidentsInBoundingBox(itineraryBoundingBox);
+
+            if (incidents.Count == 0)
+            {
+                return await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
+            }
+
+            var areasToAvoid = AreasToAvoid(incidents);
+            var newItinerary = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, areasToAvoid);
+            newItinerary.Incidents = incidents;
+
+            return newItinerary;
+        }
+
+        private async Task<ItineraryDto> GetRoute(double departure_lat, double departure_lon, double arrival_lat, double arrival_lon, string travelMethod, string routeType, object avoidAreas)
+        {
+            var requestBody = JsonSerializer.Serialize(avoidAreas);
+
+            var content = new StringContent(requestBody);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var itineraryResponse = await httpClient.PostAsync($"{_tomtomUrl}/calculateRoute/{departure_lat},{departure_lon}:{arrival_lat},{arrival_lon}/json?key={_tomtomApiKey}&travelMode={travelMethod}&routeType={routeType}&instructionsType=text&traffic=true&language=fr", content);
+            if (itineraryResponse.IsSuccessStatusCode)
+            {
+                var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
+                JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
+                return mapper.Map<ItineraryDto>(itineraryObject);
             }
             else
             {
-                throw new Exception($"Erreur lors de l'appel à l'API : {response.StatusCode} - {jsonResponse}");
+                throw new Exception($"Error when fetching TomTom API to get itinerary");
             }
         }
+
+        private async Task<List<IncidentDto>> GetIncidentsInBoundingBox(BoundingBox boundingBox)
+        {
+            var incidentsResponse = await httpClient.GetAsync($"http://incident-service:8080/incident/bounding-box?minLat={boundingBox.MinLat}&maxLat={boundingBox.MaxLat}&minLon={boundingBox.MinLon}&maxLon={boundingBox.MaxLon}");
+            if (incidentsResponse.IsSuccessStatusCode)
+            {
+                var incidentsJson = await incidentsResponse.Content.ReadAsStringAsync();
+                var incidentsObject = JsonSerializer.Deserialize<JsonObject>(incidentsJson);
+                var incidents = JsonSerializer.Deserialize<List<IncidentDto>>(incidentsObject["data"]);
+                if (incidents == null)
+                {
+                    throw new JsonException("Error when deserializing incidents in itinerary");
+                }
+                return incidents;
+            }
+            else
+            {
+                throw new Exception("Error when trying to get incidents in bounding box");
+            }
+        }
+
+        private BoundingBox GetBoundingBox(IEnumerable<(double Latitude, double Longitude)> points)
+        {
+            double minLat = double.MaxValue;
+            double maxLat = double.MinValue;
+            double minLon = double.MaxValue;
+            double maxLon = double.MinValue;
+
+            foreach (var point in points)
+            {
+                if (point.Latitude < minLat) minLat = point.Latitude;
+                if (point.Latitude > maxLat) maxLat = point.Latitude;
+                if (point.Longitude < minLon) minLon = point.Longitude;
+                if (point.Longitude > maxLon) maxLon = point.Longitude;
+            }
+
+            return new BoundingBox { MinLat = minLat, MaxLat = maxLat, MinLon = minLon, MaxLon = maxLon };
+        }
+
+        private object AreasToAvoid(List<IncidentDto> incidents)
+        {
+            var areasToAvoid = new
+            {
+                avoidAreas = new
+                {
+                    rectangles = incidents.Select(incident =>
+                    {
+                        double size = GetAvoidanceAreaSize(incident.Type);
+                        return new
+                        {
+                            southWestCorner = new { latitude = incident.Latitude - size, longitude = incident.Longitude - size },
+                            northEastCorner = new { latitude = incident.Latitude + size, longitude = incident.Longitude + size }
+                        };
+                    }).ToList()
+                }
+            };
+
+            return areasToAvoid;
+        }
+
+        private double GetAvoidanceAreaSize(string type) => IncidentSizes.TryGetValue(type, out var size) ? size : 0.002;
     }
 }
