@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using navigation_service.DTO;
+using navigation_service.DTO.ItineraryDTO;
 using System.Text.Json.Nodes;
 
 namespace navigation_service

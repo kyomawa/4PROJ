@@ -9,9 +9,10 @@ namespace incident_service.Repository
         public Task<List<Incident>> GetAll();
         public Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox);
         public Task<Incident> Get(Guid id);
+        public Task<bool> Exist(PostIncidentDto postIncidentDto);
         public Task<Incident> Create(PostIncidentDto postIncidentDto);
-        public Task<Incident> AddLike(Guid id);
-        public Task<Incident> AddDislike(Guid id);
-        public Task<Incident> Delete(Guid id);
+        public Task<Incident> AddLike(Incident incident);
+        public Task<Incident> AddDislike(Incident incident);
+        public Task<Incident> Delete(Incident incident);
     }
 }

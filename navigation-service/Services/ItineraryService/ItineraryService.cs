@@ -5,6 +5,7 @@ using navigation_service.DTO;
 using AutoMapper;
 using navigation_service.Models;
 using System.Text.Json.Nodes;
+using navigation_service.DTO.ItineraryDTO;
 
 namespace navigation_service.Services.ItineraryService
 {
@@ -23,6 +24,7 @@ namespace navigation_service.Services.ItineraryService
 
         public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMethod, string routeType)
         {
+
             var itineraryBoundingBox = GetBoundingBox(new List<(double Latitude, double Longitude)>
             {
                 (departure_lat, departure_lon),
@@ -45,21 +47,42 @@ namespace navigation_service.Services.ItineraryService
 
         private async Task<ItineraryDto> GetRoute(double departure_lat, double departure_lon, double arrival_lat, double arrival_lon, string travelMethod, string routeType, object avoidAreas)
         {
-            var requestBody = JsonSerializer.Serialize(avoidAreas);
-
-            var content = new StringContent(requestBody);
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-            var itineraryResponse = await httpClient.PostAsync($"{_tomtomUrl}/calculateRoute/{departure_lat},{departure_lon}:{arrival_lat},{arrival_lon}/json?key={_tomtomApiKey}&travelMode={travelMethod}&routeType={routeType}&instructionsType=text&traffic=true&language=fr", content);
-            if (itineraryResponse.IsSuccessStatusCode)
+            try
             {
-                var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
-                JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
-                return mapper.Map<ItineraryDto>(itineraryObject);
-            }
-            else
+                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{departure_lat},{departure_lon}:{arrival_lat},{arrival_lon}/json?key={_tomtomApiKey}&travelMode={travelMethod}&routeType={routeType}&instructionsType=text&traffic=true&language=fr";
+
+                HttpResponseMessage itineraryResponse;
+
+                if (avoidAreas == null)
+                {
+                    itineraryResponse = await httpClient.GetAsync(url);
+                }
+                else
+                {
+                    var requestBody = JsonSerializer.Serialize(avoidAreas);
+
+                    var content = new StringContent(requestBody);
+                    content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+                    itineraryResponse = await httpClient.PostAsync(url, content);
+
+                }
+
+                if (itineraryResponse.IsSuccessStatusCode)
+                {
+                    var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
+
+                    JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
+
+                    return mapper.Map<ItineraryDto>(itineraryObject);
+                }
+                else
+                {
+                    return null;
+                }
+            } catch(Exception ex)
             {
-                throw new Exception($"Error when fetching TomTom API to get itinerary");
+                throw new Exception("An error occurred while calculating the route.", ex);
             }
         }
 
@@ -69,12 +92,8 @@ namespace navigation_service.Services.ItineraryService
             if (incidentsResponse.IsSuccessStatusCode)
             {
                 var incidentsJson = await incidentsResponse.Content.ReadAsStringAsync();
-                var incidentsObject = JsonSerializer.Deserialize<JsonObject>(incidentsJson);
-                var incidents = JsonSerializer.Deserialize<List<IncidentDto>>(incidentsObject["data"]);
-                if (incidents == null)
-                {
-                    throw new JsonException("Error when deserializing incidents in itinerary");
-                }
+                var incidents = JsonSerializer.Deserialize<List<IncidentDto>>(incidentsJson) ?? throw new JsonException("Error when deserializing incidents in itinerary");
+
                 return incidents;
             }
             else

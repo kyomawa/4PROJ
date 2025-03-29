@@ -6,16 +6,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace incident_service.Repository
 {
-    public class IncidentRepository(DataContext dataContext) : InterfaceIncidentRepository
+    public class IncidentRepository(DataContext context) : InterfaceIncidentRepository
     {
         public async Task<List<Incident>> GetAll()
         {
-            var incidents = await dataContext.Incidents.ToListAsync();
+            var incidents = await context.Incidents.ToListAsync();
             return incidents;
         }
         public async Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox)
         {
-            var incidents = await dataContext.Incidents
+            var incidents = await context.Incidents
                 .Where(i => i.Latitude >= boundingBox.MinLat && i.Latitude <= boundingBox.MaxLat && i.Longitude >= boundingBox.MinLon && i.Longitude <= boundingBox.MaxLon)
                 .ToListAsync();
 
@@ -24,44 +24,48 @@ namespace incident_service.Repository
 
         public async Task<Incident> Get(Guid id)
         {
-            var incident = await dataContext.Incidents.FindAsync(id);
+            var incident = await context.Incidents.FindAsync(id);
             return incident;
+        }
+
+        public async Task<bool> Exist(PostIncidentDto postIncidentDto)
+        {
+            return await context.Incidents
+                .AnyAsync(i => i.Type == postIncidentDto.Type
+                            && i.Latitude == postIncidentDto.Latitude
+                            && i.Longitude == postIncidentDto.Longitude);
         }
         public async Task<Incident> Create(PostIncidentDto postIncidentDto)
         {
             var incident = new Incident
             {
                 Type = postIncidentDto.Type,
-                Longitude = postIncidentDto.Longitude,
-                Latitude = postIncidentDto.Latitude,
+                Longitude = (double)postIncidentDto.Longitude,
+                Latitude = (double)postIncidentDto.Latitude,
                 CreationDate = DateTime.Now
             };
 
-            var createdIncident = await dataContext.Incidents.AddAsync(incident);
-            await dataContext.SaveChangesAsync();
+            var createdIncident = await context.Incidents.AddAsync(incident);
+            await context.SaveChangesAsync();
             return createdIncident.Entity;
         }
-        public async Task<Incident> AddLike(Guid id)
+        public async Task<Incident> AddLike(Incident incident)
         {
-            var incident = await Get(id);
             incident.Like++;
-            await dataContext.SaveChangesAsync();
+            await context.SaveChangesAsync();
             return incident;
         }
-        public async Task<Incident> AddDislike(Guid id)
+        public async Task<Incident> AddDislike(Incident incident)
         {
-            var incident = await Get(id);
-            incident.Like--;
-            await dataContext.SaveChangesAsync();
+            incident.Dislike++;
+            await context.SaveChangesAsync();
             return incident;
         }
-        public async Task<Incident> Delete(Guid id)
+        public async Task<Incident> Delete(Incident incident)
         {
-            var incident = await Get(id);
-            var removedIncident = dataContext.Incidents.Remove(incident);
-            await dataContext.SaveChangesAsync();
+            var removedIncident = context.Incidents.Remove(incident);
+            await context.SaveChangesAsync();
             return removedIncident.Entity;
         }
-
     }
 }

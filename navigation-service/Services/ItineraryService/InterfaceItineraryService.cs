@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using navigation_service.DTO;
+using navigation_service.DTO.ItineraryDTO;
 
 namespace navigation_service.Services.ItineraryService
 {

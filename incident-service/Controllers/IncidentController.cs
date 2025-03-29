@@ -1,8 +1,8 @@
 ﻿using incident_service.DTO.Incident;
 using incident_service.Services;
 using Microsoft.AspNetCore.Mvc;
-using incident_service.Models;
 using incident_service.DTO.BoundingBox;
+using incident_service.Enums;
 
 namespace incident_service.Controllers
 {
@@ -11,86 +11,114 @@ namespace incident_service.Controllers
     public class IncidentController(InterfaceIncidentService incidentService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ApiResponse<List<IncidentDto>>> GetAll()
+        public async Task<ActionResult<IncidentDto>> GetAll()
         {
             try
             {
                 var response = await incidentService.GetAll();
-                return new ApiResponse<List<IncidentDto>> { Data = response};
+                return Ok(response);
             } catch (Exception ex)
             {
-                return new ApiResponse<List<IncidentDto>> { Success = false, Message = ex.Message, StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpGet("bounding-box")]
-        public async Task<ApiResponse<List<IncidentDto>>> GetByBoundingBox([FromQuery] BoundingBoxDto boundingBoxDto)
+        public async Task<ActionResult<List<IncidentDto>>> GetByBoundingBox([FromQuery] BoundingBoxDto boundingBoxDto)
         { 
             try
             {
                 var response = await incidentService.GetByBoundingBox(boundingBoxDto);
-                return new ApiResponse<List<IncidentDto>> { Data = response };
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<List<IncidentDto>> { Success = false, Message = ex.Message, StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpGet("{id}")]
-        public async Task<ApiResponse<IncidentDto>> Get(Guid id)
+        public async Task<ActionResult<IncidentDto>> Get(Guid id)
         {
             try
             {
                 var response = await incidentService.Get(id);
-                return new ApiResponse<IncidentDto> { Data = response };
+                if (response == null)
+                {
+                    return NotFound($"Incident {id} not found");
+                }
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpPost]
-        public async Task<ApiResponse<IncidentDto>> Create([FromBody] PostIncidentDto postIncidentDto)
+        public async Task<ActionResult<IncidentDto>> Create([FromBody] PostIncidentDto postIncidentDto)
         {
             try
             {
+                if (!Enum.IsDefined(typeof(IncidentType), postIncidentDto.Type))
+                {
+                    return BadRequest(new { Message = $"Invalid incident type : {postIncidentDto.Type}" });
+                }
+
                 var response = await incidentService.Create(postIncidentDto);
-                return new ApiResponse<IncidentDto> { Data = response };
+
+                if (response == null)
+                {
+                    return Conflict(new { Message = "An incident of the same type already exists at these coordinates" });
+                }
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
 
 
         [HttpPut("{id}")]
-        public async Task<ApiResponse<IncidentDto>> Update([FromBody] PutIncidentDto putIncidentDto)
+        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] PutIncidentDto putIncidentDto)
         {
             try
             {
-                var response = await incidentService.Update(putIncidentDto);
-                return new ApiResponse<IncidentDto> { Data = response };
+                if (!Enum.IsDefined(typeof(ReactionType), putIncidentDto.Reaction))
+                {
+                    return BadRequest(new { Message = $"Invalid reaction type : {putIncidentDto.Reaction}" });
+                }
+
+                var response = await incidentService.Update(id, putIncidentDto);
+                if (response == null)
+                {
+                    return NotFound($"Incident {id} not found");
+                }
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpDelete("{id}")]
-        public async Task<ApiResponse<IncidentDto>> Delete(Guid id)
+        public async Task<ActionResult<IncidentDto>> Delete(Guid id)
         {
             try
             {
                 var response = await incidentService.Delete(id);
-                return new ApiResponse<IncidentDto> { Data = response };
+                if (response == null)
+                {
+                    return BadRequest($"Incident {id} not found");
+                }
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<IncidentDto> { Success = false, Message = ex.Message, StatusCode = 500 };
+                return StatusCode(500, ex.Message);
             }
         }
     }

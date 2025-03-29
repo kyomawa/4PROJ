@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 
-namespace navigation_service.DTO
+namespace navigation_service.DTO.ItineraryDTO
 {
     public class StepDto
     {

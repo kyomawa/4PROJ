@@ -31,48 +31,45 @@ namespace incident_service.Services
 
         public async Task<IncidentDto> Create(PostIncidentDto postIncidentDto)
         {
+            var incidentExist = await incidentRepository.Exist(postIncidentDto);
+
+            if (incidentExist)
+            {
+                return null;
+            }
+
             var incident = await incidentRepository.Create(postIncidentDto);
-
-            // Appel API TomTom pour géocodage inverse
-            var response = await httpClient.GetAsync($"https://api.tomtom.com/search/2/reverseGeocode/{postIncidentDto.Latitude},{postIncidentDto.Longitude}.json?key=b7xQcWAnoOGd3Q5ceND5Aqa3lKBCn4pO");
-
-            // Lire le contenu de la réponse en tant que chaîne
-            var content = await response.Content.ReadAsStringAsync();
-
-            // Afficher le contenu dans la console
-            Console.WriteLine("TOMTOM RESPONSE ==================");
-            Console.WriteLine(content);
-
-            // Traiter la réponse JSON si nécessaire
-            var jsonResponse = JsonSerializer.Deserialize<JsonObject>(content);
-            Console.WriteLine("Parsed JSON ==================");
-            Console.WriteLine(jsonResponse);
-
-            // Retourner l'incident (comme précédemment)
             return mapper.Map<IncidentDto>(incident);
         }
 
-        public async Task<IncidentDto> Update(PutIncidentDto putIncidentDto)
+        public async Task<IncidentDto> Update(Guid id, PutIncidentDto putIncidentDto)
         {
-            Incident incident = null;
+            var incident = await incidentRepository.Get(id);
+            if (incident == null)
+            {
+                return null;
+            }
+
             if (putIncidentDto.Reaction == ReactionType.Like)
             {
-                incident = await incidentRepository.AddLike(putIncidentDto.Id);
+                incident = await incidentRepository.AddLike(incident);
             }
             else if (putIncidentDto.Reaction == ReactionType.Dislike)
             {
-                incident = await incidentRepository.AddDislike(putIncidentDto.Id);
+                incident = await incidentRepository.AddDislike(incident);
             }
             return mapper.Map<IncidentDto>(incident);
         }
 
         public async Task<IncidentDto> Delete(Guid id)
         {
-            // get user role
-            // if admin delete
-            // else deny
-            var incident = await incidentRepository.Delete(id);
-            return mapper.Map<IncidentDto>(incident);
+            var incident = await incidentRepository.Get(id);
+            if (incident == null)
+            {
+                return null;
+            }
+            var incidentDeleted = await incidentRepository.Delete(incident);
+            return mapper.Map<IncidentDto>(incidentDeleted);
         }
     }
 }

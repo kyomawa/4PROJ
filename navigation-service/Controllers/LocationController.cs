@@ -11,10 +11,22 @@ namespace navigation_service.Controllers
     public class LocationController(ILocationService locationService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<List<LocationDto>>>> GeoLocation([FromQuery(Name = "text")] string text)
+        public async Task<ActionResult<List<LocationDto>>> GeoLocation([FromQuery(Name = "textLocation")] string textLocation)
         {
-            var response = await locationService.ConvertToGeoPoint(text);
-            return response;
+            try
+            {
+                var response = await locationService.ConvertToGeoPoint(textLocation);
+
+                if (response == null)
+                {
+                    return NotFound("No data found for this location");
+                }
+                return Ok(response);
+            } catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
         }
     }
 }

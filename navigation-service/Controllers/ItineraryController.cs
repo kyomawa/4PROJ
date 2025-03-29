@@ -1,27 +1,37 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using navigation_service.DTO;
-using navigation_service.Exceptions;
-using navigation_service.Models;
+using navigation_service.DTO.ItineraryDTO;
 using navigation_service.Services.ItineraryService;
-using navigation_service.Services.LocationService;
-using System.Text.Json.Nodes;
 
 namespace navigation_service.Controllers
 {
     [ApiController]
     [Route("itinerary")]
-    public class ItineraryController(InterfaceItineraryService itineraryService, ILocationService locationService) : ControllerBase
+    public class ItineraryController(InterfaceItineraryService itineraryService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<ItineraryDto>>> CalculateItinerary([FromQuery] double departure_lon, [FromQuery] double departure_lat, [FromQuery] double arrival_lon, [FromQuery] double arrival_lat, [FromQuery] string travelMethod , [FromQuery] string routeType)
+        public async Task<ActionResult<ItineraryDto>> CalculateItinerary([FromQuery] ItineraryQueryParams queryParams)
         {
+            if (queryParams.DepartureLon == queryParams.ArrivalLon && queryParams.DepartureLat == queryParams.ArrivalLat)
+            {
+                return BadRequest(new { Message = "The departure and arrival points cannot be the same" });
+            }
+
             try
             {
-                var response = await itineraryService.GetItinerary(departure_lon, departure_lat, arrival_lon, arrival_lat, travelMethod, routeType);
-                return new ApiResponse<ItineraryDto> { Data = response };
+                var response = await itineraryService.GetItinerary(
+                    queryParams.DepartureLon, queryParams.DepartureLat,
+                    queryParams.ArrivalLon, queryParams.ArrivalLat,
+                    queryParams.TravelMethod, queryParams.RouteType
+                );
+                if (response == null)
+                {
+                    return BadRequest("Invalid points : There is probably no drivable section near to this point");
+                }
+
+                return Ok(response);
             } catch (Exception ex)
             {
-                return new ApiResponse<ItineraryDto> { Success = false, Message = ex.Message, StatusCode = (ex.GetType() == typeof(LocationNotFoundException)) ? ((LocationNotFoundException)ex).StatusCode : 500, Errors = new List<string> { ex.GetType().ToString() } };
+                return StatusCode(500, ex.Message);
             }
         }
     }
