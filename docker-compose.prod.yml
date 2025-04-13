@@ -1,5 +1,5 @@
 networks:
-  4proj_dev:
+  4proj_prod:
     driver: bridge
 services:
   traefik:
@@ -9,11 +9,11 @@ services:
       - "${HOST_PORT_TRAEFIK}:80"
       - "${HOST_PORT_TRAEFIK_DASHBOARD}:8080"
     command:
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--entrypoints.http.address=:80"
       - "--ping=true"
       - "--ping.entrypoint=http"
+      - "--api.dashboard=true"
       - "--log.level=DEBUG"
       - "--accesslog=true"
       - "--metrics.prometheus=true"
@@ -21,14 +21,20 @@ services:
       - "--metrics.prometheus.addServicesLabels=true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${DASHBOARD_USER}:${DASHBOARD_PASSWORD_HASH}"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/ping"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 25s
+      retries: 5
+      start_period: 10s
     networks:
-      - 4proj_dev
+      - 4proj_prod
 
   logto:
     image: "svhd/logto:${TAG-latest}"
@@ -46,11 +52,13 @@ services:
       - ADMIN_ENDPOINT=${LOGTO_ADMIN_ENDPOINT}
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_dev"
+      - "traefik.docker.network=4proj_prod"
+
       - "traefik.http.services.logto-core-service.loadbalancer.server.port=3001"
       - "traefik.http.routers.logto-core.rule=Host(`logto.localhost`)"
       - "traefik.http.routers.logto-core.entrypoints=http"
       - "traefik.http.routers.logto-core.service=logto-core-service"
+
       - "traefik.http.services.logto-admin-service.loadbalancer.server.port=3002"
       - "traefik.http.routers.logto-admin.rule=Host(`admin.logto.localhost`)"
       - "traefik.http.routers.logto-admin.entrypoints=http"
@@ -66,7 +74,7 @@ services:
       - "logto.localhost:host-gateway"
       - "admin.logto.localhost:host-gateway"
     networks:
-      - 4proj_dev
+      - 4proj_prod
 
   logto-db-postgres:
     image: "postgres:14-alpine"
@@ -89,65 +97,7 @@ services:
       timeout: 20s
       retries: 10
     networks:
-      - 4proj_dev
-
-  navigation-service:
-    build:
-      context: ./navigation-service
-      dockerfile: Dockerfile
-    environment:
-      - TOMTOM_URL=${TOMTOM_URL}
-      - TOMTOM_APIKEY=${TOMTOM_APIKEY}
-      - GEOAPIFY_URL=${GEOAPIFY_URL}
-      - GEOAPIFY_APIKEY=${GEOAPIFY_APIKEY}
-    develop:
-      watch:
-        - action: rebuild
-          path: ./navigation-service
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=4proj_dev"
-      - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
-      - "traefik.http.routers.navigation-service.rule=Host(`navigation.localhost`)"
-      - "traefik.http.routers.navigation-service.entrypoints=http"
-    networks:
-      - 4proj_dev
-
-  incident-service:
-    build:
-      context: ./incident-service
-      dockerfile: Dockerfile
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    develop:
-      watch:
-        - action: rebuild
-          path: ./incident-service
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=4proj_dev"
-      - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
-      - "traefik.http.routers.incident-service.rule=Host(`incident.localhost`)"
-      - "traefik.http.routers.incident-service.entrypoints=http"
-    networks:
-      - 4proj_dev
-
-  db-service:
-    image: "mysql:8.0"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3305:3306"
-    volumes:
-      - 4proj-database:/var/lib/mysql
-    networks:
-      - 4proj_dev
+      - 4proj_prod
 
 volumes:
   logto-postgres-data:
-  4proj-database:

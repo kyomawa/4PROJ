@@ -1,4 +1,13 @@
+# Visual Studio
 .vs/
 bin/
 obj/
 *.csproj.user
+
+# Env files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies
+**/node_modules/
