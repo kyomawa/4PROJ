@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
-import { Redirect } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
 
 import carImage from "../assets/images/car.png";
 import googleIcon from "../assets/icons/google.png";
@@ -21,18 +19,12 @@ type AuthType = "NONE" | "SIGNIN" | "SIGNUP";
 // ========================================================================================================
 
 export default function Index() {
-  const { isSignedIn } = useAuth();
   const [authType, setAuthType] = useState<AuthType>("NONE");
   const isHomeScreen = authType === "NONE";
   const title = authType === "SIGNIN" ? "Bienvenu 👋" : "Créer votre compte";
 
   const { height: SCREEN_HEIGHT } = Dimensions.get("window");
   const imageHeight = useSharedValue(SCREEN_HEIGHT * 0.4);
-
-  // Redirect if the user is signed in
-  if (isSignedIn) {
-    return <Redirect href="/(root)/home/index" />;
-  }
 
   // Animate the image height based on the authentication state
   useEffect(() => {

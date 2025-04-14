@@ -12,6 +12,6 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 8081 19000 19001 19002 19006
+EXPOSE 8081 19000 19001
 
-CMD ["npx", "expo", "start", "--clear"]
+CMD ["npx", "expo", "start", "--tunnel", "--clear"]

@@ -4,8 +4,6 @@ import { Stack } from "expo-router";
 import "../styles/global.css";
 import { useEffect } from "react";
 import { fonts } from "../assets/fonts/font";
-import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
-import { tokenCache } from "../lib/auth";
 
 // Keep the splash screen visible while we fetch resources
 // SplashScreen.preventAutoHideAsync();
@@ -15,8 +13,6 @@ import { tokenCache } from "../lib/auth";
 //   duration: 1000,
 //   fade: true,
 // });
-
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts(fonts);
@@ -29,23 +25,15 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !error) return null;
 
-  if (!publishableKey) {
-    throw new Error("Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env");
-  }
-
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <ClerkLoaded>
-        <Stack
-          screenOptions={{
-            animation: "fade_from_bottom",
-            // navigationBarColor: "#2C2480",
-          }}
-        >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-        </Stack>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <Stack
+      screenOptions={{
+        animation: "fade_from_bottom",
+        // navigationBarColor: "#2C2480",
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+    </Stack>
   );
 }
