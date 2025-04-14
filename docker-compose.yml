@@ -91,6 +91,26 @@ services:
     networks:
       - 4proj_dev
 
+  db-service:
+    image: "mysql:8.0"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3305:3306"
+    volumes:
+      - 4proj-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - 4proj_dev
+
   navigation-service:
     build:
       context: ./navigation-service
@@ -110,6 +130,12 @@ services:
       - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
       - "traefik.http.routers.navigation-service.rule=Host(`navigation.localhost`)"
       - "traefik.http.routers.navigation-service.entrypoints=http"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - 4proj_dev
 
@@ -117,6 +143,9 @@ services:
     build:
       context: ./incident-service
       dockerfile: Dockerfile
+    depends_on:
+      db-service:
+        condition: service_healthy
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
@@ -131,20 +160,12 @@ services:
       - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
       - "traefik.http.routers.incident-service.rule=Host(`incident.localhost`)"
       - "traefik.http.routers.incident-service.entrypoints=http"
-    networks:
-      - 4proj_dev
-
-  db-service:
-    image: "mysql:8.0"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3305:3306"
-    volumes:
-      - 4proj-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - 4proj_dev
 
