@@ -185,14 +185,15 @@ services:
           ignore:
             - node_modules/
     ports:
-      - "19000:19000" # Port principal d'Expo
-      - "19001:19001" # Expo DevTools
       - "8081:8081" # Metro bundler HTTP
+      - "19000:19000" # Expo
+      - "19001:19001" # Expo DevTools
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
       - NODE_ENV=development
       - EXPO_PUBLIC_LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
       - EXPO_PUBLIC_LOGTO_APP_ID=${LOGTO_MOBILE_APP_ID}
+      - WATCHPACK_POLLING=true
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:19000 || exit 0"]
       interval: 30s
