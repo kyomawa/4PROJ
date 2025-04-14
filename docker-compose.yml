@@ -127,7 +127,7 @@ services:
       - navigation-service-nuget:/root/.nuget/packages
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_dev"
+      - "traefik.docker.network=4proj_4proj_dev"
       - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
       - "traefik.http.routers.navigation-service.rule=Host(`navigation.localhost`)"
       - "traefik.http.routers.navigation-service.entrypoints=http"
@@ -158,7 +158,7 @@ services:
       - incident-service-nuget:/root/.nuget/packages
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_dev"
+      - "traefik.docker.network=4proj_4proj_dev"
       - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
       - "traefik.http.routers.incident-service.rule=Host(`incident.localhost`)"
       - "traefik.http.routers.incident-service.entrypoints=http"
