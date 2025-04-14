@@ -4,6 +4,8 @@ import { Stack } from "expo-router";
 import "../styles/global.css";
 import { useEffect } from "react";
 import { fonts } from "../assets/fonts/font";
+import { LogtoProvider } from "@logto/rn";
+import { config } from "../lib/auth";
 
 // Keep the splash screen visible while we fetch resources
 // SplashScreen.preventAutoHideAsync();
@@ -26,14 +28,16 @@ export default function RootLayout() {
   if (!fontsLoaded && !error) return null;
 
   return (
-    <Stack
-      screenOptions={{
-        animation: "fade_from_bottom",
-        // navigationBarColor: "#2C2480",
-      }}
-    >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-    </Stack>
+    <LogtoProvider config={config}>
+      <Stack
+        screenOptions={{
+          animation: "fade_from_bottom",
+          // navigationBarColor: "#2C2480",
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+      </Stack>
+    </LogtoProvider>
   );
 }
