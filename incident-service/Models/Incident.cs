@@ -28,7 +28,11 @@ namespace incident_service.Models
         [Column("Dislike")]
         public int Dislike { get; set; }
 
+        [Column("Status")]
+        public IncidentStatus Status { get; set; } = IncidentStatus.Active;
+
         [Column("CreationDate")]
         public DateTime CreationDate { get; init; }
+        public ICollection<UserIncidentVote> Votes { get; set; }
     }
 }

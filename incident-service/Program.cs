@@ -21,7 +21,6 @@ connectionString = connectionString
     .Replace("${MYSQL_USER}", mysqlUser)
     .Replace("${MYSQL_PASSWORD}", mysqlPassword);
 
-
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
@@ -46,7 +45,6 @@ using (var scope = app.Services.CreateScope())
     {
         context.Database.Migrate();
     }
-
 }
 
 app.UseSwagger();

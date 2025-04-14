@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace incident_service.DTO.Incident
 {
-    public class PutIncidentDto
+    public class ContributeIncidentDto
     {
         [JsonConverter(typeof(JsonStringEnumConverter))]
         [Required(ErrorMessage = "Reaction type is mandatory")]

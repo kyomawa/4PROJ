@@ -1,6 +1,7 @@
 ﻿using incident_service.Contexts;
 using incident_service.DTO.BoundingBox;
 using incident_service.DTO.Incident;
+using incident_service.Enums;
 using incident_service.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,7 @@ namespace incident_service.Repository
         public async Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox)
         {
             var incidents = await context.Incidents
-                .Where(i => i.Latitude >= boundingBox.MinLat && i.Latitude <= boundingBox.MaxLat && i.Longitude >= boundingBox.MinLon && i.Longitude <= boundingBox.MaxLon)
+                .Where(i => i.Latitude >= boundingBox.MinLat && i.Latitude <= boundingBox.MaxLat && i.Longitude >= boundingBox.MinLon && i.Longitude <= boundingBox.MaxLon && i.Status == IncidentStatus.Active)
                 .ToListAsync();
 
             return incidents;
@@ -35,6 +36,14 @@ namespace incident_service.Repository
                             && i.Latitude == postIncidentDto.Latitude
                             && i.Longitude == postIncidentDto.Longitude);
         }
+
+        public async Task<Incident> Disable(Incident incident)
+        {
+            incident.Status = IncidentStatus.Inactive;
+            await context.SaveChangesAsync();
+            return incident;
+        }
+
         public async Task<Incident> Create(PostIncidentDto postIncidentDto)
         {
             var incident = new Incident
@@ -49,6 +58,29 @@ namespace incident_service.Repository
             await context.SaveChangesAsync();
             return createdIncident.Entity;
         }
+
+        public async Task<Incident> Update(Incident incident, UpdateIncidentDto updateIncidentDto)
+        {
+            if (updateIncidentDto.Type.HasValue)
+            {
+                incident.Type = updateIncidentDto.Type.Value;
+            }
+            if (updateIncidentDto.Longitude.HasValue)
+            {
+                incident.Longitude = updateIncidentDto.Longitude.Value;
+            }
+            if (updateIncidentDto.Latitude.HasValue)
+            {
+                incident.Latitude = updateIncidentDto.Latitude.Value;
+            }
+            if (updateIncidentDto.Status.HasValue)
+            {
+                incident.Status = updateIncidentDto.Status.Value;
+            }
+            await context.SaveChangesAsync();
+            return incident;
+        }
+
         public async Task<Incident> AddLike(Incident incident)
         {
             incident.Like++;

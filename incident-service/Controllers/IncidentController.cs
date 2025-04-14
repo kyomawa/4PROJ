@@ -80,18 +80,36 @@ namespace incident_service.Controllers
             }
         }
 
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] PutIncidentDto putIncidentDto)
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] UpdateIncidentDto updateIncidentDto)
         {
             try
             {
-                if (!Enum.IsDefined(typeof(ReactionType), putIncidentDto.Reaction))
+
+                var response = await incidentService.Update(id, updateIncidentDto);
+                if (response == null)
                 {
-                    return BadRequest(new { Message = $"Invalid reaction type : {putIncidentDto.Reaction}" });
+                    return NotFound($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("contribute/{id}")]
+        public async Task<ActionResult<IncidentDto>> Contribute(Guid id, [FromBody] ContributeIncidentDto contributeIncidentDto)
+        {
+            try
+            {
+                if (!Enum.IsDefined(typeof(ReactionType), contributeIncidentDto.Reaction))
+                {
+                    return BadRequest(new { Message = $"Invalid reaction type : {contributeIncidentDto.Reaction}" });
                 }
 
-                var response = await incidentService.Update(id, putIncidentDto);
+                var response = await incidentService.Contribute(id, contributeIncidentDto);
                 if (response == null)
                 {
                     return NotFound($"Incident {id} not found");

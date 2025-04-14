@@ -13,6 +13,8 @@ namespace incident_service.Services
 {
     public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper, HttpClient httpClient) : InterfaceIncidentService
     {
+        private const int MaxDislikesBeforeDelete = 0; 
+
         public async Task<List<IncidentDto>> GetAll()
         {
             var incidents = await incidentRepository.GetAll();
@@ -42,7 +44,7 @@ namespace incident_service.Services
             return mapper.Map<IncidentDto>(incident);
         }
 
-        public async Task<IncidentDto> Update(Guid id, PutIncidentDto putIncidentDto)
+        public async Task<IncidentDto> Update(Guid id, UpdateIncidentDto updateIncidentDto)
         {
             var incident = await incidentRepository.Get(id);
             if (incident == null)
@@ -50,13 +52,29 @@ namespace incident_service.Services
                 return null;
             }
 
-            if (putIncidentDto.Reaction == ReactionType.Like)
+            incident = await incidentRepository.Update(incident, updateIncidentDto);
+            return mapper.Map<IncidentDto>(incident);
+        }
+
+        public async Task<IncidentDto> Contribute(Guid id, ContributeIncidentDto contributeIncidentDto)
+        {
+            var incident = await incidentRepository.Get(id);
+            if (incident == null)
+            {
+                return null;
+            }
+
+            if (contributeIncidentDto.Reaction == ReactionType.Like)
             {
                 incident = await incidentRepository.AddLike(incident);
             }
-            else if (putIncidentDto.Reaction == ReactionType.Dislike)
+            else if (contributeIncidentDto.Reaction == ReactionType.Dislike)
             {
                 incident = await incidentRepository.AddDislike(incident);
+                if (incident.Dislike > incident.Like + MaxDislikesBeforeDelete && incident.Status == IncidentStatus.Active)
+                {
+                    await incidentRepository.Disable(incident);
+                }
             }
             return mapper.Map<IncidentDto>(incident);
         }

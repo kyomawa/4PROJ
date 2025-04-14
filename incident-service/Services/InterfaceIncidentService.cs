@@ -11,7 +11,8 @@ namespace incident_service.Services
         public Task<List<IncidentDto>> GetByBoundingBox(BoundingBoxDto boundingBox);
         public Task<IncidentDto> Get(Guid id);
         public Task<IncidentDto> Create(PostIncidentDto postIncidentDto);
-        public Task<IncidentDto> Update(Guid id, [FromBody] PutIncidentDto putIncidentDto);
+        public Task<IncidentDto> Update(Guid id, UpdateIncidentDto updateIncidentDto);
+        public Task<IncidentDto> Contribute(Guid id, [FromBody] ContributeIncidentDto putIncidentDto);
         public Task<IncidentDto> Delete(Guid id);
 
     }

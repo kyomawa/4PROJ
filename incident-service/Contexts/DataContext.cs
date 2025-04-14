@@ -11,6 +11,8 @@ namespace incident_service.Contexts
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
         public DataContext() { }
         public DbSet<Incident> Incidents => Set<Incident>();
+        public DbSet<UserIncidentVote> UserIncidentVotes => Set<UserIncidentVote>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var converter = new ValueConverter<IncidentType, string>(
@@ -24,6 +26,12 @@ namespace incident_service.Contexts
                 .Entity<Incident>()
                 .Property(i => i.Type)
                 .HasConversion(converter);
+
+            modelBuilder.Entity<UserIncidentVote>()
+                .HasOne(v => v.Incident)
+                .WithMany(i => i.Votes)
+                .HasForeignKey(v => v.IncidentId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
