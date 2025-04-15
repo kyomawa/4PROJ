@@ -11,8 +11,6 @@ import ProviderButton from "../components/ProviderButton";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
 import Button from "../components/Button";
-import { useLogto } from "@logto/rn";
-import { config } from "../lib/auth";
 
 // ========================================================================================================
 
@@ -21,7 +19,6 @@ type AuthType = "NONE" | "SIGNIN" | "SIGNUP";
 // ========================================================================================================
 
 export default function Index() {
-  const { signIn, signOut, isAuthenticated } = useLogto();
   const [authType, setAuthType] = useState<AuthType>("NONE");
   const isHomeScreen = authType === "NONE";
   const title = authType === "SIGNIN" ? "Bienvenu 👋" : "Créer votre compte";
@@ -54,27 +51,6 @@ export default function Index() {
       {/* Section Content */}
       <View className="px-5 pb-8 gap-y-6">
         {isHomeScreen && <WelcomeMessage />}
-        <View>
-          {isAuthenticated ? (
-            <Button handlePress={async () => signOut()}>Sign out</Button>
-          ) : (
-            <Button
-              handlePress={async () => {
-                console.log("Tentative de connexion...");
-                try {
-                  // Ajoutez ce code avant l'appel à signIn
-                  console.log("Logto Config:", config);
-                  await signIn("laynz://callback");
-                  console.log("Redirection vers Logto réussie");
-                } catch (error) {
-                  console.error("Erreur lors de la connexion:", error);
-                }
-              }}
-            >
-              S'inscrire
-            </Button>
-          )}
-        </View>
         {/* Authentication Forms */}
         {authType === "SIGNIN" && <SignIn />}
         {authType === "SIGNUP" && <SignUp />}
