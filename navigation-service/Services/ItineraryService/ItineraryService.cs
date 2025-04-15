@@ -15,7 +15,7 @@ namespace navigation_service.Services.ItineraryService
         private string _tomtomApiKey = configuration["TOMTOM_APIKEY"];
         private static readonly Dictionary<string, double> IncidentSizes = new()
         {
-            { "Crash", 0.003 },
+            { "Crash", 0.003 }, // en mètre
             { "Bottling", 0.002 },
             { "ClosedRoad", 0.005 },
             { "PoliceControl", 0.001 },
@@ -35,6 +35,7 @@ namespace navigation_service.Services.ItineraryService
 
             if (incidents.Count == 0)
             {
+                // creer l'itineraire en db
                 return await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
             }
 
@@ -73,6 +74,7 @@ namespace navigation_service.Services.ItineraryService
                     var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
 
                     JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
+                    // creer l'itineraire en db
 
                     return mapper.Map<ItineraryDto>(itineraryObject);
                 }
