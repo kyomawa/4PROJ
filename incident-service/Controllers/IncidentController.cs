@@ -3,6 +3,7 @@ using incident_service.Services;
 using Microsoft.AspNetCore.Mvc;
 using incident_service.DTO.BoundingBox;
 using incident_service.Enums;
+using Microsoft.AspNetCore.Authorization;
 
 namespace incident_service.Controllers
 {
@@ -80,25 +81,6 @@ namespace incident_service.Controllers
             }
         }
 
-        [HttpPatch("{id}")]
-        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] UpdateIncidentDto updateIncidentDto)
-        {
-            try
-            {
-
-                var response = await incidentService.Update(id, updateIncidentDto);
-                if (response == null)
-                {
-                    return NotFound($"Incident {id} not found");
-                }
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
         [HttpPut("contribute/{id}")]
         public async Task<ActionResult<IncidentDto>> Contribute(Guid id, [FromBody] ContributeIncidentDto contributeIncidentDto)
         {
@@ -122,6 +104,27 @@ namespace incident_service.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] UpdateIncidentDto updateIncidentDto)
+        {
+            try
+            {
+
+                var response = await incidentService.Update(id, updateIncidentDto);
+                if (response == null)
+                {
+                    return NotFound($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<IncidentDto>> Delete(Guid id)
         {

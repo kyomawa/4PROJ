@@ -2,6 +2,10 @@ using incident_service.Contexts;
 using incident_service.Repository;
 using incident_service.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,14 @@ connectionString = connectionString
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "http://logto.localhost/oidc";
+        options.Audience = "incident-service";              
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+    });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -46,6 +58,9 @@ using (var scope = app.Services.CreateScope())
         context.Database.Migrate();
     }
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseSwagger();
 app.UseSwaggerUI();

@@ -44,6 +44,8 @@ services:
       - "DB_URL=postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@logto-db-postgres:5432/${POSTGRES_DB:-logto}"
       - ENDPOINT=${LOGTO_ENDPOINT}
       - ADMIN_ENDPOINT=${LOGTO_ADMIN_ENDPOINT}
+      - AUTHORITY_URL=http://admin.logto.localhost/
+      - AUDIENCE=http://incident.localhost/
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_dev"
