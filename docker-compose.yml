@@ -49,6 +49,26 @@ services:
       start_period: 30s
     networks:
       - 4proj_dev
+  
+  user-db:
+    image: "mysql:8.0"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${USER_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${USER_DB}
+      MYSQL_USER: ${USER_DB_USER}
+      MYSQL_PASSWORD: ${USER_DB_PSW}
+    ports:
+      - "3304:3306"
+    volumes:
+      - 4proj-user-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${USER_DB_USER}", "-p${USER_DB_PSW}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - 4proj_dev
 
   navigation-service:
     build:
@@ -110,6 +130,62 @@ services:
     networks:
       - 4proj_dev
 
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile.dev
+    depends_on:
+      user-db:
+        condition: service_healthy
+    environment:
+      USER_DB: ${USER_DB}
+      USER_DB_USER: ${USER_DB_USER}
+      USER_DB_PSW: ${USER_DB_PSW}
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
+    volumes:
+      - ./user-service:/app
+      - user-service-nuget:/root/.nuget/packages
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.http.services.user-service.loadbalancer.server.port=8080"
+      - "traefik.http.routers.user-service.rule=Host(`user.localhost`)"
+      - "traefik.http.routers.user-service.entrypoints=http"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - 4proj_dev
+  
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile.dev
+    depends_on:
+      user-service:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
+      - "traefik.http.routers.auth-service.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.auth-service.entrypoints=http"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - 4proj_dev
+
   mobile-app-service:
     build:
       context: ./mobile-app-service
@@ -142,5 +218,7 @@ services:
 
 volumes:
   4proj-database:
+  4proj-user-database:
   navigation-service-nuget:
   incident-service-nuget:
+  user-service-nuget:
