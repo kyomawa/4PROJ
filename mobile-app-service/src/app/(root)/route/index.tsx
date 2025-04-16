@@ -129,7 +129,7 @@ export default function RouteScreen() {
 
       <View className="flex-1 relative">
         {/* Map View */}
-        <MapView ref={mapRef} className="w-full h-full" showsUserLocation followsUserLocation>
+        <MapView ref={mapRef} style={{ width: "100%", height: "100%" }} showsUserLocation followsUserLocation>
           {/* Destination Marker */}
           {destinationCoords.latitude && destinationCoords.longitude && (
             <Marker coordinate={destinationCoords}>

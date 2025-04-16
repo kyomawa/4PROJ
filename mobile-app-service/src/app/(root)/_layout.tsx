@@ -5,6 +5,7 @@ import Icon from "../../components/Icon";
 export default function RootLayout() {
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {

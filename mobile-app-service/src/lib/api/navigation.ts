@@ -56,7 +56,7 @@ export const getItinerary = async (
   routeType: "fastest" | "shortest" | "eco" | "thrilling" = "fastest"
 ): Promise<Itinerary | null> => {
   try {
-    const response = await axiosClient.get(`${endpoint}/navigation/itinerary`, {
+    const response = await axiosClient.get(`${endpoint}/itinerary`, {
       params: {
         departureLat,
         departureLon,
@@ -81,7 +81,7 @@ export const getItinerary = async (
  */
 export const geocodeLocation = async (textLocation: string): Promise<Location[] | null> => {
   try {
-    const response = await axiosClient.get(`${endpoint}/navigation/location`, {
+    const response = await axiosClient.get(`${endpoint}/location`, {
       params: {
         textLocation,
       },

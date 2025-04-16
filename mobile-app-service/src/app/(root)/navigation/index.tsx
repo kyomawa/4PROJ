@@ -270,7 +270,7 @@ export default function NavigationScreen() {
         {/* Map View */}
         <MapView
           ref={mapRef}
-          className="w-full h-full"
+          style={{ width: "100%", height: "100%" }}
           showsUserLocation
           followsUserLocation
           initialRegion={

@@ -12,8 +12,6 @@ export default function ProfileScreen() {
   const { user, loading, logout } = useAuthContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  console.log(user);
-
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
