@@ -17,8 +17,8 @@ type IncidentOption = {
 
 const INCIDENT_OPTIONS: IncidentOption[] = [
   { type: "Crash", icon: "TriangleAlert", label: "Accident" },
-  { type: "Bottling", icon: "Car", label: "Traffic Jam" },
-  { type: "ClosedRoad", icon: "Ban", label: "Closed Road" },
+  { type: "Bottling", icon: "Car", label: "Embouteillage" },
+  { type: "ClosedRoad", icon: "Ban", label: "Route fermée" },
   { type: "PoliceControl", icon: "BadgeAlert", label: "Police" },
   { type: "Obstacle", icon: "CircleAlert", label: "Obstacle" },
 ];
@@ -32,7 +32,10 @@ export default function ReportIncidentScreen() {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permission denied", "Location permission is required to report incidents");
+        Alert.alert(
+          "Permission refusée",
+          "L'autorisation d'accès à la localisation est requise pour signaler un incident"
+        );
         return;
       }
 
@@ -43,7 +46,10 @@ export default function ReportIncidentScreen() {
 
   const handleSubmit = async () => {
     if (!selectedIncident || !location) {
-      Alert.alert("Error", "Please select an incident type and ensure location is available");
+      Alert.alert(
+        "Erreur",
+        "Veuillez sélectionner un type d'incident et vous assurer que la localisation est disponible"
+      );
       return;
     }
 
@@ -56,13 +62,13 @@ export default function ReportIncidentScreen() {
       });
 
       if (result) {
-        Alert.alert("Thank you!", "Incident reported successfully");
+        Alert.alert("Merci !", "Incident signalé avec succès");
         router.back();
       } else {
-        Alert.alert("Error", "Failed to report incident. Please try again.");
+        Alert.alert("Erreur", "Échec du signalement de l'incident. Veuillez réessayer.");
       }
     } catch (error) {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      Alert.alert("Erreur", "Une erreur s'est produite. Veuillez réessayer.");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -75,11 +81,11 @@ export default function ReportIncidentScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="ArrowLeft" className="size-6" />
         </TouchableOpacity>
-        <Text className="text-xl font-satoshi-Bold">Report Incident</Text>
+        <Text className="text-xl font-satoshi-Bold">Signaler un incident</Text>
       </View>
 
       <ScrollView className="flex-1 p-4">
-        <Text className="text-lg mb-4">What's happening on the road?</Text>
+        <Text className="text-lg mb-4">Que se passe-t-il sur la route ?</Text>
 
         <View className="flex-row flex-wrap justify-between mb-8">
           {INCIDENT_OPTIONS.map((option) => (
@@ -108,12 +114,12 @@ export default function ReportIncidentScreen() {
         </View>
 
         <Text className="text-neutral-500 mb-8">
-          Your current location will be used to place this incident on the map. Make sure you're at the exact location
-          of the incident.
+          Votre position actuelle sera utilisée pour placer cet incident sur la carte. Assurez-vous d’être à l'endroit
+          exact de l’incident.
         </Text>
 
         <Button handlePress={handleSubmit} isLoading={isSubmitting}>
-          Report Incident
+          Signaler l'incident
         </Button>
       </ScrollView>
     </SafeAreaView>

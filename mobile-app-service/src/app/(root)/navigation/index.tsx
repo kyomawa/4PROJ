@@ -44,7 +44,10 @@ export default function NavigationScreen() {
         // Request location permissions
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          Alert.alert("Location permission required", "Please enable location services to use navigation");
+          Alert.alert(
+            "Permission requise",
+            "Veuillez activer les services de localisation pour utiliser la navigation"
+          );
           router.back();
           return;
         }
@@ -75,7 +78,7 @@ export default function NavigationScreen() {
         }
       } catch (error) {
         console.error("Error initializing navigation:", error);
-        Alert.alert("Error", "Could not start navigation. Please try again.");
+        Alert.alert("Erreur", "Impossible de démarrer la navigation. Veuillez réessayer.");
         router.back();
       } finally {
         setIsLoading(false);
@@ -96,6 +99,7 @@ export default function NavigationScreen() {
   // Fetch the route
   const fetchRoute = async (currentLoc: Location.LocationObject) => {
     try {
+      setIsLoading(true);
       const route = await getItinerary(
         currentLoc.coords.latitude,
         currentLoc.coords.longitude,
@@ -113,13 +117,15 @@ export default function NavigationScreen() {
           speakInstruction(route.steps[0].instruction);
         }
       } else {
-        Alert.alert("Error", "Could not calculate route. Please try again.");
+        Alert.alert("Erreur", "Impossible de calculer l'itinéraire. Veuillez réessayer.");
         router.back();
       }
     } catch (error) {
       console.error("Error fetching route:", error);
-      Alert.alert("Error", "Could not calculate route. Please try again.");
+      Alert.alert("Erreur", "Impossible de calculer l'itinéraire. Veuillez réessayer.");
       router.back();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -140,7 +146,7 @@ export default function NavigationScreen() {
 
         if (distanceToDestination < 0.05) {
           // 50 meters
-          Alert.alert("Destination reached", "You have arrived at your destination");
+          Alert.alert("Destination atteinte", "Vous êtes arrivé à destination");
           router.replace("/home");
         }
         return;
@@ -181,7 +187,7 @@ export default function NavigationScreen() {
         await fetchRoute(location);
 
         // Announce rerouting
-        speakInstruction("Rerouting");
+        speakInstruction("Recalcul de l'itinéraire");
       }
     };
 
@@ -191,7 +197,7 @@ export default function NavigationScreen() {
   // Function to speak instructions
   const speakInstruction = (instruction: string) => {
     Speech.speak(instruction, {
-      language: "en-US",
+      language: "fr-FR",
       rate: 0.8,
       pitch: 1.0,
     });
@@ -253,7 +259,7 @@ export default function NavigationScreen() {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
         <ActivityIndicator size="large" color="#695BF9" />
-        <Text className="mt-4 text-neutral-500">Starting navigation...</Text>
+        <Text className="mt-4 text-neutral-500">Démarrage de la navigation...</Text>
       </SafeAreaView>
     );
   }
@@ -329,19 +335,19 @@ export default function NavigationScreen() {
         <View className="absolute bottom-24 left-4 right-4 bg-white rounded-xl p-4 shadow-lg">
           {currentStep && (
             <>
-              <Text className="text-sm text-neutral-500 mb-1">Next Direction</Text>
+              <Text className="text-sm text-neutral-500 mb-1">Prochaine direction</Text>
               <Text className="text-xl font-satoshi-Medium mb-2">{currentStep.instruction}</Text>
 
               <View className="flex-row justify-between items-center">
                 <View className="flex-row items-center">
                   <Icon name="Navigation" className="text-primary-500 size-5 mr-2" />
                   <Text className="text-base text-primary-500">
-                    {currentStep.distance > 0 ? formatDistance(currentStep.distance) : "Continue straight"}
+                    {currentStep.distance > 0 ? formatDistance(currentStep.distance) : "Continuez tout droit"}
                   </Text>
                 </View>
 
                 {itinerary && (
-                  <Text className="text-base text-neutral-500">{formatDuration(itinerary.duration)} remaining</Text>
+                  <Text className="text-base text-neutral-500">{formatDuration(itinerary.duration)} restants</Text>
                 )}
               </View>
             </>
