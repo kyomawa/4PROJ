@@ -1,9 +1,12 @@
 import axiosClient from "./axiosClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// ========================================================================================================
+
 const endpoint = "/api/auth";
 
-// Types
+// ========================================================================================================
+
 export type LoginData = {
   email: string;
   password: string;
@@ -32,6 +35,8 @@ export type AuthResponse = {
   data: User;
 };
 
+// ========================================================================================================
+
 /**
  * Login user with email and password
  */
@@ -53,15 +58,11 @@ export const login = async (loginData: LoginData): Promise<AuthResponse | null> 
   } catch (error) {
     console.error("Error during login:", error);
 
-    // For development, return mock data
-    if (__DEV__) {
-      const mockResponse = await mockLogin(loginData);
-      return mockResponse;
-    }
-
     return null;
   }
 };
+
+// ========================================================================================================
 
 /**
  * Register a new user
@@ -80,15 +81,11 @@ export const register = async (signUpData: SignUpData): Promise<User | null> => 
   } catch (error) {
     console.error("Error during registration:", error);
 
-    // For development, return mock data
-    if (__DEV__) {
-      const mockUser = await mockRegister(signUpData);
-      return mockUser;
-    }
-
     return null;
   }
 };
+
+// ========================================================================================================
 
 /**
  * Logout user
@@ -106,6 +103,8 @@ export const logout = async (): Promise<void> => {
   }
 };
 
+// ========================================================================================================
+
 /**
  * Get current authenticated user
  */
@@ -122,6 +121,8 @@ export const getCurrentUser = async (): Promise<User | null> => {
   }
 };
 
+// ========================================================================================================
+
 /**
  * Check if user is authenticated
  */
@@ -135,7 +136,11 @@ export const isAuthenticated = async (): Promise<boolean> => {
   }
 };
 
-// Initialize authentication state on app start
+// ========================================================================================================
+
+/**
+ * Initialize authentication state on app start
+ */
 export const initializeAuth = async (): Promise<void> => {
   try {
     const token = await AsyncStorage.getItem("userToken");
@@ -147,43 +152,4 @@ export const initializeAuth = async (): Promise<void> => {
   }
 };
 
-// Mock functions for development
-const mockLogin = async (loginData: LoginData): Promise<AuthResponse> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  const mockUser: User = {
-    id: "mock-user-id-123",
-    username: "TestUser",
-    email: loginData.email,
-    phoneNumber: "0612345678",
-    role: "User",
-  };
-
-  const mockToken = "mock-jwt-token-" + Date.now();
-
-  // Store the mock data
-  await AsyncStorage.setItem("userToken", mockToken);
-  await AsyncStorage.setItem("userData", JSON.stringify(mockUser));
-
-  // Add token to axios headers
-  axiosClient.defaults.headers.common["Authorization"] = `Bearer ${mockToken}`;
-
-  return {
-    token: mockToken,
-    data: mockUser,
-  };
-};
-
-const mockRegister = async (signUpData: SignUpData): Promise<User> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  return {
-    id: "mock-user-id-" + Date.now(),
-    username: signUpData.username,
-    email: signUpData.email,
-    phoneNumber: signUpData.phoneNumber,
-    role: "User",
-  };
-};
+// ========================================================================================================

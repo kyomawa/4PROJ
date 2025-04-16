@@ -14,10 +14,12 @@ import { useAuthContext } from "../../../contexts/AuthContext";
 
 const editProfileSchema = z.object({
   username: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
+  email: z.string().email({ message: "Veuillez entrer une adresse email valide" }),
   phoneNumber: z
     .string()
     .min(8, { message: "Veuillez entrer un numéro de téléphone valide" })
     .regex(/^\d+$/, { message: "Le numéro de téléphone doit contenir uniquement des chiffres" }),
+  currentPassword: z.string().min(1, { message: "Veuillez entrer votre mot de passe actuel" }),
 });
 
 type EditProfileFormData = z.infer<typeof editProfileSchema>;
@@ -28,11 +30,13 @@ export default function EditProfileScreen() {
   const { user, updateProfile } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { control, handleSubmit } = useForm<EditProfileFormData>({
+  const { control, handleSubmit, setValue } = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
       username: user?.username || "",
+      email: user?.email || "",
       phoneNumber: user?.phoneNumber || "",
+      currentPassword: "",
     },
   });
 
@@ -47,13 +51,14 @@ export default function EditProfileScreen() {
 
       const success = await updateProfile({
         username: data.username,
+        email: data.email,
         phoneNumber: data.phoneNumber,
+        currentPassword: data.currentPassword,
       });
 
       if (success) {
-        Alert.alert("Profil mis à jour", "Vos informations ont été mises à jour avec succès.", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
+        setValue("currentPassword", "");
+        Alert.alert("Profil mis à jour", "Vos informations ont été mises à jour avec succès.", [{ text: "OK" }]);
       } else {
         Alert.alert("Échec de la mise à jour", "Impossible de mettre à jour votre profil. Veuillez réessayer.");
       }
@@ -90,7 +95,14 @@ export default function EditProfileScreen() {
         {/* Form */}
         <View className="p-6 gap-6">
           <FormField control={control} name="username" placeholder="Votre nom" label="Nom" icon="User" />
-
+          <FormField
+            control={control}
+            name="email"
+            placeholder="votre@email.com"
+            label="Email"
+            icon="Mail"
+            keyboardType="email-address"
+          />
           <FormField
             control={control}
             name="phoneNumber"
@@ -99,7 +111,14 @@ export default function EditProfileScreen() {
             icon="Phone"
             keyboardType="phone-pad"
           />
-
+          <FormField
+            control={control}
+            name="currentPassword"
+            placeholder="Entrez votre mot de passe actuel"
+            label="Mot de passe actuel"
+            icon="Lock"
+            passwordField
+          />
           <Button handlePress={handleSubmit(handleUpdateProfile)} isLoading={isLoading}>
             Enregistrer les modifications
           </Button>

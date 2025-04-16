@@ -68,7 +68,7 @@ namespace user_service.Services.UserService
 
             if (updatedUser == null)
             {
-                throw new Exception($"Error when updating {user.Email}");
+                 return null;
             }
 
             return mapper.Map<UserDto>(updatedUser);
