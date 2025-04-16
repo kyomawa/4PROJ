@@ -1,6 +1,7 @@
-import axios from "axios/dist/axios.js";
+import axiosClient from "./axiosClient";
 import { Incident } from "./incidents";
-import { API_URL } from "../config";
+
+const endpoint = "/api/navigation";
 
 // Types
 export type Coordinate = {
@@ -40,6 +41,9 @@ export type Location = {
   boundingBox?: number[];
 };
 
+// ID counter pour les mocks
+let mockIdCounter = 1;
+
 /**
  * Get itinerary between two points
  */
@@ -52,53 +56,25 @@ export const getItinerary = async (
   routeType: "fastest" | "shortest" | "eco" | "thrilling" = "fastest"
 ): Promise<Itinerary | null> => {
   try {
-    // const response = await axios.get(`${API_URL}/itinerary`, {
-    //   params: {
-    //     departureLat,
-    //     departureLon,
-    //     arrivalLat,
-    //     arrivalLon,
-    //     travelMethod,
-    //     routeType,
-    //   },
-    // });
-    // return response.data;
-    return {
-      travelMode: "string",
-      distance: 0,
-      duration: 0,
-      steps: [
-        {
-          distance: 0,
-          duration: 0,
-          instruction: "string",
-          type: "string",
-          wayPoints: {
-            latitude: 0,
-            longitude: 0,
-          },
-        },
-      ],
-      coordinates: [
-        {
-          latitude: 0,
-          longitude: 0,
-        },
-      ],
-      incidents: [
-        {
-          id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          type: "string",
-          longitude: 0,
-          latitude: 0,
-          like: 0,
-          dislike: 0,
-          creationDate: "2025-04-16T07:38:53.530Z",
-        },
-      ],
-    };
+    const response = await axiosClient.get(`${endpoint}/navigation/itinerary`, {
+      params: {
+        departureLat,
+        departureLon,
+        arrivalLat,
+        arrivalLon,
+        travelMethod,
+        routeType,
+      },
+    });
+    return response.data;
   } catch (error) {
     console.error("Error fetching itinerary:", error);
+
+    // Return mock data for development
+    if (__DEV__) {
+      return getMockItinerary(departureLat, departureLon, arrivalLat, arrivalLon);
+    }
+
     return null;
   }
 };
@@ -108,30 +84,127 @@ export const getItinerary = async (
  */
 export const geocodeLocation = async (textLocation: string): Promise<Location[] | null> => {
   try {
-    // const response = await axios.get(`${API_URL}/location`, {
-    //   params: {
-    //     textLocation,
-    //   },
-    // });
-    // return response.data;
-    return [
-      {
-        placeId: "51c198e3cbfa53134059fafa100a00e14640f00101f90185d8010000000000c00208",
-        latitude: 45.7578137,
-        longitude: 4.8320114,
-        formatted: "Lyon, ARA, France",
-        wayNumber: undefined,
-        street: undefined,
-        postalCode: undefined,
-        city: "Lyon",
-        borough: undefined,
-        area: "Auvergne-Rhône-Alpes",
-        country: "France",
-        boundingBox: [4.7718132, 45.7073666, 4.8983774, 45.8082628],
+    const response = await axiosClient.get(`${endpoint}/navigation/location`, {
+      params: {
+        textLocation,
       },
-    ];
+    });
+    return response.data;
   } catch (error) {
     console.error("Error geocoding location:", error);
+
+    // Return mock data for development
+    if (__DEV__) {
+      return getMockLocations(textLocation);
+    }
+
     return null;
   }
+};
+
+const generateMockId = () => {
+  return `mock-id-${mockIdCounter++}`;
+};
+
+// Mock data functions for development
+const getMockItinerary = (
+  departureLat: number,
+  departureLon: number,
+  arrivalLat: number,
+  arrivalLon: number
+): Itinerary => {
+  const coordinates: Coordinate[] = [];
+  const steps = 10;
+
+  for (let i = 0; i <= steps; i++) {
+    const ratio = i / steps;
+    coordinates.push({
+      latitude: departureLat + (arrivalLat - departureLat) * ratio,
+      longitude: departureLon + (arrivalLon - departureLon) * ratio,
+    });
+  }
+
+  return {
+    travelMode: "car",
+    distance: 5000, // 5km mock distance
+    duration: 600, // 10 minutes mock duration
+    steps: [
+      {
+        distance: 500,
+        duration: 60,
+        instruction: "Continuer tout droit",
+        type: "CONTINUE",
+        wayPoints: coordinates[1],
+      },
+      {
+        distance: 2000,
+        duration: 240,
+        instruction: "Tourner à droite sur Avenue principale",
+        type: "TURN_RIGHT",
+        wayPoints: coordinates[4],
+      },
+      {
+        distance: 2500,
+        duration: 300,
+        instruction: "Tourner à gauche pour arriver à destination",
+        type: "TURN_LEFT",
+        wayPoints: coordinates[8],
+      },
+    ],
+    coordinates,
+    incidents: [
+      {
+        id: generateMockId(),
+        type: "Accident",
+        longitude: departureLon + (arrivalLon - departureLon) * 0.3,
+        latitude: departureLat + (arrivalLat - departureLat) * 0.3,
+        like: 5,
+        dislike: 1,
+        creationDate: new Date().toISOString(),
+      },
+    ],
+  };
+};
+
+const getMockLocations = (textLocation: string): Location[] => {
+  if (textLocation.toLowerCase().includes("paris")) {
+    return [
+      {
+        placeId: "mock-place-id-paris",
+        latitude: 48.8566,
+        longitude: 2.3522,
+        formatted: "Paris, France",
+        city: "Paris",
+        country: "France",
+        boundingBox: [2.2522, 48.7566, 2.4522, 48.9566],
+      },
+    ];
+  }
+
+  if (textLocation.toLowerCase().includes("lyon")) {
+    return [
+      {
+        placeId: "mock-place-id-lyon",
+        latitude: 45.7578,
+        longitude: 4.832,
+        formatted: "Lyon, France",
+        city: "Lyon",
+        country: "France",
+        boundingBox: [4.7718, 45.7073, 4.8983, 45.8082],
+      },
+    ];
+  }
+
+  // Mock par défaut
+  const mockLocation: Location = {
+    placeId: generateMockId(),
+    latitude: 48.8566,
+    longitude: 2.3522,
+    formatted: textLocation || "Paris, France",
+    city: "Paris",
+    country: "France",
+    boundingBox: [2.2522, 48.7566, 2.4522, 48.9566],
+  };
+
+  return [mockLocation];
 };

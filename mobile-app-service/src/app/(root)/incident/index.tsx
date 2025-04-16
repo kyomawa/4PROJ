@@ -74,11 +74,11 @@ export default function IncidentsScreen() {
       case "Crash":
         return "Accident";
       case "Bottling":
-        return "Traffic Jam";
+        return "Embouteillage";
       case "ClosedRoad":
-        return "Closed Road";
+        return "Route fermée";
       case "PoliceControl":
-        return "Police Control";
+        return "Contrôle policier";
       case "Obstacle":
         return "Obstacle";
       default:
@@ -126,23 +126,6 @@ export default function IncidentsScreen() {
             </Text>
           </View>
         </View>
-
-        <View className="flex-row justify-between">
-          <TouchableOpacity onPress={() => handleReaction(item.id, "Like")} className="flex-row items-center">
-            <Icon name="ThumbsUp" className="size-5 text-neutral-500 mr-1" />
-            <Text>{item.like}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => handleReaction(item.id, "Dislike")} className="flex-row items-center">
-            <Icon name="ThumbsDown" className="size-5 text-neutral-500 mr-1" />
-            <Text>{item.dislike}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity className="flex-row items-center">
-            <Icon name="Navigation" className="size-5 text-primary-500 mr-1" />
-            <Text className="text-primary-500">Navigate</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   };
@@ -156,7 +139,7 @@ export default function IncidentsScreen() {
       {loading && !refreshing ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#695BF9" />
-          <Text className="mt-4 text-neutral-500">Loading incidents...</Text>
+          <Text className="mt-4 text-neutral-500">Chargement des incidents...</Text>
         </View>
       ) : (
         <FlatList
@@ -167,7 +150,7 @@ export default function IncidentsScreen() {
           ListEmptyComponent={
             <View className="flex-1 justify-center items-center p-8">
               <Icon name="Info" className="size-12 text-neutral-300 mb-4" />
-              <Text className="text-lg text-neutral-500 text-center">No incidents reported in your area.</Text>
+              <Text className="text-lg text-neutral-500 text-center"> Aucun incident signalé dans votre région.</Text>
             </View>
           }
         />

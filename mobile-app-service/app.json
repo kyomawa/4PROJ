@@ -7,13 +7,14 @@
     "icon": "./src/assets/images/icon.png",
     "scheme": "laynz",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "backgroundColor": "#FFFFFF",
+    "primaryColor": "#695BF9",
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": ["location", "fetch"],
-        "NSLocationWhenInUseUsageDescription": "This app needs access to your location for navigation.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to your location for navigation."
+        "NSLocationWhenInUseUsageDescription": "Cette application a besoin d'accéder à votre position pour la navigation.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Cette application a besoin d'accéder à votre position pour la navigation."
       }
     },
     "android": {
@@ -24,8 +25,14 @@
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.FOREGROUND_SERVICE"
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.INTERNET"
       ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_API_KEY_HERE"
+        }
+      },
       "package": "com.laynz.app"
     },
     "web": {
@@ -47,7 +54,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Laynz to use your location for navigation and incident reporting."
+          "locationAlwaysAndWhenInUsePermission": "Autoriser Laynz à utiliser votre position pour la navigation et le signalement d'incidents."
         }
       ]
     ],

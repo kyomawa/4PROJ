@@ -1,5 +1,6 @@
-import axios from "axios/dist/axios.js";
-import { API_URL } from "../config";
+import axiosClient from "./axiosClient";
+
+const endpoint = "/api/incident";
 
 // Types
 export type Incident = {
@@ -28,28 +29,23 @@ export const fetchIncidentsByBoundingBox = async (
   maxLon: number
 ): Promise<Incident[]> => {
   try {
-    // const response = await axios.get(`${API_URL}/incident/bounding-box`, {
-    //   params: {
-    //     minLat,
-    //     maxLat,
-    //     minLon,
-    //     maxLon,
-    //   },
-    // });
-    // return response.data;
-    return [
-      {
-        id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        type: "ClosedRoad",
-        longitude: 0,
-        latitude: 0,
-        like: 0,
-        dislike: 0,
-        creationDate: "2025-04-16T07:30:41.811Z",
+    const response = await axiosClient.get(`${endpoint}/incident/bounding-box`, {
+      params: {
+        minLat,
+        maxLat,
+        minLon,
+        maxLon,
       },
-    ];
+    });
+    return response.data;
   } catch (error) {
     console.error("Error fetching incidents by bounding box:", error);
+
+    // Return mock data for development
+    if (__DEV__) {
+      return getMockIncidents();
+    }
+
     return [];
   }
 };
@@ -62,7 +58,8 @@ export const fetchNearbyIncidents = async (
   longitude: number,
   radiusKm: number = 5
 ): Promise<Incident[]> => {
-  const latDelta = radiusKm / 111;
+  // Calculate bounding box based on radius (approximate)
+  const latDelta = radiusKm / 111; // 1 degree latitude is approximately 111 km
   const lonDelta = radiusKm / (111 * Math.cos(latitude * (Math.PI / 180)));
 
   return fetchIncidentsByBoundingBox(
@@ -78,19 +75,16 @@ export const fetchNearbyIncidents = async (
  */
 export const reportIncident = async (incidentData: IncidentPostData): Promise<Incident | null> => {
   try {
-    // const response = await axios.post(`${API_URL}/incident`, incidentData);
-    // return response.data;
-    return {
-      id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      type: "string",
-      longitude: 0,
-      latitude: 0,
-      like: 0,
-      dislike: 0,
-      creationDate: "2025-04-16T07:55:31.268Z",
-    };
+    const response = await axiosClient.post(`${endpoint}/incident`, incidentData);
+    return response.data;
   } catch (error) {
     console.error("Error reporting incident:", error);
+
+    // Return mock data for development
+    if (__DEV__) {
+      return getMockIncident(incidentData);
+    }
+
     return null;
   }
 };
@@ -100,21 +94,79 @@ export const reportIncident = async (incidentData: IncidentPostData): Promise<In
  */
 export const reactToIncident = async (incidentId: string, reaction: "Like" | "Dislike"): Promise<Incident | null> => {
   try {
-    // const response = await axios.put(`${API_URL}/incident/${incidentId}`, {
-    //   reaction,
-    // });
-    // return response.data;
-    return {
-      id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      type: "string",
-      longitude: 0,
-      latitude: 0,
-      like: 0,
-      dislike: 0,
-      creationDate: "2025-04-16T07:56:06.730Z",
-    };
+    const response = await axiosClient.put(`${endpoint}incident/${incidentId}`, {
+      reaction,
+    });
+    return response.data;
   } catch (error) {
     console.error("Error reacting to incident:", error);
+
+    // Pour le développement, on simule la mise à jour
+    if (__DEV__) {
+      return getMockUpdatedIncident(incidentId, reaction);
+    }
+
     return null;
   }
+};
+
+let mockIdCounter = 1;
+const mockIncidents: Incident[] = [];
+
+const generateMockId = () => {
+  return `mock-incident-${mockIdCounter++}`;
+};
+
+const getMockIncidents = (): Incident[] => {
+  if (mockIncidents.length === 0) {
+    const types = ["Crash", "Bottling", "ClosedRoad", "PoliceControl", "Obstacle"];
+
+    for (let i = 0; i < 5; i++) {
+      const incident: Incident = {
+        id: generateMockId(),
+        type: types[Math.floor(Math.random() * types.length)],
+        // Paris, France (approximativement)
+        latitude: 48.8566 + (Math.random() - 0.5) * 0.05,
+        longitude: 2.3522 + (Math.random() - 0.5) * 0.05,
+        like: Math.floor(Math.random() * 10),
+        dislike: Math.floor(Math.random() * 5),
+        creationDate: new Date().toISOString(),
+      };
+      mockIncidents.push(incident);
+    }
+  }
+
+  return [...mockIncidents];
+};
+
+const getMockIncident = (data: IncidentPostData): Incident => {
+  const newIncident: Incident = {
+    id: generateMockId(),
+    type: data.type,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    like: 0,
+    dislike: 0,
+    creationDate: new Date().toISOString(),
+  };
+
+  mockIncidents.push(newIncident);
+  return newIncident;
+};
+
+const getMockUpdatedIncident = (id: string, reaction: "Like" | "Dislike"): Incident | null => {
+  const index = mockIncidents.findIndex((incident) => incident.id === id);
+
+  if (index === -1) return null;
+
+  const incident = { ...mockIncidents[index] };
+
+  if (reaction === "Like") {
+    incident.like += 1;
+  } else {
+    incident.dislike += 1;
+  }
+
+  mockIncidents[index] = incident;
+  return incident;
 };
