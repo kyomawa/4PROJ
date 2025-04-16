@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { User, LoginData, SignUpData } from "../lib/api/auth";
+import { UpdateUserData } from "../lib/api/user";
 
 // ========================================================================================================
 
@@ -11,17 +12,17 @@ type AuthContextType = {
   login: (data: LoginData) => Promise<boolean>;
   register: (data: SignUpData) => Promise<boolean>;
   logout: () => Promise<boolean>;
+  updateProfile: (data: UpdateUserData) => Promise<boolean>;
+  deleteAccount: () => Promise<boolean>;
 };
 
-// ========================================================================================================
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// ========================================================================================================
 
 type AuthProviderProps = {
   children: ReactNode;
 };
+
+// ========================================================================================================
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const auth = useAuth();

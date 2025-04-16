@@ -9,8 +9,7 @@ import {
   LoginData,
   SignUpData,
 } from "../lib/api/auth";
-
-// ========================================================================================================
+import { updateUserProfile, deleteUserAccount as apiDeleteAccount, UpdateUserData } from "../lib/api/user";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -87,6 +86,62 @@ export function useAuth() {
 
   // ========================================================================================================
 
+  const updateProfile = useCallback(
+    async (data: UpdateUserData) => {
+      try {
+        setLoading(true);
+
+        if (!user) {
+          return false;
+        }
+
+        const updatedUser = await updateUserProfile(user.id, data);
+
+        if (updatedUser) {
+          setUser(updatedUser);
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour du profil:", error);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user]
+  );
+
+  // ========================================================================================================
+
+  const deleteAccount = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      if (!user) {
+        return false;
+      }
+
+      const success = await apiDeleteAccount(user.id);
+
+      if (success) {
+        setUser(null);
+        setIsLoggedIn(false);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Erreur lors de la suppression du compte:", error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // ========================================================================================================
+
   const logout = useCallback(async () => {
     try {
       setLoading(true);
@@ -102,6 +157,8 @@ export function useAuth() {
     }
   }, []);
 
+  // ========================================================================================================
+
   return {
     user,
     loading,
@@ -109,6 +166,8 @@ export function useAuth() {
     login,
     register,
     logout,
+    updateProfile,
+    deleteAccount,
   };
 }
 

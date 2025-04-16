@@ -4,13 +4,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Icon from "../../../components/Icon";
 import Button from "../../../components/Button";
-import { useAuthContext } from "@/src/contexts/AuthContext";
+import { useAuthContext } from "../../../contexts/AuthContext";
 
 // ========================================================================================================
 
 export default function ProfileScreen() {
   const { user, loading, logout } = useAuthContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  console.log(user);
 
   const handleLogout = async () => {
     try {
@@ -36,6 +38,14 @@ export default function ProfileScreen() {
       .map((part) => part.charAt(0))
       .join("")
       .toUpperCase();
+  };
+
+  const navigateToEditProfile = () => {
+    router.push("/profile/edit");
+  };
+
+  const navigateToAccountSettings = () => {
+    router.push("/profile/account-settings");
   };
 
   if (loading) {
@@ -64,7 +74,7 @@ export default function ProfileScreen() {
           <Text className="text-xl font-satoshi-Bold mb-1">{user ? user.username : "Utilisateur"}</Text>
           <Text className="text-neutral-500 mb-1">{user ? user.email : "email@exemple.com"}</Text>
           <Text className="text-neutral-500 mb-4">{user ? user.phoneNumber : ""}</Text>
-          <TouchableOpacity className="flex-row items-center">
+          <TouchableOpacity className="flex-row items-center" onPress={navigateToEditProfile}>
             <Icon name="Pen" className="size-4 text-primary-500 mr-2" />
             <Text className="text-primary-500">Modifier le Profil</Text>
           </TouchableOpacity>
@@ -76,6 +86,14 @@ export default function ProfileScreen() {
             <TouchableOpacity className="flex-row items-center p-4 border-b border-neutral-100">
               <Icon name="Bell" className="size-6 text-neutral-600 mr-4" />
               <Text className="text-base flex-1">Notifications</Text>
+              <Icon name="ChevronRight" className="size-5 text-neutral-400" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-row items-center p-4 border-b border-neutral-100"
+              onPress={navigateToAccountSettings}
+            >
+              <Icon name="Settings" className="size-6 text-neutral-600 mr-4" />
+              <Text className="text-base flex-1">Paramètres du compte</Text>
               <Icon name="ChevronRight" className="size-5 text-neutral-400" />
             </TouchableOpacity>
           </View>

@@ -74,6 +74,20 @@ export default function RootLayout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="profile/edit"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile/account-settings"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
