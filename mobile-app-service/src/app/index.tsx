@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import carImage from "../assets/images/car.png";
 import googleIcon from "../assets/icons/google.png";
@@ -20,17 +22,45 @@ type AuthType = "NONE" | "SIGNIN" | "SIGNUP";
 
 export default function Index() {
   const [authType, setAuthType] = useState<AuthType>("NONE");
+  const [isLoading, setIsLoading] = useState(false);
   const isHomeScreen = authType === "NONE";
   const title = authType === "SIGNIN" ? "Bienvenu 👋" : "Créer votre compte";
 
   const { height: SCREEN_HEIGHT } = Dimensions.get("window");
   const imageHeight = useSharedValue(SCREEN_HEIGHT * 0.4);
 
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
   // Animate the image height based on the authentication state
   useEffect(() => {
     const targetHeight = isHomeScreen ? SCREEN_HEIGHT * 0.4 : SCREEN_HEIGHT * 0.25;
     imageHeight.value = withTiming(targetHeight, { duration: 500 });
   }, [authType, isHomeScreen, SCREEN_HEIGHT, imageHeight]);
+
+  const checkLoginStatus = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      if (userToken) {
+        router.replace("/home");
+      }
+    } catch (error) {
+      console.error("Error checking login status:", error);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      setIsLoading(true);
+      await AsyncStorage.setItem("userToken", "dummy-token");
+      router.replace("/home");
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ScrollView className="flex-1 bg-neutral-10">
@@ -52,7 +82,7 @@ export default function Index() {
       <View className="px-5 pb-8 gap-y-6">
         {isHomeScreen && <WelcomeMessage />}
         {/* Authentication Forms */}
-        {authType === "SIGNIN" && <SignIn />}
+        {authType === "SIGNIN" && <SignIn onSubmit={handleLogin} isLoading={isLoading} />}
         {authType === "SIGNUP" && <SignUp />}
         {/* Buttons */}
         <ButtonList authType={authType} setAuthType={setAuthType} />
@@ -82,6 +112,10 @@ type ButtonListProps = {
 };
 
 function ButtonList({ authType, setAuthType }: ButtonListProps) {
+  const handleSignInClick = () => {
+    setAuthType("SIGNIN");
+  };
+
   const handleSignUpClick = () => {
     setAuthType("SIGNUP");
   };
@@ -89,7 +123,11 @@ function ButtonList({ authType, setAuthType }: ButtonListProps) {
   return (
     <>
       {/* Sign up button if on home screen */}
-      {authType === "NONE" && <Button handlePress={handleSignUpClick}>S'inscrire</Button>}
+      {authType === "NONE" && (
+        <>
+          <Button handlePress={handleSignUpClick}>S'inscrire</Button>
+        </>
+      )}
       {/* Divider */}
       <Divider />
       {/* Provider buttons */}
@@ -119,10 +157,16 @@ type ProviderButtonsProps = {
 };
 
 function ProviderButtons({ setAuthType }: ProviderButtonsProps) {
+  const handleProviderLogin = () => {
+    AsyncStorage.setItem("userToken", "dummy-oauth-token").then(() => {
+      router.replace("/home");
+    });
+  };
+
   return (
     <View className="flex flex-col gap-y-2">
-      <ProviderButton title="Connexion avec Google" iconSrc={googleIcon} handlePress={() => setAuthType("NONE")} />
-      <ProviderButton title="Connexion avec Facebook" iconSrc={facebookIcon} handlePress={() => setAuthType("NONE")} />
+      <ProviderButton title="Connexion avec Google" iconSrc={googleIcon} handlePress={handleProviderLogin} />
+      <ProviderButton title="Connexion avec Facebook" iconSrc={facebookIcon} handlePress={handleProviderLogin} />
     </View>
   );
 }
@@ -148,6 +192,7 @@ function AuthSentence({ authType, setAuthType }: AuthSentenceProps) {
       </Text>
       <TouchableOpacity onPress={toggleAuthType} activeOpacity={0.75}>
         <Text className="text-xl text-center text-primary-500 font-satoshi">
+          {" "}
           {isSignIn ? "S'inscrire" : "Se connecter"}
         </Text>
       </TouchableOpacity>

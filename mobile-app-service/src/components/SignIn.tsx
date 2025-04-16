@@ -13,13 +13,26 @@ const signInSchema = z.object({
   password: z.string(),
 });
 
+type SignInFormData = z.infer<typeof signInSchema>;
+
+type SignInProps = {
+  onSubmit?: (data: SignInFormData) => void;
+  isLoading?: boolean;
+};
+
 // ========================================================================================================
 
-export default function SignIn() {
-  const { control, handleSubmit } = useForm({
+export default function SignIn({ onSubmit, isLoading = false }: SignInProps) {
+  const { control, handleSubmit } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  const submitForm = (data: SignInFormData) => {
+    if (onSubmit) {
+      onSubmit(data);
+    }
+  };
 
   return (
     <Animatable.View animation="fadeInUp" className="flex flex-col mt-4 gap-y-4">
@@ -32,7 +45,9 @@ export default function SignIn() {
         label="Mot de passe"
         icon="Lock"
       />
-      <Button>Se connecter</Button>
+      <Button handlePress={handleSubmit(submitForm)} isLoading={isLoading}>
+        Se connecter
+      </Button>
     </Animatable.View>
   );
 }
