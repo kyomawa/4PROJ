@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import Icon from "../../../components/Icon";
 import Button from "../../../components/Button";
 import { useAuthContext } from "../../../contexts/AuthContext";
+import { StatusBar } from "expo-status-bar";
 
 // ========================================================================================================
 
@@ -49,6 +50,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
+        <StatusBar style="dark" />
         <ActivityIndicator size="large" color="#695BF9" />
         <Text className="mt-4 text-neutral-500">Chargement du profil...</Text>
       </SafeAreaView>
@@ -57,6 +59,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <ScrollView>
         {/* Header */}
         <View className="p-4 border-b border-neutral-200">

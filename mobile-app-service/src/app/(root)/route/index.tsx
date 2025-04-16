@@ -7,6 +7,7 @@ import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import { getItinerary, Itinerary, Step } from "../../../lib/api/navigation";
 import { formatDistance, formatDuration, incidentTypeToIcon } from "../../../utils/mapUtils";
+import { StatusBar } from "expo-status-bar";
 
 export default function RouteScreen() {
   const mapRef = useRef<MapView>(null);
@@ -110,6 +111,8 @@ export default function RouteScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
+        <StatusBar style="dark" />
+
         <ActivityIndicator size="large" color="#695BF9" />
         <Text className="mt-4 text-neutral-500">Calculating the best route...</Text>
       </SafeAreaView>
@@ -118,6 +121,7 @@ export default function RouteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <View className="flex-row items-center p-4 border-b border-neutral-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="ArrowLeft" className="size-6" />

@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import Icon from "../../../components/Icon";
 import Button from "../../../components/Button";
 import { useAuthContext } from "../../../contexts/AuthContext";
+import { StatusBar } from "expo-status-bar";
 
 // ========================================================================================================
 
@@ -67,6 +68,8 @@ export default function AccountSettingsScreen() {
   if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
+        <StatusBar style="dark" />
+
         <Text className="text-red-500">Vous devez être connecté pour accéder à cette page.</Text>
         <TouchableOpacity onPress={() => router.replace("/")} className="mt-4 p-3 bg-primary-500 rounded-full">
           <Text className="text-white">Se connecter</Text>
@@ -77,6 +80,7 @@ export default function AccountSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <ScrollView>
         {/* Header */}
         <View className="flex-row items-center p-4 border-b border-neutral-200">

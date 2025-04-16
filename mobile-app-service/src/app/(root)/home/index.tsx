@@ -9,6 +9,7 @@ import IncidentButton from "../../../components/IncidentButton";
 import SearchBar from "../../../components/SearchBar";
 import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
 import { incidentTypeToIcon } from "../../../utils/mapUtils";
+import { StatusBar } from "expo-status-bar";
 
 export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
@@ -96,6 +97,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <View className="flex-1 relative">
         {errorMsg ? (
           <View className="flex-1 justify-center items-center">

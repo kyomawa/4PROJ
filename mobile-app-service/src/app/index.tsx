@@ -71,7 +71,7 @@ export default function Index() {
 
   return (
     <ScrollView className="flex-1 bg-neutral-10">
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
       {/* Section Header */}
       <View className="relative items-center w-full">
         <Animated.Image source={carImage} className="z-0 w-full" style={{ height: imageHeight }} />

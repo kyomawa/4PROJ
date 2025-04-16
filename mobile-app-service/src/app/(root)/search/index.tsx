@@ -6,6 +6,7 @@ import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import { geocodeLocation, Location as LocationType } from "../../../lib/api/navigation";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { StatusBar } from "expo-status-bar";
 
 export default function SearchScreen() {
   const [searchText, setSearchText] = useState("");
@@ -86,6 +87,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <View className="flex-row items-center p-4 border-b border-neutral-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="ArrowLeft" className="size-6" />

@@ -7,6 +7,7 @@ import Icon from "../../../components/Icon";
 import { fetchNearbyIncidents, Incident, reactToIncident } from "../../../lib/api/incidents";
 import { formatDistance } from "../../../utils/mapUtils";
 import { incidentTypeToIcon } from "../../../utils/mapUtils";
+import { StatusBar } from "expo-status-bar";
 
 export default function IncidentsScreen() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -132,6 +133,7 @@ export default function IncidentsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <View className="p-4 border-b border-neutral-200">
         <Text className="text-2xl font-satoshi-Bold">Incidents</Text>
       </View>

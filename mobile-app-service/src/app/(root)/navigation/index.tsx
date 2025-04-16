@@ -8,6 +8,7 @@ import * as Speech from "expo-speech";
 import Icon from "../../../components/Icon";
 import { getItinerary, Itinerary } from "../../../lib/api/navigation";
 import { formatDistance, formatDuration, incidentTypeToIcon } from "../../../utils/mapUtils";
+import { StatusBar } from "expo-status-bar";
 
 export default function NavigationScreen() {
   const mapRef = useRef<MapView>(null);
@@ -266,6 +267,7 @@ export default function NavigationScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <View className="flex-1 relative">
         {/* Map View */}
         <MapView

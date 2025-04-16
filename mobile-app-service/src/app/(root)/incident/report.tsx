@@ -6,6 +6,7 @@ import * as Location from "expo-location";
 import Icon, { IconProps } from "../../../components/Icon";
 import Button from "../../../components/Button";
 import { reportIncident } from "../../../lib/api/incidents";
+import { StatusBar } from "expo-status-bar";
 
 type IncidentType = "Crash" | "Bottling" | "ClosedRoad" | "PoliceControl" | "Obstacle";
 
@@ -77,6 +78,7 @@ export default function ReportIncidentScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
+      <StatusBar style="dark" />
       <View className="flex-row items-center p-4 border-b border-neutral-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="ArrowLeft" className="size-6" />
