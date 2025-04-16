@@ -104,9 +104,10 @@ export default function HomeScreen() {
         ) : (
           <>
             <MapView
+              style={{ width: "100%", height: "100%" }}
               ref={mapRef}
-              className="w-full h-full"
               initialRegion={region}
+              region={region}
               onRegionChangeComplete={handleRegionChange}
               showsUserLocation
               showsMyLocationButton={false}
@@ -137,12 +138,12 @@ export default function HomeScreen() {
             </View>
 
             {/* Center on User Button */}
-            <View className="absolute bottom-24 right-6">
+            <View className="absolute bottom-8 left-6">
               <TouchableOpacity
                 onPress={centerOnUser}
-                className="bg-white w-12 h-12 rounded-full items-center justify-center shadow-md"
+                className="bg-white size-14 rounded-full items-center justify-center shadow-md"
               >
-                <Icon name="Target" className="size-6 text-primary-500" />
+                <Icon name="Crosshair" className="size-6 text-primary-500" />
               </TouchableOpacity>
             </View>
 
