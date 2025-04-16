@@ -15,7 +15,8 @@ For development, use the `docker-compose.yml` file which includes live reload ca
 4. **Access Services:**
    - Navigation service: [http://navigation.localhost](http://navigation.localhost/)
    - Incident service: [http://incident.localhost](http://incident.localhost/)
-   - Mobile app web client: [http://mobile.localhost](http://mobile.localhost/)
+   - User service: [http://user.localhost](http://user.localhost/)
+   - Auth service: [http://auth.localhost](http://auth.localhost/)
    - Traefik dashboard: [http://localhost:8080](http://localhost:8080/) (as defined by HOST_PORT_TRAEFIK_DASHBOARD)
 
 ## Production Environment Setup

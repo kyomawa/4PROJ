@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { router } from "expo-router";
@@ -13,6 +13,7 @@ import ProviderButton from "../components/ProviderButton";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
 import Button from "../components/Button";
+import { isAuthenticated } from "../lib/api/auth";
 
 // ========================================================================================================
 
@@ -22,9 +23,10 @@ type AuthType = "NONE" | "SIGNIN" | "SIGNUP";
 
 export default function Index() {
   const [authType, setAuthType] = useState<AuthType>("NONE");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const isHomeScreen = authType === "NONE";
-  const title = authType === "SIGNIN" ? "Bienvenu 👋" : "Créer votre compte";
+  const title = authType === "SIGNIN" ? "Bienvenue 👋" : "Créer votre compte";
 
   const { height: SCREEN_HEIGHT } = Dimensions.get("window");
   const imageHeight = useSharedValue(SCREEN_HEIGHT * 0.4);
@@ -33,7 +35,6 @@ export default function Index() {
     checkLoginStatus();
   }, []);
 
-  // Animate the image height based on the authentication state
   useEffect(() => {
     const targetHeight = isHomeScreen ? SCREEN_HEIGHT * 0.4 : SCREEN_HEIGHT * 0.25;
     imageHeight.value = withTiming(targetHeight, { duration: 500 });
@@ -41,26 +42,32 @@ export default function Index() {
 
   const checkLoginStatus = async () => {
     try {
-      const userToken = await AsyncStorage.getItem("userToken");
-      if (userToken) {
+      setIsAuthChecking(true);
+      const isLoggedIn = await isAuthenticated();
+
+      if (isLoggedIn) {
         router.replace("/home");
       }
     } catch (error) {
-      console.error("Error checking login status:", error);
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      setIsLoading(true);
-      await AsyncStorage.setItem("userToken", "dummy-token");
-      router.replace("/home");
-    } catch (error) {
-      console.error("Login error:", error);
+      console.error("Erreur lors de la vérification de l'état de connexion:", error);
     } finally {
+      setIsAuthChecking(false);
       setIsLoading(false);
     }
   };
+
+  const handleLoginSubmit = async () => {
+    router.replace("/home");
+  };
+
+  if (isAuthChecking) {
+    return (
+      <View className="flex-1 justify-center items-center bg-neutral-10">
+        <ActivityIndicator size="large" color="#695BF9" />
+        <Text className="mt-4 text-neutral-500">Chargement...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-neutral-10">
@@ -82,7 +89,7 @@ export default function Index() {
       <View className="px-5 pb-8 gap-y-6">
         {isHomeScreen && <WelcomeMessage />}
         {/* Authentication Forms */}
-        {authType === "SIGNIN" && <SignIn onSubmit={handleLogin} isLoading={isLoading} />}
+        {authType === "SIGNIN" && <SignIn onSubmit={handleLoginSubmit} />}
         {authType === "SIGNUP" && <SignUp />}
         {/* Buttons */}
         <ButtonList authType={authType} setAuthType={setAuthType} />
