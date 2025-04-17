@@ -18,7 +18,13 @@ namespace incident_service.Services
 {
     public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
     {
-        private const int MaxDislikesBeforeDelete = 5; 
+        private const int MaxDislikesBeforeDelete = 5;
+
+        public async Task<List<IncidentDto>> GetAllActive()
+        {
+            var incidents = await incidentRepository.GetAllActive();
+            return mapper.Map<List<IncidentDto>>(incidents);
+        }
 
         public async Task<List<IncidentDto>> GetAll()
         {

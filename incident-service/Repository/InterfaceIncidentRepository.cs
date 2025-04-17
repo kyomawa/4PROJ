@@ -7,6 +7,7 @@ namespace incident_service.Repository
 {
     public interface InterfaceIncidentRepository
     {
+        public Task<List<Incident>> GetAllActive();
         public Task<List<Incident>> GetAll();
         public Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox);
         public Task<Incident> Get(Guid id);
