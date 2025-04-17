@@ -28,7 +28,7 @@ export default function RouteScreen() {
   const [showDirections, setShowDirections] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
 
-  const { fetchIncidents, setSelectedIncident } = useIncidents();
+  const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
 
   // Parse destination coordinates
   const destinationCoords = {
@@ -42,6 +42,7 @@ export default function RouteScreen() {
     // Get current location and fetch itinerary
     const setupNavigation = async () => {
       try {
+        // Request location permissions
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           Alert.alert(
@@ -56,6 +57,7 @@ export default function RouteScreen() {
         const location = await Location.getCurrentPositionAsync({});
         setCurrentLocation(location);
 
+        // Fetch itinerary
         if (destLat && destLon) {
           const route = await getItinerary(
             location.coords.latitude,
@@ -148,7 +150,6 @@ export default function RouteScreen() {
 
   const handleIncidentPress = (incidentId: string) => {
     // Find the incident in our context
-    const { incidents } = useIncidents();
     const incident = incidents.find((inc) => inc.id === incidentId);
     if (incident) {
       setSelectedIncident(incident);
@@ -222,7 +223,7 @@ export default function RouteScreen() {
                     </View>
                     <View className="items-center">
                       <Text className="text-neutral-500 mb-1">Incidents</Text>
-                      <Text className="text-xl font-satoshi-Bold">{useIncidents().incidents?.length || 0}</Text>
+                      <Text className="text-xl font-satoshi-Bold">{incidents.length || 0}</Text>
                     </View>
                   </View>
 
