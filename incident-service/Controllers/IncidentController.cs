@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using incident_service.DTO.BoundingBox;
 using incident_service.Enums;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using incident_service.DTO.Vote;
 
 namespace incident_service.Controllers
 {
@@ -81,17 +83,25 @@ namespace incident_service.Controllers
             }
         }
 
-        [HttpPut("contribute/{id}")]
-        public async Task<ActionResult<IncidentDto>> Contribute(Guid id, [FromBody] ContributeIncidentDto contributeIncidentDto)
+        [Authorize]
+        [HttpPut("{id}/vote")]
+        public async Task<ActionResult<IncidentDto>> Vote(Guid id, [FromBody] VoteIncidentDto contributeIncidentDto)
         {
             try
             {
+                var currentUserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(currentUserId) || !Guid.TryParse(currentUserId, out Guid userId))
+                {
+                    return Unauthorized(new { Message = "Invalid or missing user ID." });
+                }
+
                 if (!Enum.IsDefined(typeof(ReactionType), contributeIncidentDto.Reaction))
                 {
                     return BadRequest(new { Message = $"Invalid reaction type : {contributeIncidentDto.Reaction}" });
                 }
 
-                var response = await incidentService.Contribute(id, contributeIncidentDto);
+                var response = await incidentService.Vote(userId, id, contributeIncidentDto);
                 if (response == null)
                 {
                     return NotFound($"Incident {id} not found");
@@ -110,6 +120,10 @@ namespace incident_service.Controllers
         {
             try
             {
+                if (updateIncidentDto.Status.HasValue && !Enum.IsDefined(typeof(IncidentStatus), updateIncidentDto.Status))
+                {
+                    return BadRequest(new { Message = $"Invalid status type : {updateIncidentDto.Status}" });
+                }
 
                 var response = await incidentService.Update(id, updateIncidentDto);
                 if (response == null)

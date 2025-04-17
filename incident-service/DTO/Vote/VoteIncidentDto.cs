@@ -2,9 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace incident_service.DTO.Incident
+namespace incident_service.DTO.Vote
 {
-    public class ContributeIncidentDto
+    public class VoteIncidentDto
     {
         [JsonConverter(typeof(JsonStringEnumConverter))]
         [Required(ErrorMessage = "Reaction type is mandatory")]

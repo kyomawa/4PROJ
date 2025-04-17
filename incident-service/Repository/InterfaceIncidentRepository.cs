@@ -1,5 +1,6 @@
 ﻿using incident_service.DTO.BoundingBox;
 using incident_service.DTO.Incident;
+using incident_service.Enums;
 using incident_service.Models;
 
 namespace incident_service.Repository
@@ -13,8 +14,12 @@ namespace incident_service.Repository
         public Task<Incident> Disable(Incident incident);
         public Task<Incident> Create(PostIncidentDto postIncidentDto);
         public Task<Incident> Update(Incident incident, UpdateIncidentDto updateIncidentDto);
-        public Task<Incident> AddLike(Incident incident);
-        public Task<Incident> AddDislike(Incident incident);
         public Task<Incident> Delete(Incident incident);
+        public Task<List<UserIncidentVote>> GetAllVotesOnIncident(Incident incident);
+        public Task<UserIncidentVote> GetVoteByUserOnIncident(Incident incident, Guid userId);
+        public Task<UserIncidentVote> CreateUserVoteOnIncident(Incident incident, Guid userId, ReactionType reaction);
+        public Task<UserIncidentVote> UpdateUserVoteOnIncident(UserIncidentVote vote, ReactionType newReaction);
+        public Task<UserIncidentVote> DeleteUserVoteOnIncident(UserIncidentVote vote);
+
     }
 }

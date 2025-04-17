@@ -15,17 +15,28 @@ namespace incident_service.Contexts
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            var converter = new ValueConverter<IncidentType, string>(
-                    v => v.ToString(),
-                    v => (IncidentType)Enum.Parse(typeof(IncidentType), v)
-                );
-
             base.OnModelCreating(modelBuilder);
+
+            var typeConverter = new ValueConverter<IncidentType, string>(
+                   v => v.ToString(),
+                   v => (IncidentType)Enum.Parse(typeof(IncidentType), v)
+               );
+
+            var statusConverter = new ValueConverter<IncidentStatus, string>(
+                v => v.ToString(),
+                v => (IncidentStatus)Enum.Parse(typeof(IncidentStatus), v)
+            );
 
             modelBuilder
                 .Entity<Incident>()
                 .Property(i => i.Type)
-                .HasConversion(converter);
+                .HasConversion(typeConverter);
+
+            modelBuilder
+                .Entity<Incident>()
+                .Property(i => i.Status)
+                .HasConversion(statusConverter);
+
 
             modelBuilder.Entity<UserIncidentVote>()
                 .HasOne(v => v.Incident)

@@ -8,10 +8,15 @@ using AutoMapper;
 using incident_service.Models;
 using incident_service.Exceptions;
 using incident_service.DTO.BoundingBox;
+using System.Security.Claims;
+using System;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.ComponentModel;
+using incident_service.DTO.Vote;
 
 namespace incident_service.Services
 {
-    public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper, HttpClient httpClient) : InterfaceIncidentService
+    public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
     {
         private const int MaxDislikesBeforeDelete = 0; 
 
@@ -56,26 +61,17 @@ namespace incident_service.Services
             return mapper.Map<IncidentDto>(incident);
         }
 
-        public async Task<IncidentDto> Contribute(Guid id, ContributeIncidentDto contributeIncidentDto)
+        public async Task<IncidentDto> Vote(Guid currentUserId, Guid id, VoteIncidentDto voteIncidentDto)
         {
             var incident = await incidentRepository.Get(id);
+
             if (incident == null)
             {
                 return null;
             }
 
-            if (contributeIncidentDto.Reaction == ReactionType.Like)
-            {
-                incident = await incidentRepository.AddLike(incident);
-            }
-            else if (contributeIncidentDto.Reaction == ReactionType.Dislike)
-            {
-                incident = await incidentRepository.AddDislike(incident);
-                if (incident.Dislike > incident.Like + MaxDislikesBeforeDelete && incident.Status == IncidentStatus.Active)
-                {
-                    await incidentRepository.Disable(incident);
-                }
-            }
+            var userVote = await HandleUserVote(currentUserId, incident, voteIncidentDto.Reaction);
+
             return mapper.Map<IncidentDto>(incident);
         }
 
@@ -88,6 +84,28 @@ namespace incident_service.Services
             }
             var incidentDeleted = await incidentRepository.Delete(incident);
             return mapper.Map<IncidentDto>(incidentDeleted);
+        }
+
+        private async Task<UserIncidentVote> HandleUserVote(Guid userId, Incident incident, ReactionType reaction)
+        {
+            var userVote = await incidentRepository.GetVoteByUserOnIncident(incident, userId);
+
+            if (userVote == null)
+            {
+                userVote = await incidentRepository.CreateUserVoteOnIncident(incident, userId, reaction);
+            }
+
+            else if (reaction == userVote.Reaction)
+            {
+                userVote = await incidentRepository.DeleteUserVoteOnIncident(userVote);
+            }
+
+            else if (reaction != userVote.Reaction)
+            {
+                userVote = await incidentRepository.UpdateUserVoteOnIncident(userVote, reaction);
+            }
+
+            return userVote;
         }
     }
 }

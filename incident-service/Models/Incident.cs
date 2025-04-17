@@ -1,6 +1,7 @@
 ﻿using incident_service.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace incident_service.Models
 {
@@ -22,13 +23,8 @@ namespace incident_service.Models
         [Column("Latitude")]
         public double Latitude { get; set; }
 
-        [Column("Like")]
-        public int Like { get; set; }
-
-        [Column("Dislike")]
-        public int Dislike { get; set; }
-
         [Column("Status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public IncidentStatus Status { get; set; } = IncidentStatus.Active;
 
         [Column("CreationDate")]

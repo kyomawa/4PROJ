@@ -4,6 +4,7 @@ using incident_service.DTO.Incident;
 using incident_service.Enums;
 using incident_service.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
 
 namespace incident_service.Repository
 {
@@ -11,13 +12,16 @@ namespace incident_service.Repository
     {
         public async Task<List<Incident>> GetAll()
         {
-            var incidents = await context.Incidents.ToListAsync();
+            var incidents = await context.Incidents
+                .Include(i => i.Votes)
+                .ToListAsync();
             return incidents;
         }
         public async Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox)
         {
             var incidents = await context.Incidents
                 .Where(i => i.Latitude >= boundingBox.MinLat && i.Latitude <= boundingBox.MaxLat && i.Longitude >= boundingBox.MinLon && i.Longitude <= boundingBox.MaxLon && i.Status == IncidentStatus.Active)
+                .Include(i => i.Votes)
                 .ToListAsync();
 
             return incidents;
@@ -25,7 +29,9 @@ namespace incident_service.Repository
 
         public async Task<Incident> Get(Guid id)
         {
-            var incident = await context.Incidents.FindAsync(id);
+            var incident = await context.Incidents
+                .Include(i => i.Votes)
+                .FirstOrDefaultAsync(i => i.Id == id); 
             return incident;
         }
 
@@ -81,23 +87,52 @@ namespace incident_service.Repository
             return incident;
         }
 
-        public async Task<Incident> AddLike(Incident incident)
-        {
-            incident.Like++;
-            await context.SaveChangesAsync();
-            return incident;
-        }
-        public async Task<Incident> AddDislike(Incident incident)
-        {
-            incident.Dislike++;
-            await context.SaveChangesAsync();
-            return incident;
-        }
         public async Task<Incident> Delete(Incident incident)
         {
             var removedIncident = context.Incidents.Remove(incident);
             await context.SaveChangesAsync();
             return removedIncident.Entity;
+        }
+        public async Task<List<UserIncidentVote>> GetAllVotesOnIncident(Incident incident)
+        {
+            return await context.UserIncidentVotes
+                .Where(v => v.IncidentId == incident.Id)
+                .ToListAsync();
+        }
+
+        public async Task<UserIncidentVote> GetVoteByUserOnIncident(Incident incident, Guid userId)
+        {
+            return await context.UserIncidentVotes
+                .FirstOrDefaultAsync(v => v.IncidentId == incident.Id && v.UserId == userId);
+        }
+
+        public async Task<UserIncidentVote> CreateUserVoteOnIncident(Incident incident, Guid userId, ReactionType reaction)
+        {
+            var vote = new UserIncidentVote
+            {
+                IncidentId = incident.Id,
+                UserId = userId,
+                Reaction = reaction
+            };
+
+            await context.UserIncidentVotes.AddAsync(vote);
+            await context.SaveChangesAsync();
+            return vote;
+        }
+
+        public async Task<UserIncidentVote> UpdateUserVoteOnIncident(UserIncidentVote vote, ReactionType reaction)
+        {
+            vote.Reaction = reaction;
+            await context.SaveChangesAsync();
+
+            return vote;
+        }
+        public async Task<UserIncidentVote> DeleteUserVoteOnIncident(UserIncidentVote vote)
+        {
+            context.UserIncidentVotes.Remove(vote);
+            await context.SaveChangesAsync();
+
+            return vote;
         }
     }
 }

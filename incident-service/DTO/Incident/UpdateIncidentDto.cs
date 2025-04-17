@@ -16,6 +16,7 @@ namespace incident_service.DTO.Incident
         [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
         public double? Latitude { get; set; }
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public IncidentStatus? Status { get; set; }
     }
 }
