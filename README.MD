@@ -56,3 +56,27 @@ docker-compose -f docker-compose.prod.yml up --build --scale the-service=2
 This allows you to simulate a load-balanced, scalable microservices environment.
 
 ---
+
+## Services Documentation
+
+Trafine is a Waze-like navigation application built using a microservices architecture. Each service handles a specific aspect of the application:
+
+### Backend Services
+
+- **[Navigation Service](navigation-service/README.md)**: Handles route calculations, geocoding, and turn-by-turn directions.
+- **[Incident Service](incident-service/README.md)**: Manages traffic incidents such as accidents, traffic jams, and road closures.
+- **[Auth Service](auth-service/README.md)**: Handles user authentication and JWT token generation.
+- **[User Service](user-service/README.md)**: Manages user accounts, profiles, and roles.
+
+### Frontend
+
+- **[Mobile App Service](mobile-app-service/README.md)**: React Native mobile client application.
+
+### Infrastructure
+
+- **Traefik**: API Gateway and load balancer for routing requests to appropriate services.
+- **MySQL**: Database for storing service data.
+
+## Contributing
+
+Please see our [Contributing Guide](CONTRIBUTING.md) for information on how to contribute to this project.
