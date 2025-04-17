@@ -11,6 +11,7 @@ import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
 import MapWithIncidents from "../../../components/MapWithIncidents";
 import { useIncidents } from "../../../contexts/IncidentContext";
+import { useNavigation } from "../../../contexts/NavigationContext";
 import { StatusBar } from "expo-status-bar";
 
 // ========================================================================================================
@@ -19,8 +20,6 @@ export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
   const [location, setLocation] = useState(null as Location.LocationObject | null);
   const [errorMsg, setErrorMsg] = useState("");
-  const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
-  const [activeDestination, setActiveDestination] = useState<string>("");
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
   const [region, setRegion] = useState({
     latitude: 48.8566,
@@ -30,15 +29,13 @@ export default function HomeScreen() {
   });
 
   const { fetchIncidents, setSelectedIncident, isLoading: isLoadingIncidents } = useIncidents();
+  const { navigationState, hasActiveNavigation } = useNavigation();
+
+  const showSearchBar = !(hasActiveNavigation && navigationState);
 
   // ========================================================================================================
 
   useEffect(() => {
-    if (global.navigationState) {
-      setHasActiveNavigation(true);
-      setActiveDestination(global.navigationState.destination.name);
-    }
-
     (async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -64,7 +61,7 @@ export default function HomeScreen() {
           fetchIncidents(locationResult.coords.latitude, locationResult.coords.longitude, 5);
         }
       } catch (error) {
-        console.error("Erreur lors de l'obtention de la localisation:", error);
+        console.error("Error getting location:", error);
         Alert.alert(
           "Erreur de localisation",
           "Impossible d'obtenir votre position actuelle. Veuillez vérifier vos paramètres de localisation."
@@ -108,9 +105,7 @@ export default function HomeScreen() {
   };
 
   const resumeNavigation = () => {
-    if (global.navigationState) {
-      router.push("/navigation");
-    }
+    router.push("/navigation");
   };
 
   // ========================================================================================================
@@ -134,13 +129,17 @@ export default function HomeScreen() {
             />
 
             {/* Search Bar */}
-            <SafeAreaView className="absolute top-4 left-4 right-4">
-              <SearchBar onPress={handleSearch} />
-            </SafeAreaView>
+            {showSearchBar && (
+              <SafeAreaView className="absolute top-4 left-4 right-4">
+                <SearchBar onPress={handleSearch} />
+              </SafeAreaView>
+            )}
 
             {/* Active Navigation Banner */}
             {hasActiveNavigation && (
-              <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
+              <View className="absolute top-20 left-4 right-4">
+                <ActiveNavigationBanner onPress={resumeNavigation} />
+              </View>
             )}
 
             {/* Center on User Button */}

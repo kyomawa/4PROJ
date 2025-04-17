@@ -7,8 +7,9 @@ import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import MapWithIncidents from "../../../components/MapWithIncidents";
-import { getItinerary, Itinerary, Step } from "../../../lib/api/navigation";
+import { getItinerary, Itinerary, Step, ItineraryError } from "../../../lib/api/navigation";
 import { useIncidents } from "../../../contexts/IncidentContext";
+import { useNavigation } from "../../../contexts/NavigationContext";
 import { formatDistance, formatDuration, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
 
@@ -27,8 +28,11 @@ export default function RouteScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDirections, setShowDirections] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+  const [navigationError, setNavigationError] = useState<string | null>(null);
+  const [routeRequestCompleted, setRouteRequestCompleted] = useState(false);
 
   const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
+  const { setNavigationState } = useNavigation();
 
   // Parse destination coordinates
   const destinationCoords = {
@@ -50,6 +54,7 @@ export default function RouteScreen() {
             "Veuillez activer les services de localisation pour utiliser la navigation"
           );
           setIsLoading(false);
+          setRouteRequestCompleted(true);
           return;
         }
 
@@ -59,65 +64,110 @@ export default function RouteScreen() {
 
         // Fetch itinerary
         if (destLat && destLon) {
-          const route = await getItinerary(
-            location.coords.latitude,
-            location.coords.longitude,
-            destinationCoords.latitude,
-            destinationCoords.longitude,
-            "car", // Default to car
-            "fastest" // Default to fastest route
-          );
-
-          if (route) {
-            setItinerary(route);
-
-            global.navigationState = {
-              route,
-              destination: {
-                coords: destinationCoords,
-                name: destName || "Destination",
-              },
-              startedAt: new Date(),
-            };
-
-            const boundingBox = calculateBoundingBox([
-              { latitude: location.coords.latitude, longitude: location.coords.longitude },
-              ...route.coordinates,
-            ]);
-
-            if (boundingBox) {
-              await fetchIncidents(
-                (boundingBox.minLat + boundingBox.maxLat) / 2,
-                (boundingBox.minLon + boundingBox.maxLon) / 2,
-                10 // 10km radius
-              );
-            }
-
-            if (mapRef.current && route.coordinates.length > 0) {
-              const coordinates = [
-                { latitude: location.coords.latitude, longitude: location.coords.longitude },
-                ...route.coordinates,
-              ];
-
-              mapRef.current.fitToCoordinates(coordinates, {
-                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
-                animated: true,
-              });
-            }
-          } else {
-            Alert.alert("Erreur", "Impossible de calculer l'itinéraire. Veuillez réessayer.");
-          }
+          await fetchItinerary(location);
         }
       } catch (error) {
         console.error("Error setting up navigation:", error);
-        Alert.alert("Erreur", "Un problème est survenu. Veuillez réessayer.");
-      } finally {
+        setNavigationError("Un problème est survenu. Veuillez réessayer.");
         setIsLoading(false);
+        setRouteRequestCompleted(true);
       }
     };
 
-    setupNavigation();
-  }, [destLat, destLon, fetchIncidents]);
+    if (!routeRequestCompleted) {
+      setupNavigation();
+    }
+  }, [destLat, destLon, routeRequestCompleted]);
+
+  // ========================================================================================================
+
+  // Extract itinerary fetching logic to a separate function
+  const fetchItinerary = async (location: Location.LocationObject) => {
+    try {
+      const routeResult = await getItinerary(
+        location.coords.latitude,
+        location.coords.longitude,
+        destinationCoords.latitude,
+        destinationCoords.longitude,
+        "car", // Default to car
+        "fastest" // Default to fastest route
+      );
+
+      // Check if the result is an error
+      if ("status" in routeResult) {
+        const errorResult = routeResult as ItineraryError;
+        console.error("Itinerary error:", errorResult);
+
+        if (errorResult.isInvalidPoints) {
+          setNavigationError(
+            "Impossible de calculer l'itinéraire : points invalides.\nVeuillez choisir un autre lieu."
+          );
+        } else {
+          setNavigationError("Impossible de calculer l'itinéraire. Veuillez réessayer.");
+        }
+
+        setRouteRequestCompleted(true);
+        setIsLoading(false);
+        return;
+      }
+
+      const route = routeResult as Itinerary;
+      setItinerary(route);
+
+      // Update navigation state in context and global state
+      setNavigationState({
+        route,
+        destination: {
+          coords: destinationCoords,
+          name: destName || "Destination",
+        },
+        startedAt: new Date(),
+      });
+
+      const boundingBox = calculateBoundingBox([
+        { latitude: location.coords.latitude, longitude: location.coords.longitude },
+        ...route.coordinates,
+      ]);
+
+      if (boundingBox) {
+        await fetchIncidents(
+          (boundingBox.minLat + boundingBox.maxLat) / 2,
+          (boundingBox.minLon + boundingBox.maxLon) / 2,
+          10 // 10km radius
+        );
+      }
+
+      if (mapRef.current && route.coordinates.length > 0) {
+        const coordinates = [
+          { latitude: location.coords.latitude, longitude: location.coords.longitude },
+          ...route.coordinates,
+        ];
+
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+          animated: true,
+        });
+      }
+
+      setRouteRequestCompleted(true);
+    } catch (error) {
+      console.error("Error fetching itinerary:", error);
+      setNavigationError("Un problème est survenu. Veuillez réessayer.");
+      setRouteRequestCompleted(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ========================================================================================================
+
+  const handleRetryNavigation = async () => {
+    if (!currentLocation) return;
+
+    setIsLoading(true);
+    setNavigationError(null);
+    setRouteRequestCompleted(false);
+  };
 
   // ========================================================================================================
 
@@ -166,6 +216,34 @@ export default function RouteScreen() {
 
         <ActivityIndicator size="large" color="#695BF9" />
         <Text className="mt-4 text-neutral-500">Calcul du meilleur itinéraire...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // If there's an error, display it with a retry button
+  if (navigationError) {
+    return (
+      <SafeAreaView className="flex-1 bg-neutral-10">
+        <StatusBar style="dark" />
+        <View className="flex-row items-center p-4 border-b border-neutral-200">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+            <Icon name="ArrowLeft" className="size-6" />
+          </TouchableOpacity>
+          <Text className="text-xl font-satoshi-Bold flex-1" numberOfLines={1}>
+            Itinéraire vers {destName || "Destination"}
+          </Text>
+        </View>
+
+        <View className="flex-1 justify-center items-center p-6">
+          <Icon name="CircleAlert" className="text-red-500 size-16 mb-4" />
+          <Text className="text-lg text-center mb-6">{navigationError}</Text>
+          <TouchableOpacity onPress={handleRetryNavigation} className="bg-primary-500 py-3 px-6 rounded-full">
+            <Text className="text-white font-satoshi-Bold">Réessayer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} className="mt-4 py-3 px-6">
+            <Text className="text-primary-500 font-satoshi-Bold">Retour à la recherche</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -263,10 +341,10 @@ export default function RouteScreen() {
             />
           )}
         </View>
-      </View>
 
-      {/* Incident Details Modal */}
-      <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
+        {/* Incident Details Modal */}
+        <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
+      </View>
     </SafeAreaView>
   );
 }

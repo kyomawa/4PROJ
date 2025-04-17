@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -6,24 +6,15 @@ import Icon from "../../../components/Icon";
 import Button from "../../../components/Button";
 import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
 import { useAuthContext } from "../../../contexts/AuthContext";
+import { useNavigation } from "../../../contexts/NavigationContext";
 import { StatusBar } from "expo-status-bar";
 
 // ========================================================================================================
 
 export default function ProfileScreen() {
   const { user, loading, logout } = useAuthContext();
+  const { hasActiveNavigation } = useNavigation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
-  const [activeDestination, setActiveDestination] = useState<string>("");
-
-  // ========================================================================================================
-
-  useEffect(() => {
-    if (global.navigationState) {
-      setHasActiveNavigation(true);
-      setActiveDestination(global.navigationState.destination.name);
-    }
-  }, []);
 
   // ========================================================================================================
 
@@ -38,7 +29,7 @@ export default function ProfileScreen() {
         Alert.alert("Erreur", "Un problème est survenu lors de la déconnexion. Veuillez réessayer.");
       }
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+      console.error("Error during logout:", error);
       Alert.alert("Erreur", "Un problème est survenu lors de la déconnexion. Veuillez réessayer.");
     } finally {
       setIsLoggingOut(false);
@@ -70,9 +61,7 @@ export default function ProfileScreen() {
   // ========================================================================================================
 
   const resumeNavigation = () => {
-    if (global.navigationState) {
-      router.push("/navigation");
-    }
+    router.push("/navigation");
   };
 
   // ========================================================================================================
@@ -117,7 +106,7 @@ export default function ProfileScreen() {
         {/* Active Navigation Banner */}
         {hasActiveNavigation && (
           <View className="my-4 mx-4">
-            <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
+            <ActiveNavigationBanner onPress={resumeNavigation} />
           </View>
         )}
 

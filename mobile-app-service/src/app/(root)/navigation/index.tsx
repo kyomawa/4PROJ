@@ -11,6 +11,7 @@ import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import MapWithIncidents from "../../../components/MapWithIncidents";
 import { getItinerary, Itinerary } from "../../../lib/api/navigation";
 import { useIncidents } from "../../../contexts/IncidentContext";
+import { useNavigation } from "../../../contexts/NavigationContext";
 import { formatDistance, formatDuration, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
 
@@ -31,8 +32,11 @@ export default function NavigationScreen() {
   const [watchPosition, setWatchPosition] = useState<Location.LocationSubscription | null>(null);
   const [recentlyPassedStep, setRecentlyPassedStep] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [recalculationFailed, setRecalculationFailed] = useState(false);
 
   const { fetchIncidents, setSelectedIncident } = useIncidents();
+  const { navigationState, setNavigationState, clearNavigation } = useNavigation();
 
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
@@ -48,13 +52,11 @@ export default function NavigationScreen() {
   // ========================================================================================================
 
   useEffect(() => {
-    if (!destLat || !destLon) {
-      if (global.navigationState) {
-        const { route } = global.navigationState;
-        setItinerary(route);
-      }
+    // If we have navigation state but no itinerary yet, initialize from navigation state
+    if (!itinerary && navigationState?.route) {
+      setItinerary(navigationState.route);
     }
-  }, []);
+  }, [itinerary, navigationState]);
 
   // ========================================================================================================
 
@@ -141,7 +143,9 @@ export default function NavigationScreen() {
   const fetchRoute = async (currentLoc: Location.LocationObject) => {
     try {
       setIsLoading(true);
-      const route = await getItinerary(
+      setIsRecalculating(true);
+
+      const routeResult = await getItinerary(
         currentLoc.coords.latitude,
         currentLoc.coords.longitude,
         destinationCoords.latitude,
@@ -150,41 +154,48 @@ export default function NavigationScreen() {
         "fastest"
       );
 
-      if (route) {
-        setItinerary(route);
+      // Check if the result is an error
+      if ("status" in routeResult) {
+        console.error("Itinerary error:", routeResult);
+        setRecalculationFailed(true);
 
-        global.navigationState = {
-          route,
-          destination: {
-            coords: destinationCoords,
-            name: destName || "Destination",
-          },
-          startedAt: new Date(),
-        };
+        // Don't show alert for recalculation failures, just show UI indication
+        return;
+      }
 
-        // Fetch incidents for the route area
-        await fetchIncidentsForRoute(route, currentLoc);
+      const route = routeResult as Itinerary;
+      setItinerary(route);
+      setRecalculationFailed(false);
 
-        if (route.steps && route.steps.length > 0) {
-          speakInstruction(route.steps[0].instruction);
-        }
-      } else {
-        Alert.alert("Erreur", "Impossible de calculer l'itinéraire. Veuillez réessayer.");
-        router.back();
+      // Update navigation state
+      setNavigationState({
+        route,
+        destination: {
+          coords: destinationCoords,
+          name: destName || "Destination",
+        },
+        startedAt: new Date(),
+      });
+
+      // Fetch incidents for the route area
+      await fetchIncidentsForRoute(route, currentLoc);
+
+      if (route.steps && route.steps.length > 0) {
+        speakInstruction(route.steps[0].instruction);
       }
     } catch (error) {
       console.error("Error fetching route:", error);
-      Alert.alert("Erreur", "Impossible de calculer l'itinéraire. Veuillez réessayer.");
-      router.back();
+      setRecalculationFailed(true);
     } finally {
       setIsLoading(false);
+      setIsRecalculating(false);
     }
   };
 
   // ========================================================================================================
 
   useEffect(() => {
-    if (!location || !itinerary || !currentStep) return;
+    if (!location || !itinerary || !currentStep || isRecalculating) return;
 
     const checkProgressAlongRoute = async () => {
       if (currentStepIndex === itinerary.steps.length - 1) {
@@ -196,10 +207,13 @@ export default function NavigationScreen() {
         );
 
         if (distanceToDestination < 0.05) {
+          // Notify user they've reached their destination
           Alert.alert("Destination atteinte", "Vous êtes arrivé à destination");
 
-          global.navigationState = null;
+          // Clear navigation state
+          clearNavigation();
 
+          // Navigate back to home
           router.replace("/home");
         }
         return;
@@ -230,16 +244,24 @@ export default function NavigationScreen() {
         itinerary.coordinates
       );
 
-      if (closestPointOnRoute.distance > 0.1) {
-        await fetchRoute(location);
-
-        // Announce rerouting
+      // If user is too far from route and recalculation isn't already in progress
+      if (closestPointOnRoute.distance > 0.1 && !isRecalculating && !recalculationFailed) {
         speakInstruction("Recalcul de l'itinéraire");
+        await fetchRoute(location);
       }
     };
 
     checkProgressAlongRoute();
-  }, [location, itinerary, currentStep, currentStepIndex]);
+  }, [location, itinerary, currentStep, currentStepIndex, clearNavigation, isRecalculating, recalculationFailed]);
+
+  // ========================================================================================================
+
+  const handleManualRecalculation = async () => {
+    if (!location) return;
+
+    setRecalculationFailed(false);
+    await fetchRoute(location);
+  };
 
   // ========================================================================================================
 
@@ -353,6 +375,17 @@ export default function NavigationScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Recalculation Failed Banner */}
+        {recalculationFailed && (
+          <View className="absolute top-16 left-4 right-4 bg-red-100 rounded-lg p-3 flex-row items-center">
+            <Icon name="CircleAlert" className="text-red-500 size-5 mr-2" />
+            <Text className="flex-1 text-red-800">Impossible de recalculer l'itinéraire</Text>
+            <TouchableOpacity onPress={handleManualRecalculation} className="ml-2 bg-red-500 px-3 py-1 rounded-full">
+              <Text className="text-white">Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Current Instruction Card */}
         <View className="absolute bottom-24 left-4 right-4 bg-white rounded-xl p-4 shadow-lg">

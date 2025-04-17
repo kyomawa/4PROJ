@@ -9,6 +9,7 @@ import { LogBox } from "react-native";
 import { initializeAuth } from "../lib/api/auth";
 import { AuthProvider } from "../contexts/AuthContext";
 import { IncidentProvider } from "../contexts/IncidentContext";
+import { NavigationProvider } from "../contexts/NavigationContext";
 
 // ========================================================================================================
 
@@ -45,18 +46,20 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <IncidentProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: "fade_from_bottom",
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(root)" options={{ animation: "fade" }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-        </IncidentProvider>
+        <NavigationProvider>
+          <IncidentProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: "fade_from_bottom",
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(root)" options={{ animation: "fade" }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </IncidentProvider>
+        </NavigationProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

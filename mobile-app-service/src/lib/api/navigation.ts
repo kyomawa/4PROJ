@@ -42,6 +42,12 @@ export type Location = {
   boundingBox?: number[];
 };
 
+export type ItineraryError = {
+  status: number;
+  message: string;
+  isInvalidPoints?: boolean;
+};
+
 // ========================================================================================================
 
 /**
@@ -54,7 +60,7 @@ export const getItinerary = async (
   arrivalLon: number,
   travelMethod: "car" | "bike" | "foot" | "train" = "car",
   routeType: "fastest" | "shortest" | "eco" | "thrilling" = "fastest"
-): Promise<Itinerary | null> => {
+): Promise<Itinerary | ItineraryError> => {
   try {
     const response = await axiosClient.get(`${endpoint}/itinerary`, {
       params: {
@@ -67,10 +73,16 @@ export const getItinerary = async (
       },
     });
     return response.data;
-  } catch (error) {
-    console.error("Error fetching itinerary:", error);
+  } catch (error: any) {
+    // Check for specific error message about invalid points
+    const isInvalidPoints =
+      error.response?.data?.message?.includes("Invalid points") || error.response?.data?.includes("Invalid points");
 
-    return null;
+    return {
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch itinerary",
+      isInvalidPoints: isInvalidPoints,
+    };
   }
 };
 

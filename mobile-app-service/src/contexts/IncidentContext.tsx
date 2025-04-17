@@ -53,7 +53,6 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
       const newIncident = await reportIncident(data);
 
       if (newIncident) {
-        // Add the new incident to the list
         setIncidents((prevIncidents) => [...prevIncidents, newIncident]);
       }
 
