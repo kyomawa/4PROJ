@@ -43,6 +43,19 @@ namespace incident_service.Repository
                             && i.Longitude == postIncidentDto.Longitude);
         }
 
+        public async Task<Incident> Enable(Incident incident)
+        {
+            incident.Status = IncidentStatus.Active;
+
+            var votes = context.UserIncidentVotes
+                .Where(v => v.IncidentId == incident.Id);
+
+            context.UserIncidentVotes.RemoveRange(votes);
+
+            await context.SaveChangesAsync();
+            return incident;
+        }
+
         public async Task<Incident> Disable(Incident incident)
         {
             incident.Status = IncidentStatus.Inactive;

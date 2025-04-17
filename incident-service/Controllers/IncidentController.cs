@@ -156,5 +156,43 @@ namespace incident_service.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/enable")]
+        public async Task<ActionResult<IncidentDto>> Enable(Guid id)
+        {
+            try
+            {
+                var response = await incidentService.Enable(id);
+                if (response == null)
+                {
+                    return BadRequest($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/disable")]
+        public async Task<ActionResult<IncidentDto>> Disable(Guid id)
+        {
+            try
+            {
+                var response = await incidentService.Disable(id);
+                if (response == null)
+                {
+                    return BadRequest($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

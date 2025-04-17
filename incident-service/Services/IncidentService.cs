@@ -18,7 +18,7 @@ namespace incident_service.Services
 {
     public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
     {
-        private const int MaxDislikesBeforeDelete = 0; 
+        private const int MaxDislikesBeforeDelete = 5; 
 
         public async Task<List<IncidentDto>> GetAll()
         {
@@ -71,6 +71,15 @@ namespace incident_service.Services
             }
 
             var userVote = await HandleUserVote(currentUserId, incident, voteIncidentDto.Reaction);
+            var votesOnIncident = await incidentRepository.GetAllVotesOnIncident(incident);
+
+            var totalLikes = votesOnIncident.Count(v => v.Reaction == ReactionType.Like);
+            var totalDislikes = votesOnIncident.Count(v => v.Reaction == ReactionType.Dislike);
+
+            if (totalDislikes >= totalLikes + MaxDislikesBeforeDelete)
+            {
+                incident = await incidentRepository.Disable(incident);
+            }
 
             return mapper.Map<IncidentDto>(incident);
         }
@@ -84,6 +93,28 @@ namespace incident_service.Services
             }
             var incidentDeleted = await incidentRepository.Delete(incident);
             return mapper.Map<IncidentDto>(incidentDeleted);
+        }
+        public async Task<IncidentDto> Enable(Guid incidentId)
+        {
+            var incident = await incidentRepository.Get(incidentId);
+            if (incident == null)
+            {
+                return null;
+            }
+            incident = await incidentRepository.Enable(incident);
+
+            return mapper.Map<IncidentDto>(incident);
+        }
+        public async Task<IncidentDto> Disable(Guid incidentId)
+        {
+            var incident = await incidentRepository.Get(incidentId);
+            if (incident == null)
+            {
+                return null;
+            }
+            incident = await incidentRepository.Disable(incident);
+
+            return mapper.Map<IncidentDto>(incident);
         }
 
         private async Task<UserIncidentVote> HandleUserVote(Guid userId, Incident incident, ReactionType reaction)

@@ -15,6 +15,7 @@ namespace incident_service.Services
         public Task<IncidentDto> Update(Guid id, UpdateIncidentDto updateIncidentDto);
         public Task<IncidentDto> Vote(Guid currentUserId, Guid id, VoteIncidentDto contributeIncidentDto);
         public Task<IncidentDto> Delete(Guid id);
-
+        public Task<IncidentDto> Enable(Guid incidentId);
+        public Task<IncidentDto> Disable(Guid incidentId);
     }
 }

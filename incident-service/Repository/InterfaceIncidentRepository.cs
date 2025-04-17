@@ -11,6 +11,7 @@ namespace incident_service.Repository
         public Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox);
         public Task<Incident> Get(Guid id);
         public Task<bool> Exist(PostIncidentDto postIncidentDto);
+        public Task<Incident> Enable(Incident incident);
         public Task<Incident> Disable(Incident incident);
         public Task<Incident> Create(PostIncidentDto postIncidentDto);
         public Task<Incident> Update(Incident incident, UpdateIncidentDto updateIncidentDto);
