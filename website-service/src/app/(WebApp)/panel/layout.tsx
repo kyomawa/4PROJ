@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
-import "@/globals.css";
-import { ViewTransitions } from "next-view-transitions";
-import { Toaster } from "react-hot-toast";
 import { commonMetadata } from "@/constants/metadata";
+import "@/globals.css";
+import { Toaster } from "react-hot-toast";
+import { ViewTransitions } from "next-view-transitions";
 import NextTopLoader from "nextjs-toploader";
 
 // =============================================================================================
@@ -23,8 +23,10 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="fr">
         <body className={`${sora.className} ${sora.variable} antialiased`}>
+          {/* Manifest of the website */}
+          <link rel="manifest" href="/manifests/manifestapp.json" />
           {/* Loading Bar */}
-          <NextTopLoader color="#695bf9" zIndex={10} showSpinner={false} />
+          <NextTopLoader color="#f83b56" zIndex={10} showSpinner={false} />
           {/* Content */}
           {children}
           {/* Toast  */}

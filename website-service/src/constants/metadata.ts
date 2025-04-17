@@ -89,4 +89,15 @@ export const loginMetadata: Metadata = {
   },
 };
 
+// =================================== PANEL (EMPLOYEE / ADMIN SECTION) ====================================
+
+export const panelLoginMetadata: Metadata = {
+  title: "Espace Employés",
+  description: "Espace personnel des employés.",
+  keywords: "connexion, login, espace client",
+  alternates: {
+    canonical: `${baseUrl}/panel/connexion`,
+  },
+};
+
 // =========================================================================================================

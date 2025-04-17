@@ -3,6 +3,7 @@ import Navbar from "./Navbar";
 import { Link } from "next-view-transitions";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { getConnectedUser } from "@/actions/user/action";
 import HeaderAvatar from "./HeaderAvatar";
 import SidebarMobile from "./NavbarMobile";
 
