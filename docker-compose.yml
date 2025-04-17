@@ -338,6 +338,32 @@ services:
     networks:
       - 4proj_dev
 
+  website-service:
+    build:
+      context: ./website-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./website-service:/app
+      - /app/node_modules
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.http.services.website-service.loadbalancer.server.port=3000"
+      - "traefik.http.routers.website.rule=Host(`localhost`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.website.entrypoints=http"
+      - "traefik.http.routers.website.priority=10"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - 4proj_dev
+
 volumes:
   4proj-incident-database:
   4proj-user-database:
