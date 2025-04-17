@@ -1,5 +1,7 @@
 import { IconProps } from "../components/Icon";
 
+// ========================================================================================================
+
 // Helper function to convert incident types to icon names
 export const incidentTypeToIcon = (type: string): IconProps["name"] => {
   switch (type) {
@@ -18,6 +20,8 @@ export const incidentTypeToIcon = (type: string): IconProps["name"] => {
   }
 };
 
+// ========================================================================================================
+
 // Convert distance in meters to a human-readable format
 export const formatDistance = (distanceInMeters: number): string => {
   if (distanceInMeters < 1000) {
@@ -25,6 +29,8 @@ export const formatDistance = (distanceInMeters: number): string => {
   }
   return `${(distanceInMeters / 1000).toFixed(1)}km`;
 };
+
+// ========================================================================================================
 
 // Convert duration in seconds to a human-readable format
 export const formatDuration = (durationInSeconds: number): string => {
@@ -36,6 +42,8 @@ export const formatDuration = (durationInSeconds: number): string => {
   }
   return `${minutes}min`;
 };
+
+// ========================================================================================================
 
 // Calculate bounding box from a list of coordinates
 export const calculateBoundingBox = (coordinates: { latitude: number; longitude: number }[]) => {
@@ -65,3 +73,5 @@ export const calculateBoundingBox = (coordinates: { latitude: number; longitude:
     maxLon: maxLon + lonPadding,
   };
 };
+
+// ========================================================================================================

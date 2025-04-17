@@ -8,6 +8,8 @@ import Button from "../../../components/Button";
 import { reportIncident } from "../../../lib/api/incidents";
 import { StatusBar } from "expo-status-bar";
 
+// ========================================================================================================
+
 type IncidentType = "Crash" | "Bottling" | "ClosedRoad" | "PoliceControl" | "Obstacle";
 
 type IncidentOption = {
@@ -24,10 +26,14 @@ const INCIDENT_OPTIONS: IncidentOption[] = [
   { type: "Obstacle", icon: "CircleAlert", label: "Obstacle" },
 ];
 
+// ========================================================================================================
+
 export default function ReportIncidentScreen() {
   const [selectedIncident, setSelectedIncident] = useState<IncidentType | null>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ========================================================================================================
 
   useEffect(() => {
     (async () => {
@@ -44,6 +50,8 @@ export default function ReportIncidentScreen() {
       setLocation(locationResult);
     })();
   }, []);
+
+  // ========================================================================================================
 
   const handleSubmit = async () => {
     if (!selectedIncident || !location) {
@@ -75,6 +83,8 @@ export default function ReportIncidentScreen() {
       setIsSubmitting(false);
     }
   };
+
+  // ========================================================================================================
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
@@ -116,8 +126,8 @@ export default function ReportIncidentScreen() {
         </View>
 
         <Text className="text-neutral-500 mb-8">
-          Votre position actuelle sera utilisée pour placer cet incident sur la carte. Assurez-vous d’être à l'endroit
-          exact de l’incident.
+          Votre position actuelle sera utilisée pour placer cet incident sur la carte. Assurez-vous d'être à l'endroit
+          exact de l'incident.
         </Text>
 
         <Button handlePress={handleSubmit} isLoading={isSubmitting}>
@@ -127,3 +137,5 @@ export default function ReportIncidentScreen() {
     </SafeAreaView>
   );
 }
+
+// ========================================================================================================

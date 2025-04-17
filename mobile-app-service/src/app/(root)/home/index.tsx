@@ -7,6 +7,8 @@ import { router } from "expo-router";
 import Icon from "../../../components/Icon";
 import IncidentButton from "../../../components/IncidentButton";
 import SearchBar from "../../../components/SearchBar";
+import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
+import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
 import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
 import { incidentTypeToIcon } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
@@ -19,6 +21,10 @@ export default function HomeScreen() {
   const [errorMsg, setErrorMsg] = useState("");
   const [incidents, setIncidents] = useState([] as Incident[]);
   const [isLoadingIncidents, setIsLoadingIncidents] = useState(false);
+  const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
+  const [activeDestination, setActiveDestination] = useState<string>("");
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [showIncidentDetails, setShowIncidentDetails] = useState(false);
   const [region, setRegion] = useState({
     latitude: 48.8566,
     longitude: 2.3522,
@@ -27,6 +33,11 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
+    if (global.navigationState) {
+      setHasActiveNavigation(true);
+      setActiveDestination(global.navigationState.destination.name);
+    }
+
     (async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -97,6 +108,17 @@ export default function HomeScreen() {
     }
   };
 
+  const handleIncidentPress = (incident: Incident) => {
+    setSelectedIncident(incident);
+    setShowIncidentDetails(true);
+  };
+
+  const resumeNavigation = () => {
+    if (global.navigationState) {
+      router.push("/navigation");
+    }
+  };
+
   return (
     <View className="flex-1 bg-neutral-10">
       <StatusBar style="auto" translucent backgroundColor="transparent" />
@@ -128,6 +150,7 @@ export default function HomeScreen() {
                     latitude: incident.latitude,
                     longitude: incident.longitude,
                   }}
+                  onPress={() => handleIncidentPress(incident)}
                 >
                   <View className="bg-white p-2 rounded-full shadow-md">
                     <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
@@ -140,6 +163,11 @@ export default function HomeScreen() {
             <SafeAreaView className="absolute top-4 left-4 right-4">
               <SearchBar onPress={handleSearch} />
             </SafeAreaView>
+
+            {/* Active Navigation Banner */}
+            {hasActiveNavigation && (
+              <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
+            )}
 
             {/* Center on User Button */}
             <View className="absolute bottom-8 left-6">
@@ -162,6 +190,13 @@ export default function HomeScreen() {
                 <ActivityIndicator color="#695BF9" size="small" />
               </View>
             )}
+
+            {/* Incident Details Modal */}
+            <IncidentDetailsModal
+              incident={selectedIncident}
+              visible={showIncidentDetails}
+              onClose={() => setShowIncidentDetails(false)}
+            />
           </>
         )}
       </View>

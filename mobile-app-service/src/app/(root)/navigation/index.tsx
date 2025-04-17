@@ -6,10 +6,13 @@ import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import * as Speech from "expo-speech";
 import Icon from "../../../components/Icon";
-import { getItinerary, Itinerary } from "../../../lib/api/navigation";
-import { formatDistance, formatDuration, incidentTypeToIcon } from "../../../utils/mapUtils";
-import { StatusBar } from "expo-status-bar";
 import IncidentButton from "@/src/components/IncidentButton";
+import { getItinerary, Itinerary } from "../../../lib/api/navigation";
+import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
+import { formatDistance, formatDuration, incidentTypeToIcon, calculateBoundingBox } from "../../../utils/mapUtils";
+import { StatusBar } from "expo-status-bar";
+
+// ========================================================================================================
 
 export default function NavigationScreen() {
   const mapRef = useRef<MapView>(null);
@@ -25,25 +28,35 @@ export default function NavigationScreen() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [watchPosition, setWatchPosition] = useState<Location.LocationSubscription | null>(null);
   const [recentlyPassedStep, setRecentlyPassedStep] = useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
 
-  // Parse destination coordinates
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
     longitude: parseFloat(destLon || "0"),
   };
 
-  // Get current step
   const currentStep =
     itinerary?.steps && itinerary.steps.length > currentStepIndex ? itinerary.steps[currentStepIndex] : null;
 
-  // Next step
   const nextStep =
     itinerary?.steps && itinerary.steps.length > currentStepIndex + 1 ? itinerary.steps[currentStepIndex + 1] : null;
 
   useEffect(() => {
+    if (!destLat || !destLon) {
+      if (global.navigationState) {
+        const { route } = global.navigationState;
+        setItinerary(route);
+
+        if (route.incidents && route.incidents.length > 0) {
+          setIncidents(route.incidents);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const initNavigation = async () => {
       try {
-        // Request location permissions
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           Alert.alert(
@@ -54,13 +67,11 @@ export default function NavigationScreen() {
           return;
         }
 
-        // Get current location
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.BestForNavigation,
         });
         setLocation(location);
 
-        // Start watching position
         const subscription = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
@@ -74,9 +85,12 @@ export default function NavigationScreen() {
 
         setWatchPosition(subscription);
 
-        // Fetch itinerary
-        if (destLat && destLon) {
+        if (!itinerary && destLat && destLon) {
           await fetchRoute(location);
+        } else if (itinerary) {
+          if (!incidents.length) {
+            fetchIncidentsForRoute(itinerary, location);
+          }
         }
       } catch (error) {
         console.error("Error initializing navigation:", error);
@@ -89,7 +103,6 @@ export default function NavigationScreen() {
 
     initNavigation();
 
-    // Cleanup
     return () => {
       if (watchPosition) {
         watchPosition.remove();
@@ -97,6 +110,26 @@ export default function NavigationScreen() {
       Speech.stop();
     };
   }, []);
+
+  const fetchIncidentsForRoute = async (route: Itinerary, currentLoc: Location.LocationObject) => {
+    try {
+      const boundingBox = calculateBoundingBox([
+        { latitude: currentLoc.coords.latitude, longitude: currentLoc.coords.longitude },
+        ...route.coordinates,
+      ]);
+
+      if (boundingBox) {
+        const nearbyIncidents = await fetchNearbyIncidents(
+          (boundingBox.minLat + boundingBox.maxLat) / 2,
+          (boundingBox.minLon + boundingBox.maxLon) / 2,
+          10 // 10km radius
+        );
+        setIncidents(nearbyIncidents);
+      }
+    } catch (error) {
+      console.error("Error fetching incidents:", error);
+    }
+  };
 
   // Fetch the route
   const fetchRoute = async (currentLoc: Location.LocationObject) => {
@@ -114,7 +147,21 @@ export default function NavigationScreen() {
       if (route) {
         setItinerary(route);
 
-        // Announce first instruction
+        global.navigationState = {
+          route,
+          destination: {
+            coords: destinationCoords,
+            name: destName || "Destination",
+          },
+          startedAt: new Date(),
+        };
+
+        if (route.incidents && route.incidents.length > 0) {
+          setIncidents(route.incidents);
+        } else {
+          fetchIncidentsForRoute(route, currentLoc);
+        }
+
         if (route.steps && route.steps.length > 0) {
           speakInstruction(route.steps[0].instruction);
         }
@@ -131,14 +178,11 @@ export default function NavigationScreen() {
     }
   };
 
-  // Monitor user progress along the route
   useEffect(() => {
     if (!location || !itinerary || !currentStep) return;
 
     const checkProgressAlongRoute = async () => {
-      // If we're at the last step
       if (currentStepIndex === itinerary.steps.length - 1) {
-        // Check if we're close to destination
         const distanceToDestination = calculateDistance(
           location.coords.latitude,
           location.coords.longitude,
@@ -147,14 +191,15 @@ export default function NavigationScreen() {
         );
 
         if (distanceToDestination < 0.05) {
-          // 50 meters
           Alert.alert("Destination atteinte", "Vous êtes arrivé à destination");
+
+          global.navigationState = null;
+
           router.replace("/home");
         }
         return;
       }
 
-      // Check if we're close to the next step point
       if (nextStep) {
         const distanceToNextStep = calculateDistance(
           location.coords.latitude,
@@ -163,20 +208,17 @@ export default function NavigationScreen() {
           nextStep.wayPoints.longitude
         );
 
-        // If we're close to the next step point (30 meters)
         if (distanceToNextStep < 0.03 && !recentlyPassedStep) {
           setCurrentStepIndex(currentStepIndex + 1);
           speakInstruction(nextStep.instruction);
           setRecentlyPassedStep(true);
 
-          // Reset the recently passed flag after 10 seconds
           setTimeout(() => {
             setRecentlyPassedStep(false);
           }, 10000);
         }
       }
 
-      // Recalculate route if we're significantly off course
       const closestPointOnRoute = findClosestPointOnRoute(
         location.coords.latitude,
         location.coords.longitude,
@@ -184,8 +226,6 @@ export default function NavigationScreen() {
       );
 
       if (closestPointOnRoute.distance > 0.1) {
-        // More than 100 meters off route
-        // Fetch new route
         await fetchRoute(location);
 
         // Announce rerouting
@@ -196,7 +236,6 @@ export default function NavigationScreen() {
     checkProgressAlongRoute();
   }, [location, itinerary, currentStep, currentStepIndex]);
 
-  // Function to speak instructions
   const speakInstruction = (instruction: string) => {
     Speech.speak(instruction, {
       language: "fr-FR",
@@ -205,7 +244,6 @@ export default function NavigationScreen() {
     });
   };
 
-  // Calculate distance between two coordinates in kilometers
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radius of the earth in km
     const dLat = deg2rad(lat2 - lat1);
@@ -238,16 +276,8 @@ export default function NavigationScreen() {
     return { point: closestPoint, distance: closestDistance };
   };
 
-  // Center map on current location
-  const centerOnUser = () => {
-    if (mapRef.current && location) {
-      mapRef.current.animateToRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.005, // Zoomed in
-        longitudeDelta: 0.005,
-      });
-    }
+  const handleAddIncident = () => {
+    router.push("/incident/report");
   };
 
   if (isLoading) {
@@ -258,10 +288,6 @@ export default function NavigationScreen() {
       </SafeAreaView>
     );
   }
-
-  const handleAddIncident = () => {
-    router.push("/incident/report");
-  };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-neutral-10">
@@ -357,3 +383,5 @@ export default function NavigationScreen() {
     </SafeAreaView>
   );
 }
+
+// ========================================================================================================

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Icon from "../../../components/Icon";
 import Button from "../../../components/Button";
+import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
 import { useAuthContext } from "../../../contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
 
@@ -12,6 +13,20 @@ import { StatusBar } from "expo-status-bar";
 export default function ProfileScreen() {
   const { user, loading, logout } = useAuthContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
+  const [activeDestination, setActiveDestination] = useState<string>("");
+
+  // ========================================================================================================
+
+  useEffect(() => {
+    // Check if we have an active navigation session
+    if (global.navigationState) {
+      setHasActiveNavigation(true);
+      setActiveDestination(global.navigationState.destination.name);
+    }
+  }, []);
+
+  // ========================================================================================================
 
   const handleLogout = async () => {
     try {
@@ -31,6 +46,8 @@ export default function ProfileScreen() {
     }
   };
 
+  // ========================================================================================================
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -39,13 +56,27 @@ export default function ProfileScreen() {
       .toUpperCase();
   };
 
+  // ========================================================================================================
+
   const navigateToEditProfile = () => {
     router.push("/profile/edit");
   };
 
+  // ========================================================================================================
+
   const navigateToAccountSettings = () => {
     router.push("/profile/account-settings");
   };
+
+  // ========================================================================================================
+
+  const resumeNavigation = () => {
+    if (global.navigationState) {
+      router.push("/navigation");
+    }
+  };
+
+  // ========================================================================================================
 
   if (loading) {
     return (
@@ -57,6 +88,8 @@ export default function ProfileScreen() {
     );
   }
 
+  // ========================================================================================================
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
       <StatusBar style="dark" />
@@ -65,6 +98,14 @@ export default function ProfileScreen() {
         <View className="p-4 border-b border-neutral-200">
           <Text className="text-2xl font-satoshi-Bold">Profil</Text>
         </View>
+
+        {/* Active Navigation Banner */}
+        {hasActiveNavigation && (
+          <View className="my-4 mx-4">
+            <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
+          </View>
+        )}
+
         {/* Profile Info */}
         <View className="p-6 items-center">
           <View className="bg-primary-100 w-24 h-24 rounded-full items-center justify-center mb-4">

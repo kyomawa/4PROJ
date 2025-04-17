@@ -2,6 +2,8 @@ import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import Icon from "../../components/Icon";
 
+// ========================================================================================================
+
 export default function RootLayout() {
   return (
     <Tabs
@@ -26,23 +28,15 @@ export default function RootLayout() {
       <Tabs.Screen
         name="home/index"
         options={{
-          title: "Map",
+          title: "Carte",
           tabBarIcon: ({ color, size }) => <Icon name="Map" className={`text-[${color}] size-${size}`} />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="incident/index"
-        options={{
-          title: "Incidents",
-          tabBarIcon: ({ color, size }) => <Icon name="TriangleAlert" className={`text-[${color}] size-${size}`} />,
         }}
       />
 
       <Tabs.Screen
         name="profile/index"
         options={{
-          title: "Profile",
+          title: "Profil",
           tabBarIcon: ({ color, size }) => <Icon name="User" className={`text-[${color}] size-${size}`} />,
         }}
       />
@@ -92,3 +86,5 @@ export default function RootLayout() {
     </Tabs>
   );
 }
+
+// ========================================================================================================

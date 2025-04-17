@@ -8,12 +8,16 @@ import { geocodeLocation, Location as LocationType } from "../../../lib/api/navi
 import { useDebounce } from "../../../hooks/useDebounce";
 import { StatusBar } from "expo-status-bar";
 
+// ========================================================================================================
+
 export default function SearchScreen() {
   const [searchText, setSearchText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [locations, setLocations] = useState<LocationType[]>([]);
   const [recentSearches, setRecentSearches] = useState<LocationType[]>([]);
   const debouncedSearchText = useDebounce(searchText, 500);
+
+  // ========================================================================================================
 
   useEffect(() => {
     if (debouncedSearchText.length < 3) {
@@ -38,6 +42,8 @@ export default function SearchScreen() {
     fetchLocations();
   }, [debouncedSearchText]);
 
+  // ========================================================================================================
+
   const handleLocationSelect = (location: LocationType) => {
     // Store in recent searches (avoiding duplicates)
     setRecentSearches((prev) => {
@@ -55,6 +61,8 @@ export default function SearchScreen() {
       },
     });
   };
+
+  // ========================================================================================================
 
   const handleMyLocationSelect = async () => {
     try {
@@ -74,6 +82,8 @@ export default function SearchScreen() {
     }
   };
 
+  // ========================================================================================================
+
   const renderLocationItem = ({ item }: { item: LocationType }) => (
     <TouchableOpacity className="p-4 border-b border-neutral-200" onPress={() => handleLocationSelect(item)}>
       <Text className="text-base font-satoshi-Medium">{item.formatted}</Text>
@@ -84,6 +94,8 @@ export default function SearchScreen() {
       )}
     </TouchableOpacity>
   );
+
+  // ========================================================================================================
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-10">
@@ -97,7 +109,7 @@ export default function SearchScreen() {
           <Icon name="Search" className="text-neutral-400 size-5 mr-2" />
           <TextInput
             className="flex-1 text-base py-0.5 mb-2"
-            placeholder="Search for a destination"
+            placeholder="Rechercher une destination"
             value={searchText}
             onChangeText={setSearchText}
             autoFocus
@@ -126,7 +138,9 @@ export default function SearchScreen() {
               ListEmptyComponent={
                 <View className="p-4 items-center">
                   <Text className="text-neutral-500">
-                    {searchText.length < 3 ? "Enter at least 3 characters to search" : "No results found"}
+                    {searchText.length < 3
+                      ? "Saisissez au moins 3 caractères pour rechercher"
+                      : "Aucun résultat trouvé"}
                   </Text>
                 </View>
               }
@@ -138,12 +152,12 @@ export default function SearchScreen() {
                 onPress={handleMyLocationSelect}
               >
                 <Icon name="Navigation" className="text-primary-500 size-6 mr-3" />
-                <Text className="text-base font-satoshi-Medium">Current Location</Text>
+                <Text className="text-base font-satoshi-Medium">Position actuelle</Text>
               </TouchableOpacity>
 
               {recentSearches.length > 0 && (
                 <>
-                  <Text className="text-neutral-500 ml-2 mb-2">Recent Searches</Text>
+                  <Text className="text-neutral-500 ml-2 mb-2">Recherches récentes</Text>
                   <FlatList
                     data={recentSearches}
                     keyExtractor={(item) => item.placeId}
@@ -159,3 +173,5 @@ export default function SearchScreen() {
     </SafeAreaView>
   );
 }
+
+// ========================================================================================================

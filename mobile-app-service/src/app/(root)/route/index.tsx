@@ -5,9 +5,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
+import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import { getItinerary, Itinerary, Step } from "../../../lib/api/navigation";
-import { formatDistance, formatDuration, incidentTypeToIcon } from "../../../utils/mapUtils";
+import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
+import { formatDistance, formatDuration, incidentTypeToIcon, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
+
+// ========================================================================================================
 
 export default function RouteScreen() {
   const mapRef = useRef<MapView>(null);
@@ -21,6 +25,9 @@ export default function RouteScreen() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDirections, setShowDirections] = useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [showIncidentDetails, setShowIncidentDetails] = useState(false);
 
   // Parse destination coordinates
   const destinationCoords = {
@@ -35,7 +42,10 @@ export default function RouteScreen() {
         // Request location permissions
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          Alert.alert("Location permission required", "Please enable location services to use navigation");
+          Alert.alert(
+            "Autorisation de localisation requise",
+            "Veuillez activer les services de localisation pour utiliser la navigation"
+          );
           setIsLoading(false);
           return;
         }
@@ -58,6 +68,35 @@ export default function RouteScreen() {
           if (route) {
             setItinerary(route);
 
+            // Store route in global navigation state
+            global.navigationState = {
+              route,
+              destination: {
+                coords: destinationCoords,
+                name: destName || "Destination",
+              },
+              startedAt: new Date(),
+            };
+
+            // Load additional incidents in the area if needed
+            if (!route.incidents || route.incidents.length === 0) {
+              const boundingBox = calculateBoundingBox([
+                { latitude: location.coords.latitude, longitude: location.coords.longitude },
+                ...route.coordinates,
+              ]);
+
+              if (boundingBox) {
+                const nearbyIncidents = await fetchNearbyIncidents(
+                  (boundingBox.minLat + boundingBox.maxLat) / 2,
+                  (boundingBox.minLon + boundingBox.maxLon) / 2,
+                  10 // 10km radius
+                );
+                setIncidents(nearbyIncidents);
+              }
+            } else {
+              setIncidents(route.incidents);
+            }
+
             // Fit map to show the entire route
             if (mapRef.current && route.coordinates.length > 0) {
               const coordinates = [
@@ -71,12 +110,12 @@ export default function RouteScreen() {
               });
             }
           } else {
-            Alert.alert("Error", "Could not calculate route. Please try again.");
+            Alert.alert("Erreur", "Impossible de calculer l'itinéraire. Veuillez réessayer.");
           }
         }
       } catch (error) {
         console.error("Error setting up navigation:", error);
-        Alert.alert("Error", "Something went wrong. Please try again.");
+        Alert.alert("Erreur", "Un problème est survenu. Veuillez réessayer.");
       } finally {
         setIsLoading(false);
       }
@@ -108,13 +147,18 @@ export default function RouteScreen() {
     });
   };
 
+  const handleIncidentPress = (incident: Incident) => {
+    setSelectedIncident(incident);
+    setShowIncidentDetails(true);
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
         <StatusBar style="dark" />
 
         <ActivityIndicator size="large" color="#695BF9" />
-        <Text className="mt-4 text-neutral-500">Calculating the best route...</Text>
+        <Text className="mt-4 text-neutral-500">Calcul du meilleur itinéraire...</Text>
       </SafeAreaView>
     );
   }
@@ -127,7 +171,7 @@ export default function RouteScreen() {
           <Icon name="ArrowLeft" className="size-6" />
         </TouchableOpacity>
         <Text className="text-xl font-satoshi-Bold flex-1" numberOfLines={1}>
-          Route to {destName || "Destination"}
+          Itinéraire vers {destName || "Destination"}
         </Text>
       </View>
 
@@ -149,15 +193,16 @@ export default function RouteScreen() {
           )}
 
           {/* Incident Markers */}
-          {itinerary?.incidents?.map((incident) => (
+          {incidents.map((incident) => (
             <Marker
               key={incident.id}
               coordinate={{
                 latitude: incident.latitude,
                 longitude: incident.longitude,
               }}
+              onPress={() => handleIncidentPress(incident)}
             >
-              <View className="bg-white p-2 rounded-full">
+              <View className="bg-white p-2 rounded-full shadow-md">
                 <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
               </View>
             </Marker>
@@ -172,7 +217,9 @@ export default function RouteScreen() {
               onPress={() => setShowDirections(!showDirections)}
               className="flex-row justify-between items-center mb-2"
             >
-              <Text className="text-xl font-satoshi-Bold">{showDirections ? "Route Details" : "Directions"}</Text>
+              <Text className="text-xl font-satoshi-Bold">
+                {showDirections ? "Détails de l'itinéraire" : "Instructions"}
+              </Text>
               <Icon name={showDirections ? "ChevronDown" : "ChevronUp"} className="text-neutral-500 size-5" />
             </TouchableOpacity>
           </View>
@@ -188,12 +235,12 @@ export default function RouteScreen() {
                       <Text className="text-xl font-satoshi-Bold">{formatDistance(itinerary.distance)}</Text>
                     </View>
                     <View className="items-center">
-                      <Text className="text-neutral-500 mb-1">Duration</Text>
+                      <Text className="text-neutral-500 mb-1">Durée</Text>
                       <Text className="text-xl font-satoshi-Bold">{formatDuration(itinerary.duration)}</Text>
                     </View>
                     <View className="items-center">
                       <Text className="text-neutral-500 mb-1">Incidents</Text>
-                      <Text className="text-xl font-satoshi-Bold">{itinerary.incidents?.length || 0}</Text>
+                      <Text className="text-xl font-satoshi-Bold">{incidents?.length || 0}</Text>
                     </View>
                   </View>
 
@@ -202,7 +249,7 @@ export default function RouteScreen() {
                     className="w-full h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
                   >
                     <Icon name="Navigation" className="text-white size-5 mr-2" />
-                    <Text className="text-white text-lg font-satoshi-Bold">Start Navigation</Text>
+                    <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -211,12 +258,12 @@ export default function RouteScreen() {
             // Directions List
             <FlatList
               data={itinerary?.steps || []}
-              keyExtractor={(item, index) => `step-${index}`}
+              keyExtractor={(_item, index) => `step-${index}`}
               renderItem={renderDirectionItem}
               style={{ maxHeight: Dimensions.get("window").height * 0.5 }}
               ListEmptyComponent={
                 <View className="p-4 items-center">
-                  <Text className="text-neutral-500">No directions available</Text>
+                  <Text className="text-neutral-500">Aucune instruction disponible</Text>
                 </View>
               }
               ListFooterComponent={
@@ -226,7 +273,7 @@ export default function RouteScreen() {
                     className="w-full h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
                   >
                     <Icon name="Navigation" className="text-white size-5 mr-2" />
-                    <Text className="text-white text-lg font-satoshi-Bold">Start Navigation</Text>
+                    <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
                   </TouchableOpacity>
                 </View>
               }
@@ -234,6 +281,15 @@ export default function RouteScreen() {
           )}
         </View>
       </View>
+
+      {/* Incident Details Modal */}
+      <IncidentDetailsModal
+        incident={selectedIncident}
+        visible={showIncidentDetails}
+        onClose={() => setShowIncidentDetails(false)}
+      />
     </SafeAreaView>
   );
 }
+
+// ========================================================================================================
