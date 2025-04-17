@@ -35,7 +35,7 @@ export default function NavigationScreen() {
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [recalculationFailed, setRecalculationFailed] = useState(false);
 
-  const { fetchIncidents, setSelectedIncident } = useIncidents();
+  const { fetchIncidents, setSelectedIncident, incidents } = useIncidents();
   const { navigationState, setNavigationState, clearNavigation } = useNavigation();
 
   const destinationCoords = {
@@ -62,7 +62,7 @@ export default function NavigationScreen() {
         text: "Oui",
         style: "destructive",
         onPress: () => {
-          // Clear both global navigation state and local component state
+          // Clear only navigation state, not incidents
           clearNavigation();
           setItinerary(null);
           router.replace("/home");
@@ -161,6 +161,8 @@ export default function NavigationScreen() {
       ]);
 
       if (boundingBox) {
+        // With the updated IncidentContext, this will now merge with existing incidents
+        // rather than replacing them
         await fetchIncidents(
           (boundingBox.minLat + boundingBox.maxLat) / 2,
           (boundingBox.minLon + boundingBox.maxLon) / 2,
@@ -356,8 +358,6 @@ export default function NavigationScreen() {
   // ========================================================================================================
 
   const handleIncidentPress = (incidentId: string) => {
-    // Find the incident in our context
-    const { incidents } = useIncidents();
     const incident = incidents.find((inc) => inc.id === incidentId);
     if (incident) {
       setSelectedIncident(incident);

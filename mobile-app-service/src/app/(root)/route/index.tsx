@@ -34,7 +34,6 @@ export default function RouteScreen() {
   const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
   const { setNavigationState, clearNavigation } = useNavigation();
 
-  // Parse destination coordinates
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
     longitude: parseFloat(destLon || "0"),
@@ -42,14 +41,12 @@ export default function RouteScreen() {
 
   // ========================================================================================================
 
-  // Clear any existing navigation data when the component mounts
   useEffect(() => {
     clearNavigation();
   }, []);
 
   // ========================================================================================================
 
-  // Reset the route state when destination params change
   useEffect(() => {
     if (destLat && destLon) {
       setItinerary(null);
@@ -61,7 +58,6 @@ export default function RouteScreen() {
   // ========================================================================================================
 
   useEffect(() => {
-    // Get current location and fetch itinerary
     const setupNavigation = async () => {
       try {
         // Request location permissions
@@ -99,7 +95,6 @@ export default function RouteScreen() {
 
   // ========================================================================================================
 
-  // Extract itinerary fetching logic to a separate function
   const fetchItinerary = async (location: Location.LocationObject) => {
     try {
       setIsLoading(true);
@@ -113,7 +108,6 @@ export default function RouteScreen() {
         "fastest" // Default to fastest route
       );
 
-      // Check if the result is an error
       if ("status" in routeResult) {
         const errorResult = routeResult as ItineraryError;
         console.error("Itinerary error:", errorResult);
@@ -133,8 +127,6 @@ export default function RouteScreen() {
 
       const route = routeResult as Itinerary;
       setItinerary(route);
-
-      // Update navigation state in context and global state
       setNavigationState({
         route,
         destination: {
@@ -219,7 +211,6 @@ export default function RouteScreen() {
   // ========================================================================================================
 
   const handleIncidentPress = (incidentId: string) => {
-    // Find the incident in our context
     const incident = incidents.find((inc) => inc.id === incidentId);
     if (incident) {
       setSelectedIncident(incident);

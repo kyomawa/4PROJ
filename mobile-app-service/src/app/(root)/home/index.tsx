@@ -28,7 +28,7 @@ export default function HomeScreen() {
     longitudeDelta: 0.0421,
   });
 
-  const { fetchIncidents, setSelectedIncident, isLoading: isLoadingIncidents } = useIncidents();
+  const { fetchIncidents, setSelectedIncident, isLoading: isLoadingIncidents, incidents } = useIncidents();
   const { navigationState, hasActiveNavigation } = useNavigation();
 
   const showSearchBar = !(hasActiveNavigation && navigationState);
@@ -56,7 +56,6 @@ export default function HomeScreen() {
           longitudeDelta: 0.0421,
         });
 
-        // Fetch nearby incidents when location is available
         if (locationResult) {
           fetchIncidents(locationResult.coords.latitude, locationResult.coords.longitude, 5);
         }
@@ -96,7 +95,6 @@ export default function HomeScreen() {
   };
 
   const handleIncidentPress = (incidentId: string) => {
-    const { incidents } = useIncidents();
     const incident = incidents.find((inc) => inc.id === incidentId);
     if (incident) {
       setSelectedIncident(incident);

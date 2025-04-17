@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, ReactNode, useState, useCallback } from "react";
 import {
   fetchNearbyIncidents,
   reportIncident,
@@ -13,6 +13,7 @@ type IncidentContextType = {
   incidents: Incident[];
   isLoading: boolean;
   fetchIncidents: (latitude: number, longitude: number, radiusKm?: number) => Promise<void>;
+  clearIncidents: () => void;
   reportNewIncident: (data: IncidentPostData) => Promise<Incident | null>;
   reactToIncident: (incidentId: string, reaction: "Like" | "Dislike") => Promise<Incident | null>;
   selectedIncident: Incident | null;
@@ -38,12 +39,35 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
     try {
       setIsLoading(true);
       const fetchedIncidents = await fetchNearbyIncidents(latitude, longitude, radiusKm);
-      setIncidents(fetchedIncidents);
+
+      // Merge new incidents with existing ones, avoiding duplicates
+      setIncidents((prevIncidents) => {
+        const uniqueIncidents = new Map();
+
+        // Add existing incidents to map using ID as key
+        prevIncidents.forEach((incident) => {
+          uniqueIncidents.set(incident.id, incident);
+        });
+
+        // Add or update with new incidents
+        fetchedIncidents.forEach((incident) => {
+          uniqueIncidents.set(incident.id, incident);
+        });
+
+        // Convert back to array
+        return Array.from(uniqueIncidents.values());
+      });
     } catch (error) {
       console.error("Error fetching incidents:", error);
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // ========================================================================================================
+
+  const clearIncidents = useCallback(() => {
+    setIncidents([]);
   }, []);
 
   // ========================================================================================================
@@ -91,6 +115,7 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
     incidents,
     isLoading,
     fetchIncidents,
+    clearIncidents,
     reportNewIncident,
     reactToIncident: handleReactToIncident,
     selectedIncident,
