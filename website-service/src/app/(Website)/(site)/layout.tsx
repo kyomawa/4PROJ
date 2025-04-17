@@ -1,4 +1,4 @@
-import Header from "@/components/Header/Header";
+import Header from "@/app/(Website)/(site)/_components/Header/Header";
 
 // =============================================================================================
 
