@@ -13,6 +13,7 @@ For development, use the `docker-compose.yml` file which includes live reload ca
    ```
 
 4. **Access Services:**
+   - Web service: [http://localhost](http://localhost/)
    - Navigation service: [http://navigation.localhost](http://navigation.localhost/)
    - Incident service: [http://incident.localhost](http://incident.localhost/)
    - User service: [http://user.localhost](http://user.localhost/)
@@ -70,7 +71,7 @@ Trafine is a Waze-like navigation application built using a microservices archit
 
 ### Frontend
 
-- **[Mobile App Service](mobile-app-service/README.md)**: React Native mobile client application.
+- **[Web service](http://localhost/)**: The main website for the application.
 
 ### Infrastructure
 
