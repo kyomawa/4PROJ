@@ -11,6 +11,8 @@ import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
 import { incidentTypeToIcon } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
 
+// ========================================================================================================
+
 export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
   const [location, setLocation] = useState(null as Location.LocationObject | null);
@@ -18,7 +20,7 @@ export default function HomeScreen() {
   const [incidents, setIncidents] = useState([] as Incident[]);
   const [isLoadingIncidents, setIsLoadingIncidents] = useState(false);
   const [region, setRegion] = useState({
-    latitude: 48.8566, // Default to Paris
+    latitude: 48.8566,
     longitude: 2.3522,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
@@ -62,7 +64,7 @@ export default function HomeScreen() {
   const fetchIncidents = async (lat: number, lon: number) => {
     try {
       setIsLoadingIncidents(true);
-      const incidentsData = await fetchNearbyIncidents(lat, lon, 5); // 5km radius
+      const incidentsData = await fetchNearbyIncidents(lat, lon, 5);
       setIncidents(incidentsData);
     } catch (error) {
       console.error("Échec de la récupération des incidents:", error);
@@ -96,8 +98,8 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-10">
-      <StatusBar style="dark" />
+    <View className="flex-1 bg-neutral-10">
+      <StatusBar style="auto" translucent backgroundColor="transparent" />
       <View className="flex-1 relative">
         {errorMsg ? (
           <View className="flex-1 justify-center items-center">
@@ -135,9 +137,9 @@ export default function HomeScreen() {
             </MapView>
 
             {/* Search Bar */}
-            <View className="absolute top-4 left-4 right-4">
+            <SafeAreaView className="absolute top-4 left-4 right-4">
               <SearchBar onPress={handleSearch} />
-            </View>
+            </SafeAreaView>
 
             {/* Center on User Button */}
             <View className="absolute bottom-8 left-6">
@@ -163,6 +165,8 @@ export default function HomeScreen() {
           </>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
+
+// ========================================================================================================

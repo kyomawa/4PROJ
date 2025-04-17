@@ -96,7 +96,7 @@ export default function SearchScreen() {
         <View className="flex-1 flex-row items-center bg-neutral-100 rounded-full px-4 py-2">
           <Icon name="Search" className="text-neutral-400 size-5 mr-2" />
           <TextInput
-            className="flex-1 text-base py-1"
+            className="flex-1 text-base py-0.5 mb-2"
             placeholder="Search for a destination"
             value={searchText}
             onChangeText={setSearchText}

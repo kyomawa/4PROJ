@@ -120,9 +120,9 @@ export default function RouteScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-10">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-neutral-10">
       <StatusBar style="dark" />
-      <View className="flex-row items-center p-4 border-b border-neutral-200">
+      <View className="flex-row items-center p-4 border-b border-neutral-200 ">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="ArrowLeft" className="size-6" />
         </TouchableOpacity>
@@ -133,7 +133,7 @@ export default function RouteScreen() {
 
       <View className="flex-1 relative">
         {/* Map View */}
-        <MapView ref={mapRef} style={{ width: "100%", height: "100%" }} showsUserLocation followsUserLocation>
+        <MapView ref={mapRef} style={{ width: "100%", height: "100%" }} showsUserLocation>
           {/* Destination Marker */}
           {destinationCoords.latitude && destinationCoords.longitude && (
             <Marker coordinate={destinationCoords}>

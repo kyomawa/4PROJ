@@ -9,6 +9,7 @@ import Icon from "../../../components/Icon";
 import { getItinerary, Itinerary } from "../../../lib/api/navigation";
 import { formatDistance, formatDuration, incidentTypeToIcon } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
+import IncidentButton from "@/src/components/IncidentButton";
 
 export default function NavigationScreen() {
   const mapRef = useRef<MapView>(null);
@@ -249,13 +250,6 @@ export default function NavigationScreen() {
     }
   };
 
-  // Report an incident at current location
-  const reportIncident = () => {
-    if (location) {
-      router.push("/incident/report");
-    }
-  };
-
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
@@ -265,8 +259,12 @@ export default function NavigationScreen() {
     );
   }
 
+  const handleAddIncident = () => {
+    router.push("/incident/report");
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-neutral-10">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-neutral-10">
       <StatusBar style="dark" />
       <View className="flex-1 relative">
         {/* Map View */}
@@ -326,10 +324,6 @@ export default function NavigationScreen() {
             <Text className="font-satoshi-Bold text-lg flex-1 text-center" numberOfLines={1}>
               {destName || "Destination"}
             </Text>
-
-            <TouchableOpacity onPress={reportIncident} className="p-2">
-              <Icon name="CircleAlert" className="size-6 text-red-500" />
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -339,7 +333,6 @@ export default function NavigationScreen() {
             <>
               <Text className="text-sm text-neutral-500 mb-1">Prochaine direction</Text>
               <Text className="text-xl font-satoshi-Medium mb-2">{currentStep.instruction}</Text>
-
               <View className="flex-row justify-between items-center">
                 <View className="flex-row items-center">
                   <Icon name="Navigation" className="text-primary-500 size-5 mr-2" />
@@ -356,14 +349,9 @@ export default function NavigationScreen() {
           )}
         </View>
 
-        {/* Control Buttons */}
-        <View className="absolute bottom-4 right-4">
-          <TouchableOpacity
-            onPress={centerOnUser}
-            className="bg-white w-12 h-12 rounded-full items-center justify-center shadow-md"
-          >
-            <Icon name="Locate" className="size-6 text-primary-500" />
-          </TouchableOpacity>
+        {/* Add Incident Button */}
+        <View className="absolute bottom-8 right-6">
+          <IncidentButton onPress={handleAddIncident} />
         </View>
       </View>
     </SafeAreaView>
