@@ -14,4 +14,8 @@ export const register = async (formData: FormData): Promise<ApiResponse<null>> =
 
 export const login = async (formData: FormData): Promise<ApiResponse<null>> => {};
 
+// =================================== EMPLOYEE SECTION ===================================
+
+export const employeeLogin = async (formData: FormData): Promise<ApiResponse<null>> => {};
+
 // =======================================================================================
