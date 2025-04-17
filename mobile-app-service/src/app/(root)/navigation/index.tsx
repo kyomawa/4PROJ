@@ -51,6 +51,41 @@ export default function NavigationScreen() {
 
   // ========================================================================================================
 
+  // Handle navigation cancellation and cleanup
+  const handleCancelNavigation = () => {
+    Alert.alert("Arrêter la navigation", "Voulez-vous vraiment arrêter la navigation en cours ?", [
+      {
+        text: "Non",
+        style: "cancel",
+      },
+      {
+        text: "Oui",
+        style: "destructive",
+        onPress: () => {
+          // Clear both global navigation state and local component state
+          clearNavigation();
+          setItinerary(null);
+          router.replace("/home");
+        },
+      },
+    ]);
+  };
+
+  // ========================================================================================================
+
+  // Reset component state when navigation params change
+  useEffect(() => {
+    if (destLat && destLon) {
+      // Reset route-related state when destination changes
+      setItinerary(null);
+      setCurrentStepIndex(0);
+      setRecentlyPassedStep(false);
+      setRecalculationFailed(false);
+    }
+  }, [destLat, destLon]);
+
+  // ========================================================================================================
+
   useEffect(() => {
     // If we have navigation state but no itinerary yet, initialize from navigation state
     if (!itinerary && navigationState?.route) {
@@ -212,6 +247,7 @@ export default function NavigationScreen() {
 
           // Clear navigation state
           clearNavigation();
+          setItinerary(null);
 
           // Navigate back to home
           router.replace("/home");
@@ -366,7 +402,7 @@ export default function NavigationScreen() {
         {/* Navigation Header */}
         <View className="absolute top-0 left-0 right-0 bg-white p-4 shadow-sm">
           <View className="flex-row justify-between items-center">
-            <TouchableOpacity onPress={() => router.back()} className="p-2">
+            <TouchableOpacity onPress={handleCancelNavigation} className="p-2">
               <Icon name="X" className="size-6" />
             </TouchableOpacity>
 

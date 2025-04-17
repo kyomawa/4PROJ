@@ -32,13 +32,31 @@ export default function RouteScreen() {
   const [routeRequestCompleted, setRouteRequestCompleted] = useState(false);
 
   const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
-  const { setNavigationState } = useNavigation();
+  const { setNavigationState, clearNavigation } = useNavigation();
 
   // Parse destination coordinates
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
     longitude: parseFloat(destLon || "0"),
   };
+
+  // ========================================================================================================
+
+  // Clear any existing navigation data when the component mounts
+  useEffect(() => {
+    clearNavigation();
+  }, []);
+
+  // ========================================================================================================
+
+  // Reset the route state when destination params change
+  useEffect(() => {
+    if (destLat && destLon) {
+      setItinerary(null);
+      setRouteRequestCompleted(false);
+      setNavigationError(null);
+    }
+  }, [destLat, destLon]);
 
   // ========================================================================================================
 
@@ -84,6 +102,8 @@ export default function RouteScreen() {
   // Extract itinerary fetching logic to a separate function
   const fetchItinerary = async (location: Location.LocationObject) => {
     try {
+      setIsLoading(true);
+
       const routeResult = await getItinerary(
         location.coords.latitude,
         location.coords.longitude,
