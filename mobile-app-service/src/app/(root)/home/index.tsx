@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MapView, { Marker, Region } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import Icon from "../../../components/Icon";
@@ -9,10 +9,9 @@ import IncidentButton from "../../../components/IncidentButton";
 import SearchBar from "../../../components/SearchBar";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
-import { incidentTypeToIcon } from "../../../utils/mapUtils";
+import MapWithIncidents from "../../../components/MapWithIncidents";
 import { useIncidents } from "../../../contexts/IncidentContext";
 import { StatusBar } from "expo-status-bar";
-import { Incident } from "@/src/lib/api/incidents";
 
 // ========================================================================================================
 
@@ -30,7 +29,7 @@ export default function HomeScreen() {
     longitudeDelta: 0.0421,
   });
 
-  const { incidents, isLoading: isLoadingIncidents, fetchIncidents, setSelectedIncident } = useIncidents();
+  const { fetchIncidents, setSelectedIncident, isLoading: isLoadingIncidents } = useIncidents();
 
   // ========================================================================================================
 
@@ -60,6 +59,7 @@ export default function HomeScreen() {
           longitudeDelta: 0.0421,
         });
 
+        // Fetch nearby incidents when location is available
         if (locationResult) {
           fetchIncidents(locationResult.coords.latitude, locationResult.coords.longitude, 5);
         }
@@ -98,9 +98,13 @@ export default function HomeScreen() {
     }
   };
 
-  const handleIncidentPress = (incident: Incident) => {
-    setSelectedIncident(incident);
-    setShowIncidentDetails(true);
+  const handleIncidentPress = (incidentId: string) => {
+    const { incidents } = useIncidents();
+    const incident = incidents.find((inc) => inc.id === incidentId);
+    if (incident) {
+      setSelectedIncident(incident);
+      setShowIncidentDetails(true);
+    }
   };
 
   const resumeNavigation = () => {
@@ -121,50 +125,22 @@ export default function HomeScreen() {
           </View>
         ) : (
           <>
-            <MapView
-              style={{ width: "100%", height: "100%" }}
+            <MapWithIncidents
               ref={mapRef}
               initialRegion={region}
               region={region}
               onRegionChangeComplete={handleRegionChange}
-              showsUserLocation
-              showsMyLocationButton={false}
-              showsCompass={true}
-              rotateEnabled={true}
-              toolbarEnabled={false}
-              loadingEnabled={true}
-              moveOnMarkerPress={false}
-            >
-              {incidents.map((incident) => (
-                <Marker
-                  key={incident.id}
-                  coordinate={{
-                    latitude: incident.latitude,
-                    longitude: incident.longitude,
-                  }}
-                  onPress={() => handleIncidentPress(incident)}
-                >
-                  <View className="bg-white p-2 rounded-full shadow-md">
-                    <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
-                  </View>
-                </Marker>
-              ))}
-            </MapView>
+              onIncidentPress={handleIncidentPress}
+            />
 
             {/* Search Bar */}
-            {!hasActiveNavigation && (
-              <SafeAreaView className="absolute top-4 left-4 right-4">
-                <SearchBar onPress={handleSearch} />
-              </SafeAreaView>
-            )}
+            <SafeAreaView className="absolute top-4 left-4 right-4">
+              <SearchBar onPress={handleSearch} />
+            </SafeAreaView>
 
             {/* Active Navigation Banner */}
             {hasActiveNavigation && (
-              <ActiveNavigationBanner
-                className="absolute top-20 left-4 right-4"
-                destination={activeDestination}
-                onPress={resumeNavigation}
-              />
+              <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
             )}
 
             {/* Center on User Button */}

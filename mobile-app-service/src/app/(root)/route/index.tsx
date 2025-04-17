@@ -2,15 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, FlatList, Alert, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
+import MapWithIncidents from "../../../components/MapWithIncidents";
 import { getItinerary, Itinerary, Step } from "../../../lib/api/navigation";
 import { useIncidents } from "../../../contexts/IncidentContext";
-import { formatDistance, formatDuration, incidentTypeToIcon, calculateBoundingBox } from "../../../utils/mapUtils";
+import { formatDistance, formatDuration, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
-import { Incident } from "@/src/lib/api/incidents";
 
 // ========================================================================================================
 
@@ -28,7 +28,7 @@ export default function RouteScreen() {
   const [showDirections, setShowDirections] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
 
-  const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
+  const { fetchIncidents, setSelectedIncident } = useIncidents();
 
   // Parse destination coordinates
   const destinationCoords = {
@@ -42,7 +42,6 @@ export default function RouteScreen() {
     // Get current location and fetch itinerary
     const setupNavigation = async () => {
       try {
-        // Request location permissions
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           Alert.alert(
@@ -57,7 +56,6 @@ export default function RouteScreen() {
         const location = await Location.getCurrentPositionAsync({});
         setCurrentLocation(location);
 
-        // Fetch itinerary
         if (destLat && destLon) {
           const route = await getItinerary(
             location.coords.latitude,
@@ -71,7 +69,6 @@ export default function RouteScreen() {
           if (route) {
             setItinerary(route);
 
-            // Store route in global navigation state
             global.navigationState = {
               route,
               destination: {
@@ -81,7 +78,6 @@ export default function RouteScreen() {
               startedAt: new Date(),
             };
 
-            // Load incidents in the area
             const boundingBox = calculateBoundingBox([
               { latitude: location.coords.latitude, longitude: location.coords.longitude },
               ...route.coordinates,
@@ -95,7 +91,6 @@ export default function RouteScreen() {
               );
             }
 
-            // Fit map to show the entire route
             if (mapRef.current && route.coordinates.length > 0) {
               const coordinates = [
                 { latitude: location.coords.latitude, longitude: location.coords.longitude },
@@ -151,9 +146,14 @@ export default function RouteScreen() {
 
   // ========================================================================================================
 
-  const handleIncidentPress = (incident: Incident) => {
-    setSelectedIncident(incident);
-    setShowIncidentDetails(true);
+  const handleIncidentPress = (incidentId: string) => {
+    // Find the incident in our context
+    const { incidents } = useIncidents();
+    const incident = incidents.find((inc) => inc.id === incidentId);
+    if (incident) {
+      setSelectedIncident(incident);
+      setShowIncidentDetails(true);
+    }
   };
 
   // ========================================================================================================
@@ -183,37 +183,13 @@ export default function RouteScreen() {
 
       <View className="flex-1 relative">
         {/* Map View */}
-        <MapView ref={mapRef} style={{ width: "100%", height: "100%" }} showsUserLocation>
-          {/* Destination Marker */}
-          {destinationCoords.latitude && destinationCoords.longitude && (
-            <Marker coordinate={destinationCoords}>
-              <View className="bg-primary-500 p-2 rounded-full">
-                <Icon name="MapPin" className="text-white size-6" />
-              </View>
-            </Marker>
-          )}
-
-          {/* Route Line */}
-          {itinerary && itinerary.coordinates.length > 0 && (
-            <Polyline coordinates={itinerary.coordinates} strokeWidth={5} strokeColor="#695BF9" lineDashPattern={[0]} />
-          )}
-
-          {/* Incident Markers */}
-          {incidents.map((incident) => (
-            <Marker
-              key={incident.id}
-              coordinate={{
-                latitude: incident.latitude,
-                longitude: incident.longitude,
-              }}
-              onPress={() => handleIncidentPress(incident)}
-            >
-              <View className="bg-white p-2 rounded-full shadow-md">
-                <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
-              </View>
-            </Marker>
-          ))}
-        </MapView>
+        <MapWithIncidents
+          ref={mapRef}
+          itinerary={itinerary}
+          destinationCoords={destinationCoords}
+          onIncidentPress={handleIncidentPress}
+          showsUserLocation
+        />
 
         {/* Route Summary or Directions */}
         <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg">
@@ -246,7 +222,7 @@ export default function RouteScreen() {
                     </View>
                     <View className="items-center">
                       <Text className="text-neutral-500 mb-1">Incidents</Text>
-                      <Text className="text-xl font-satoshi-Bold">{incidents?.length || 0}</Text>
+                      <Text className="text-xl font-satoshi-Bold">{useIncidents().incidents?.length || 0}</Text>
                     </View>
                   </View>
 

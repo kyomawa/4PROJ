@@ -2,17 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import * as Speech from "expo-speech";
 import Icon from "../../../components/Icon";
 import IncidentButton from "@/src/components/IncidentButton";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
+import MapWithIncidents from "../../../components/MapWithIncidents";
 import { getItinerary, Itinerary } from "../../../lib/api/navigation";
 import { useIncidents } from "../../../contexts/IncidentContext";
-import { formatDistance, formatDuration, incidentTypeToIcon, calculateBoundingBox } from "../../../utils/mapUtils";
+import { formatDistance, formatDuration, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
-import { Incident } from "@/src/lib/api/incidents";
 
 // ========================================================================================================
 
@@ -32,7 +32,7 @@ export default function NavigationScreen() {
   const [recentlyPassedStep, setRecentlyPassedStep] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
 
-  const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
+  const { fetchIncidents, setSelectedIncident } = useIncidents();
 
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
@@ -297,9 +297,14 @@ export default function NavigationScreen() {
 
   // ========================================================================================================
 
-  const handleIncidentPress = (incident: Incident) => {
-    setSelectedIncident(incident);
-    setShowIncidentDetails(true);
+  const handleIncidentPress = (incidentId: string) => {
+    // Find the incident in our context
+    const { incidents } = useIncidents();
+    const incident = incidents.find((inc) => inc.id === incidentId);
+    if (incident) {
+      setSelectedIncident(incident);
+      setShowIncidentDetails(true);
+    }
   };
 
   // ========================================================================================================
@@ -318,10 +323,11 @@ export default function NavigationScreen() {
       <StatusBar style="dark" />
       <View className="flex-1 relative">
         {/* Map View */}
-        <MapView
+        <MapWithIncidents
           ref={mapRef}
-          style={{ width: "100%", height: "100%" }}
-          showsUserLocation
+          itinerary={itinerary}
+          destinationCoords={destinationCoords}
+          onIncidentPress={handleIncidentPress}
           followsUserLocation
           initialRegion={
             location
@@ -333,37 +339,7 @@ export default function NavigationScreen() {
                 }
               : undefined
           }
-        >
-          {/* Destination Marker */}
-          {destinationCoords.latitude && destinationCoords.longitude && (
-            <Marker coordinate={destinationCoords}>
-              <View className="bg-primary-500 p-2 rounded-full">
-                <Icon name="MapPin" className="text-white size-6" />
-              </View>
-            </Marker>
-          )}
-
-          {/* Route Line */}
-          {itinerary && itinerary.coordinates.length > 0 && (
-            <Polyline coordinates={itinerary.coordinates} strokeWidth={5} strokeColor="#695BF9" lineDashPattern={[0]} />
-          )}
-
-          {/* Incident Markers */}
-          {incidents.map((incident) => (
-            <Marker
-              key={incident.id}
-              coordinate={{
-                latitude: incident.latitude,
-                longitude: incident.longitude,
-              }}
-              onPress={() => handleIncidentPress(incident)}
-            >
-              <View className="bg-white p-2 rounded-full">
-                <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
-              </View>
-            </Marker>
-          ))}
-        </MapView>
+        />
 
         {/* Navigation Header */}
         <View className="absolute top-0 left-0 right-0 bg-white p-4 shadow-sm">
