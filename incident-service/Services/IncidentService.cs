@@ -8,11 +8,18 @@ using AutoMapper;
 using incident_service.Models;
 using incident_service.Exceptions;
 using incident_service.DTO.BoundingBox;
+using System.Security.Claims;
+using System;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.ComponentModel;
+using incident_service.DTO.Vote;
 
 namespace incident_service.Services
 {
-    public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper, HttpClient httpClient) : InterfaceIncidentService
+    public class IncidentService(InterfaceIncidentRepository incidentRepository, IMapper mapper) : InterfaceIncidentService
     {
+        private const int MaxDislikesBeforeDelete = 5; 
+
         public async Task<List<IncidentDto>> GetAll()
         {
             var incidents = await incidentRepository.GetAll();
@@ -42,7 +49,7 @@ namespace incident_service.Services
             return mapper.Map<IncidentDto>(incident);
         }
 
-        public async Task<IncidentDto> Update(Guid id, PutIncidentDto putIncidentDto)
+        public async Task<IncidentDto> Update(Guid id, UpdateIncidentDto updateIncidentDto)
         {
             var incident = await incidentRepository.Get(id);
             if (incident == null)
@@ -50,14 +57,30 @@ namespace incident_service.Services
                 return null;
             }
 
-            if (putIncidentDto.Reaction == ReactionType.Like)
+            incident = await incidentRepository.Update(incident, updateIncidentDto);
+            return mapper.Map<IncidentDto>(incident);
+        }
+
+        public async Task<IncidentDto> Vote(Guid currentUserId, Guid id, VoteIncidentDto voteIncidentDto)
+        {
+            var incident = await incidentRepository.Get(id);
+
+            if (incident == null)
             {
-                incident = await incidentRepository.AddLike(incident);
+                return null;
             }
-            else if (putIncidentDto.Reaction == ReactionType.Dislike)
+
+            var userVote = await HandleUserVote(currentUserId, incident, voteIncidentDto.Reaction);
+            var votesOnIncident = await incidentRepository.GetAllVotesOnIncident(incident);
+
+            var totalLikes = votesOnIncident.Count(v => v.Reaction == ReactionType.Like);
+            var totalDislikes = votesOnIncident.Count(v => v.Reaction == ReactionType.Dislike);
+
+            if (totalDislikes >= totalLikes + MaxDislikesBeforeDelete)
             {
-                incident = await incidentRepository.AddDislike(incident);
+                incident = await incidentRepository.Disable(incident);
             }
+
             return mapper.Map<IncidentDto>(incident);
         }
 
@@ -70,6 +93,50 @@ namespace incident_service.Services
             }
             var incidentDeleted = await incidentRepository.Delete(incident);
             return mapper.Map<IncidentDto>(incidentDeleted);
+        }
+        public async Task<IncidentDto> Enable(Guid incidentId)
+        {
+            var incident = await incidentRepository.Get(incidentId);
+            if (incident == null)
+            {
+                return null;
+            }
+            incident = await incidentRepository.Enable(incident);
+
+            return mapper.Map<IncidentDto>(incident);
+        }
+        public async Task<IncidentDto> Disable(Guid incidentId)
+        {
+            var incident = await incidentRepository.Get(incidentId);
+            if (incident == null)
+            {
+                return null;
+            }
+            incident = await incidentRepository.Disable(incident);
+
+            return mapper.Map<IncidentDto>(incident);
+        }
+
+        private async Task<UserIncidentVote> HandleUserVote(Guid userId, Incident incident, ReactionType reaction)
+        {
+            var userVote = await incidentRepository.GetVoteByUserOnIncident(incident, userId);
+
+            if (userVote == null)
+            {
+                userVote = await incidentRepository.CreateUserVoteOnIncident(incident, userId, reaction);
+            }
+
+            else if (reaction == userVote.Reaction)
+            {
+                userVote = await incidentRepository.DeleteUserVoteOnIncident(userVote);
+            }
+
+            else if (reaction != userVote.Reaction)
+            {
+                userVote = await incidentRepository.UpdateUserVoteOnIncident(userVote, reaction);
+            }
+
+            return userVote;
         }
     }
 }

@@ -10,7 +10,6 @@ using user_service.Services.UserService;
 using Microsoft.AspNetCore.Identity;
 using user_service.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);

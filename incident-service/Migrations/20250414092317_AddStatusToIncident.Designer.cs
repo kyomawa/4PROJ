@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using incident_service.Contexts;
 
@@ -11,9 +12,11 @@ using incident_service.Contexts;
 namespace incident_service.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250414092317_AddStatusToIncident")]
+    partial class AddStatusToIncident
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,17 +35,24 @@ namespace incident_service.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreationDate");
 
+                    b.Property<int>("Dislike")
+                        .HasColumnType("int")
+                        .HasColumnName("Dislike");
+
                     b.Property<double>("Latitude")
                         .HasColumnType("double")
                         .HasColumnName("Latitude");
+
+                    b.Property<int>("Like")
+                        .HasColumnType("int")
+                        .HasColumnName("Like");
 
                     b.Property<double>("Longitude")
                         .HasColumnType("double")
                         .HasColumnName("Longitude");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("longtext")
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
                         .HasColumnName("Status");
 
                     b.Property<string>("Type")
@@ -67,8 +77,9 @@ namespace incident_service.Migrations
                     b.Property<int>("Reaction")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 

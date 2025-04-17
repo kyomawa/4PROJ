@@ -30,19 +30,19 @@ services:
     networks:
       - 4proj_dev
 
-  db-service:
+  incident-db:
     image: "mysql:8.0"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${INCIDENT_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${INCIDENT_DB}
+      MYSQL_USER: ${INCIDENT_DB_USER}
+      MYSQL_PASSWORD: ${INCIDENT_DB_PSW}
     ports:
       - "3305:3306"
     volumes:
-      - 4proj-database:/var/lib/mysql
+      - 4proj-incident-database:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -110,12 +110,12 @@ services:
       context: ./incident-service
       dockerfile: Dockerfile.dev
     depends_on:
-      db-service:
+      incident-db:
         condition: service_healthy
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      INCIDENT_DB: ${INCIDENT_DB}
+      INCIDENT_DB_USER: ${INCIDENT_DB_USER}
+      INCIDENT_DB_PSW: ${INCIDENT_DB_PSW}
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
     volumes:
@@ -243,7 +243,7 @@ services:
       - 4proj_dev
 
 volumes:
-  4proj-database:
+  4proj-incident-database:
   4proj-user-database:
   navigation-service-nuget:
   incident-service-nuget:
