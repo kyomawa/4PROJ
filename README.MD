@@ -15,7 +15,8 @@ For development, use the `docker-compose.yml` file which includes live reload ca
 4. **Access Services:**
    - Navigation service: [http://navigation.localhost](http://navigation.localhost/)
    - Incident service: [http://incident.localhost](http://incident.localhost/)
-   - Mobile app web client: [http://mobile.localhost](http://mobile.localhost/)
+   - User service: [http://user.localhost](http://user.localhost/)
+   - Auth service: [http://auth.localhost](http://auth.localhost/)
    - Traefik dashboard: [http://localhost:8080](http://localhost:8080/) (as defined by HOST_PORT_TRAEFIK_DASHBOARD)
 
 ## Production Environment Setup
@@ -55,3 +56,27 @@ docker-compose -f docker-compose.prod.yml up --build --scale the-service=2
 This allows you to simulate a load-balanced, scalable microservices environment.
 
 ---
+
+## Services Documentation
+
+Trafine is a Waze-like navigation application built using a microservices architecture. Each service handles a specific aspect of the application:
+
+### Backend Services
+
+- **[Navigation Service](navigation-service/README.md)**: Handles route calculations, geocoding, and turn-by-turn directions.
+- **[Incident Service](incident-service/README.md)**: Manages traffic incidents such as accidents, traffic jams, and road closures.
+- **[Auth Service](auth-service/README.md)**: Handles user authentication and JWT token generation.
+- **[User Service](user-service/README.md)**: Manages user accounts, profiles, and roles.
+
+### Frontend
+
+- **[Mobile App Service](mobile-app-service/README.md)**: React Native mobile client application.
+
+### Infrastructure
+
+- **Traefik**: API Gateway and load balancer for routing requests to appropriate services.
+- **MySQL**: Database for storing service data.
+
+## Contributing
+
+Please see our [Contributing Guide](CONTRIBUTING.md) for information on how to contribute to this project.

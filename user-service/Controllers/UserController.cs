@@ -115,7 +115,13 @@ namespace user_service.Controllers
                 var updatedUser = await userService.Update(id, updateUserDto);
                 if (updatedUser == null)
                 {
-                    return NotFound(new { Message = "User not found" });
+                    var user = await userService.GetById(id);
+                    if (user == null)
+                    {
+                        return NotFound(new { Message = "User not found" });
+                    }
+                    
+                    return Unauthorized(new { Message = "Current password is incorrect" });
                 }
                 return Ok(updatedUser);
             }

@@ -11,5 +11,11 @@ namespace user_service.DTO
 
         [RegularExpression(@"^\d+$", ErrorMessage = "Phone number must contain only digits")]
         public string? PhoneNumber { get; set; }
+
+        [RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$", ErrorMessage = "Invalid email format")]
+        public string? Email { get; set; }
+        
+        [Required(ErrorMessage = "Current password is required for profile updates")]
+        public string CurrentPassword { get; set; }
     }
 }
