@@ -49,7 +49,7 @@ services:
       start_period: 30s
     networks:
       - 4proj_dev
-  
+
   user-db:
     image: "mysql:8.0"
     environment:
@@ -88,8 +88,14 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_4proj_dev"
       - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
-      - "traefik.http.routers.navigation-service.rule=Host(`navigation.localhost`)"
-      - "traefik.http.routers.navigation-service.entrypoints=http"
+      # API
+      - "traefik.http.routers.navigation-api.rule=PathPrefix(`/api/navigation`)"
+      - "traefik.http.routers.navigation-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-navigation-prefix.stripprefix.prefixes=/api/navigation"
+      - "traefik.http.routers.navigation-api.middlewares=strip-navigation-prefix"
+      # Swagger
+      - "traefik.http.routers.navigation-swagger.rule=Host(`navigation.localhost`)"
+      - "traefik.http.routers.navigation-swagger.entrypoints=http"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
       interval: 30s
@@ -119,8 +125,14 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_4proj_dev"
       - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
-      - "traefik.http.routers.incident-service.rule=Host(`incident.localhost`)"
-      - "traefik.http.routers.incident-service.entrypoints=http"
+      # API
+      - "traefik.http.routers.incident-api.rule=PathPrefix(`/api/incident`)"
+      - "traefik.http.routers.incident-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-incident-prefix.stripprefix.prefixes=/api/incident"
+      - "traefik.http.routers.incident-api.middlewares=strip-incident-prefix"
+      # Swagger
+      - "traefik.http.routers.incident-swagger.rule=Host(`incident.localhost`)"
+      - "traefik.http.routers.incident-swagger.entrypoints=http"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
       interval: 30s
@@ -150,8 +162,15 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_4proj_dev"
       - "traefik.http.services.user-service.loadbalancer.server.port=8080"
+      # API
+      - "traefik.http.routers.user-api.rule=PathPrefix(`/api/user`)"
+      - "traefik.http.routers.user-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-user-prefix.stripprefix.prefixes=/api/user"
+      - "traefik.http.routers.user-api.middlewares=strip-user-prefix"
+      # Swagger
       - "traefik.http.routers.user-service.rule=Host(`user.localhost`)"
       - "traefik.http.routers.user-service.entrypoints=http"
+
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
       interval: 30s
@@ -160,7 +179,7 @@ services:
       start_period: 30s
     networks:
       - 4proj_dev
-  
+
   auth-service:
     build:
       context: ./auth-service
@@ -175,6 +194,12 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_4proj_dev"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
+        # API
+      - "traefik.http.routers.auth-api.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-auth-prefix.stripprefix.prefixes=/api/auth"
+      - "traefik.http.routers.auth-api.middlewares=strip-auth-prefix"
+      # Swagger
       - "traefik.http.routers.auth-service.rule=Host(`auth.localhost`)"
       - "traefik.http.routers.auth-service.entrypoints=http"
     healthcheck:
@@ -207,6 +232,7 @@ services:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
+      - EXPO_PUBLIC_API_BASE_URL=${EXPO_PUBLIC_API_BASE_URL}
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:19000 || exit 0"]
       interval: 30s

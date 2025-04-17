@@ -67,8 +67,14 @@ namespace user_service.Repositories
 
         public async Task<User> Update(User user, UpdateUserDto updateUserDto)
         {
+            if (!BCrypt.Net.BCrypt.Verify(updateUserDto.CurrentPassword, user.Password))
+            {
+                return null;
+            }
+            
             if (updateUserDto.Username is not null) user.Username = updateUserDto.Username;
-            if (updateUserDto.PhoneNumber is not null) user.Username = updateUserDto.PhoneNumber;
+            if (updateUserDto.PhoneNumber is not null) user.PhoneNumber = updateUserDto.PhoneNumber;
+            if (updateUserDto.Email is not null) user.Email = updateUserDto.Email;
 
             await context.SaveChangesAsync();
             return user;

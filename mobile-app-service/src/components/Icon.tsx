@@ -28,7 +28,7 @@ const StyledIcons: Record<keyof typeof icons, React.ComponentType<any>> = {} as 
 
 // ========================================================================================================
 
-type IconProps = {
+export type IconProps = {
   name: keyof typeof icons;
   className?: string;
 };
