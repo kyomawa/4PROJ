@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import FormField from "../../../components/FormField";
 import Button from "../../../components/Button";
 import Icon from "../../../components/Icon";
-import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
 import { useAuthContext } from "../../../contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
 
@@ -31,8 +30,6 @@ type EditProfileFormData = z.infer<typeof editProfileSchema>;
 export default function EditProfileScreen() {
   const { user, updateProfile } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
-  const [activeDestination, setActiveDestination] = useState<string>("");
 
   const { control, handleSubmit, setValue } = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
@@ -43,16 +40,6 @@ export default function EditProfileScreen() {
       currentPassword: "",
     },
   });
-
-  // ========================================================================================================
-
-  useEffect(() => {
-    // Check if we have an active navigation session
-    if (global.navigationState) {
-      setHasActiveNavigation(true);
-      setActiveDestination(global.navigationState.destination.name);
-    }
-  }, []);
 
   // ========================================================================================================
 
@@ -88,14 +75,6 @@ export default function EditProfileScreen() {
 
   // ========================================================================================================
 
-  const resumeNavigation = () => {
-    if (global.navigationState) {
-      router.push("/navigation");
-    }
-  };
-
-  // ========================================================================================================
-
   if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
@@ -121,13 +100,6 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
           <Text className="text-xl font-satoshi-Bold flex-1">Modifier le profil</Text>
         </View>
-
-        {/* Active Navigation Banner */}
-        {hasActiveNavigation && (
-          <View className="my-4 mx-4">
-            <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
-          </View>
-        )}
 
         {/* Form */}
         <View className="p-6 gap-6">

@@ -19,7 +19,6 @@ export default function ProfileScreen() {
   // ========================================================================================================
 
   useEffect(() => {
-    // Check if we have an active navigation session
     if (global.navigationState) {
       setHasActiveNavigation(true);
       setActiveDestination(global.navigationState.destination.name);
@@ -99,13 +98,6 @@ export default function ProfileScreen() {
           <Text className="text-2xl font-satoshi-Bold">Profil</Text>
         </View>
 
-        {/* Active Navigation Banner */}
-        {hasActiveNavigation && (
-          <View className="my-4 mx-4">
-            <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
-          </View>
-        )}
-
         {/* Profile Info */}
         <View className="p-6 items-center">
           <View className="bg-primary-100 w-24 h-24 rounded-full items-center justify-center mb-4">
@@ -121,6 +113,14 @@ export default function ProfileScreen() {
             <Text className="text-primary-500">Modifier le Profil</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Active Navigation Banner */}
+        {hasActiveNavigation && (
+          <View className="my-4 mx-4">
+            <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
+          </View>
+        )}
+
         {/* Account Settings */}
         <View className="px-4 mt-4">
           <Text className="text-lg font-satoshi-Medium mb-3">Paramètres du compte</Text>

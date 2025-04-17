@@ -5,15 +5,16 @@ import Icon from "./Icon";
 // ========================================================================================================
 
 type ActiveNavigationBannerProps = {
+  className?: string;
   destination: string;
   onPress: () => void;
 };
 
-export default function ActiveNavigationBanner({ destination, onPress }: ActiveNavigationBannerProps) {
+export default function ActiveNavigationBanner({ destination, onPress, className }: ActiveNavigationBannerProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="absolute top-20 left-4 right-4 bg-primary-500 rounded-lg p-3 flex-row items-center shadow-md"
+      className={`bg-primary-500 rounded-lg p-3 flex-row items-center shadow-md ${className}`}
     >
       <Icon name="Navigation" className="text-white size-5 mr-3" />
       <View className="flex-1">

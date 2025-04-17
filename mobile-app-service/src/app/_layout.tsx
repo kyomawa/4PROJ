@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LogBox } from "react-native";
 import { initializeAuth } from "../lib/api/auth";
 import { AuthProvider } from "../contexts/AuthContext";
+import { IncidentProvider } from "../contexts/IncidentContext";
 
 // ========================================================================================================
 
@@ -44,16 +45,18 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: "fade_from_bottom",
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(root)" options={{ animation: "fade" }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <IncidentProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: "fade_from_bottom",
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(root)" options={{ animation: "fade" }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </IncidentProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

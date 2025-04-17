@@ -9,9 +9,10 @@ import IncidentButton from "../../../components/IncidentButton";
 import SearchBar from "../../../components/SearchBar";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
-import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
 import { incidentTypeToIcon } from "../../../utils/mapUtils";
+import { useIncidents } from "../../../contexts/IncidentContext";
 import { StatusBar } from "expo-status-bar";
+import { Incident } from "@/src/lib/api/incidents";
 
 // ========================================================================================================
 
@@ -19,11 +20,8 @@ export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
   const [location, setLocation] = useState(null as Location.LocationObject | null);
   const [errorMsg, setErrorMsg] = useState("");
-  const [incidents, setIncidents] = useState([] as Incident[]);
-  const [isLoadingIncidents, setIsLoadingIncidents] = useState(false);
   const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
   const [activeDestination, setActiveDestination] = useState<string>("");
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
   const [region, setRegion] = useState({
     latitude: 48.8566,
@@ -31,6 +29,10 @@ export default function HomeScreen() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+
+  const { incidents, isLoading: isLoadingIncidents, fetchIncidents, setSelectedIncident } = useIncidents();
+
+  // ========================================================================================================
 
   useEffect(() => {
     if (global.navigationState) {
@@ -58,9 +60,8 @@ export default function HomeScreen() {
           longitudeDelta: 0.0421,
         });
 
-        // Fetch nearby incidents when location is available
         if (locationResult) {
-          fetchIncidents(locationResult.coords.latitude, locationResult.coords.longitude);
+          fetchIncidents(locationResult.coords.latitude, locationResult.coords.longitude, 5);
         }
       } catch (error) {
         console.error("Erreur lors de l'obtention de la localisation:", error);
@@ -70,20 +71,9 @@ export default function HomeScreen() {
         );
       }
     })();
-  }, []);
+  }, [fetchIncidents]);
 
-  const fetchIncidents = async (lat: number, lon: number) => {
-    try {
-      setIsLoadingIncidents(true);
-      const incidentsData = await fetchNearbyIncidents(lat, lon, 5);
-      setIncidents(incidentsData);
-    } catch (error) {
-      console.error("Échec de la récupération des incidents:", error);
-      Alert.alert("Erreur", "Impossible de récupérer les incidents à proximité.");
-    } finally {
-      setIsLoadingIncidents(false);
-    }
-  };
+  // ========================================================================================================
 
   const handleRegionChange = (newRegion: Region) => {
     setRegion(newRegion);
@@ -118,6 +108,8 @@ export default function HomeScreen() {
       router.push("/navigation");
     }
   };
+
+  // ========================================================================================================
 
   return (
     <View className="flex-1 bg-neutral-10">
@@ -160,13 +152,19 @@ export default function HomeScreen() {
             </MapView>
 
             {/* Search Bar */}
-            <SafeAreaView className="absolute top-4 left-4 right-4">
-              <SearchBar onPress={handleSearch} />
-            </SafeAreaView>
+            {!hasActiveNavigation && (
+              <SafeAreaView className="absolute top-4 left-4 right-4">
+                <SearchBar onPress={handleSearch} />
+              </SafeAreaView>
+            )}
 
             {/* Active Navigation Banner */}
             {hasActiveNavigation && (
-              <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
+              <ActiveNavigationBanner
+                className="absolute top-20 left-4 right-4"
+                destination={activeDestination}
+                onPress={resumeNavigation}
+              />
             )}
 
             {/* Center on User Button */}
@@ -192,11 +190,7 @@ export default function HomeScreen() {
             )}
 
             {/* Incident Details Modal */}
-            <IncidentDetailsModal
-              incident={selectedIncident}
-              visible={showIncidentDetails}
-              onClose={() => setShowIncidentDetails(false)}
-            />
+            <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
           </>
         )}
       </View>

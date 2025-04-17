@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Icon from "../../../components/Icon";
 import Button from "../../../components/Button";
-import ActiveNavigationBanner from "../../../components/ActiveNavigationBanner";
 import { useAuthContext } from "../../../contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
 
@@ -13,18 +12,6 @@ import { StatusBar } from "expo-status-bar";
 export default function AccountSettingsScreen() {
   const { user, deleteAccount } = useAuthContext();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [hasActiveNavigation, setHasActiveNavigation] = useState(false);
-  const [activeDestination, setActiveDestination] = useState<string>("");
-
-  // ========================================================================================================
-
-  useEffect(() => {
-    // Check if we have an active navigation session
-    if (global.navigationState) {
-      setHasActiveNavigation(true);
-      setActiveDestination(global.navigationState.destination.name);
-    }
-  }, []);
 
   // ========================================================================================================
 
@@ -84,14 +71,6 @@ export default function AccountSettingsScreen() {
 
   // ========================================================================================================
 
-  const resumeNavigation = () => {
-    if (global.navigationState) {
-      router.push("/navigation");
-    }
-  };
-
-  // ========================================================================================================
-
   if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-neutral-10">
@@ -118,14 +97,6 @@ export default function AccountSettingsScreen() {
           </TouchableOpacity>
           <Text className="text-xl font-satoshi-Bold flex-1">Paramètres du compte</Text>
         </View>
-
-        {/* Active Navigation Banner */}
-        {hasActiveNavigation && (
-          <View className="my-4 mx-4">
-            <ActiveNavigationBanner destination={activeDestination} onPress={resumeNavigation} />
-          </View>
-        )}
-
         <View className="flex-1 flex-col gap-y-4 mt-6">
           {/* Account Info */}
           <View className="px-6">
@@ -136,14 +107,12 @@ export default function AccountSettingsScreen() {
               Rôle: {user.role === "Admin" ? "Administrateur" : "Utilisateur"}
             </Text>
           </View>
-
           {/* Danger Zone */}
           <View className="px-6">
             <Text className="text-lg font-satoshi-Bold text-red-500 mb-2">Zone dangereuse</Text>
             <Text className="text-neutral-500 mb-8">
               Les actions ci-dessous sont permanentes et ne peuvent pas être annulées.
             </Text>
-
             <Button handlePress={handleDeleteAccount} containerClassName="bg-red-500" isLoading={isDeleting}>
               Supprimer mon compte
             </Button>

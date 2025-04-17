@@ -1,19 +1,20 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Modal } from "react-native";
+import { View, Text, TouchableOpacity, Modal, Alert } from "react-native";
 import Icon from "./Icon";
-import { Incident } from "../lib/api/incidents";
 import { incidentTypeToIcon } from "../utils/mapUtils";
+import { useIncidents } from "../contexts/IncidentContext";
 
 // ========================================================================================================
 
 type IncidentDetailsModalProps = {
-  incident: Incident | null;
   visible: boolean;
-  onClose: () => void;
+  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function IncidentDetailsModal({ incident, visible, onClose }: IncidentDetailsModalProps) {
-  if (!incident) return null;
+export default function IncidentDetailsModal({ visible, setIsVisible }: IncidentDetailsModalProps) {
+  const { selectedIncident, reactToIncident } = useIncidents();
+
+  if (!selectedIncident) return null;
 
   const getIncidentLabel = (type: string): string => {
     switch (type) {
@@ -42,34 +43,50 @@ export default function IncidentDetailsModal({ incident, visible, onClose }: Inc
     });
   };
 
+  const handleReaction = async (reaction: "Like" | "Dislike") => {
+    try {
+      const success = await reactToIncident(selectedIncident.id, reaction);
+      if (!success) {
+        Alert.alert("Erreur", "Impossible d'enregistrer votre réaction");
+      }
+      setIsVisible(false);
+    } catch (error) {
+      console.error("Error reacting to incident:", error);
+      Alert.alert("Erreur", "Impossible d'enregistrer votre réaction");
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View className="flex-1 justify-end items-center bg-black/30">
         <View className="bg-white w-full p-5 rounded-t-3xl">
           <View className="w-16 h-1 bg-neutral-300 rounded-full mx-auto mb-3" />
-          <View className="flex-row items-center mb-4">
+          <View className="flex-row items-center mb-12">
             <View className="bg-primary-50 p-3 rounded-full mr-4">
-              <Icon name={incidentTypeToIcon(incident.type)} className="text-primary-500 size-6" />
+              <Icon name={incidentTypeToIcon(selectedIncident.type)} className="text-primary-500 size-6" />
             </View>
             <View className="flex-1">
-              <Text className="text-xl font-satoshi-Bold">{getIncidentLabel(incident.type)}</Text>
-              <Text className="text-neutral-500">{formatDate(incident.creationDate)}</Text>
+              <Text className="text-xl font-satoshi-Bold">{getIncidentLabel(selectedIncident.type)}</Text>
+              <Text className="text-neutral-500">{formatDate(selectedIncident.creationDate)}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} className="p-2">
+            <TouchableOpacity onPress={() => setIsVisible(false)} className="p-2">
               <Icon name="X" className="size-5 text-neutral-500" />
             </TouchableOpacity>
           </View>
-          <View className="flex-row justify-between mb-2">
-            <View className="flex-row items-center">
-              <Icon name="ThumbsUp" className="text-green-500 size-5 mr-1" />
-              <Text className="text-neutral-600">{incident.like}</Text>
-            </View>
-            <View className="flex-row items-center">
-              <Icon name="ThumbsDown" className="text-red-500 size-5 mr-1" />
-              <Text className="text-neutral-600">{incident.dislike}</Text>
-            </View>
+          <View className="flex-row justify-between mb-12">
+            <TouchableOpacity onPress={() => handleReaction("Like")} className="flex-row items-center">
+              <Icon name="ThumbsUp" className="text-green-500 size-8 mr-1" />
+              <Text className="text-neutral-600">{selectedIncident.like}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleReaction("Dislike")} className="flex-row items-center">
+              <Icon name="ThumbsDown" className="text-red-500 size-8 mr-1" />
+              <Text className="text-neutral-600">{selectedIncident.dislike}</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={onClose} className="bg-primary-500 py-3 rounded-full items-center mt-4">
+          <TouchableOpacity
+            onPress={() => setIsVisible(false)}
+            className="bg-primary-500 py-3 rounded-full items-center mt-4"
+          >
             <Text className="text-white font-satoshi-Bold">Fermer</Text>
           </TouchableOpacity>
         </View>

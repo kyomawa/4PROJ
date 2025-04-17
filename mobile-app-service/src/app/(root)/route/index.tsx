@@ -7,9 +7,10 @@ import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import { getItinerary, Itinerary, Step } from "../../../lib/api/navigation";
-import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
+import { useIncidents } from "../../../contexts/IncidentContext";
 import { formatDistance, formatDuration, incidentTypeToIcon, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
+import { Incident } from "@/src/lib/api/incidents";
 
 // ========================================================================================================
 
@@ -25,15 +26,17 @@ export default function RouteScreen() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDirections, setShowDirections] = useState(false);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+
+  const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
 
   // Parse destination coordinates
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
     longitude: parseFloat(destLon || "0"),
   };
+
+  // ========================================================================================================
 
   useEffect(() => {
     // Get current location and fetch itinerary
@@ -78,23 +81,18 @@ export default function RouteScreen() {
               startedAt: new Date(),
             };
 
-            // Load additional incidents in the area if needed
-            if (!route.incidents || route.incidents.length === 0) {
-              const boundingBox = calculateBoundingBox([
-                { latitude: location.coords.latitude, longitude: location.coords.longitude },
-                ...route.coordinates,
-              ]);
+            // Load incidents in the area
+            const boundingBox = calculateBoundingBox([
+              { latitude: location.coords.latitude, longitude: location.coords.longitude },
+              ...route.coordinates,
+            ]);
 
-              if (boundingBox) {
-                const nearbyIncidents = await fetchNearbyIncidents(
-                  (boundingBox.minLat + boundingBox.maxLat) / 2,
-                  (boundingBox.minLon + boundingBox.maxLon) / 2,
-                  10 // 10km radius
-                );
-                setIncidents(nearbyIncidents);
-              }
-            } else {
-              setIncidents(route.incidents);
+            if (boundingBox) {
+              await fetchIncidents(
+                (boundingBox.minLat + boundingBox.maxLat) / 2,
+                (boundingBox.minLon + boundingBox.maxLon) / 2,
+                10 // 10km radius
+              );
             }
 
             // Fit map to show the entire route
@@ -122,7 +120,9 @@ export default function RouteScreen() {
     };
 
     setupNavigation();
-  }, [destLat, destLon]);
+  }, [destLat, destLon, fetchIncidents]);
+
+  // ========================================================================================================
 
   const renderDirectionItem = ({ item, index }: { item: Step; index: number }) => (
     <View className="flex-row p-4 border-b border-neutral-200">
@@ -136,6 +136,8 @@ export default function RouteScreen() {
     </View>
   );
 
+  // ========================================================================================================
+
   const handleStartNavigation = () => {
     router.push({
       pathname: "/navigation",
@@ -147,10 +149,14 @@ export default function RouteScreen() {
     });
   };
 
+  // ========================================================================================================
+
   const handleIncidentPress = (incident: Incident) => {
     setSelectedIncident(incident);
     setShowIncidentDetails(true);
   };
+
+  // ========================================================================================================
 
   if (isLoading) {
     return (
@@ -283,11 +289,7 @@ export default function RouteScreen() {
       </View>
 
       {/* Incident Details Modal */}
-      <IncidentDetailsModal
-        incident={selectedIncident}
-        visible={showIncidentDetails}
-        onClose={() => setShowIncidentDetails(false)}
-      />
+      <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
     </SafeAreaView>
   );
 }

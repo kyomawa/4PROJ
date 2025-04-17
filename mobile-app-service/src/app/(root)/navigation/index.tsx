@@ -7,10 +7,12 @@ import * as Location from "expo-location";
 import * as Speech from "expo-speech";
 import Icon from "../../../components/Icon";
 import IncidentButton from "@/src/components/IncidentButton";
+import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import { getItinerary, Itinerary } from "../../../lib/api/navigation";
-import { fetchNearbyIncidents, Incident } from "../../../lib/api/incidents";
+import { useIncidents } from "../../../contexts/IncidentContext";
 import { formatDistance, formatDuration, incidentTypeToIcon, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
+import { Incident } from "@/src/lib/api/incidents";
 
 // ========================================================================================================
 
@@ -28,7 +30,9 @@ export default function NavigationScreen() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [watchPosition, setWatchPosition] = useState<Location.LocationSubscription | null>(null);
   const [recentlyPassedStep, setRecentlyPassedStep] = useState(false);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+
+  const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
 
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
@@ -41,18 +45,18 @@ export default function NavigationScreen() {
   const nextStep =
     itinerary?.steps && itinerary.steps.length > currentStepIndex + 1 ? itinerary.steps[currentStepIndex + 1] : null;
 
+  // ========================================================================================================
+
   useEffect(() => {
     if (!destLat || !destLon) {
       if (global.navigationState) {
         const { route } = global.navigationState;
         setItinerary(route);
-
-        if (route.incidents && route.incidents.length > 0) {
-          setIncidents(route.incidents);
-        }
       }
     }
   }, []);
+
+  // ========================================================================================================
 
   useEffect(() => {
     const initNavigation = async () => {
@@ -88,9 +92,8 @@ export default function NavigationScreen() {
         if (!itinerary && destLat && destLon) {
           await fetchRoute(location);
         } else if (itinerary) {
-          if (!incidents.length) {
-            fetchIncidentsForRoute(itinerary, location);
-          }
+          // Fetch incidents for the route
+          await fetchIncidentsForRoute(itinerary, location);
         }
       } catch (error) {
         console.error("Error initializing navigation:", error);
@@ -111,6 +114,8 @@ export default function NavigationScreen() {
     };
   }, []);
 
+  // ========================================================================================================
+
   const fetchIncidentsForRoute = async (route: Itinerary, currentLoc: Location.LocationObject) => {
     try {
       const boundingBox = calculateBoundingBox([
@@ -119,17 +124,18 @@ export default function NavigationScreen() {
       ]);
 
       if (boundingBox) {
-        const nearbyIncidents = await fetchNearbyIncidents(
+        await fetchIncidents(
           (boundingBox.minLat + boundingBox.maxLat) / 2,
           (boundingBox.minLon + boundingBox.maxLon) / 2,
           10 // 10km radius
         );
-        setIncidents(nearbyIncidents);
       }
     } catch (error) {
       console.error("Error fetching incidents:", error);
     }
   };
+
+  // ========================================================================================================
 
   // Fetch the route
   const fetchRoute = async (currentLoc: Location.LocationObject) => {
@@ -156,11 +162,8 @@ export default function NavigationScreen() {
           startedAt: new Date(),
         };
 
-        if (route.incidents && route.incidents.length > 0) {
-          setIncidents(route.incidents);
-        } else {
-          fetchIncidentsForRoute(route, currentLoc);
-        }
+        // Fetch incidents for the route area
+        await fetchIncidentsForRoute(route, currentLoc);
 
         if (route.steps && route.steps.length > 0) {
           speakInstruction(route.steps[0].instruction);
@@ -177,6 +180,8 @@ export default function NavigationScreen() {
       setIsLoading(false);
     }
   };
+
+  // ========================================================================================================
 
   useEffect(() => {
     if (!location || !itinerary || !currentStep) return;
@@ -236,6 +241,8 @@ export default function NavigationScreen() {
     checkProgressAlongRoute();
   }, [location, itinerary, currentStep, currentStepIndex]);
 
+  // ========================================================================================================
+
   const speakInstruction = (instruction: string) => {
     Speech.speak(instruction, {
       language: "fr-FR",
@@ -243,6 +250,8 @@ export default function NavigationScreen() {
       pitch: 1.0,
     });
   };
+
+  // ========================================================================================================
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radius of the earth in km
@@ -255,10 +264,14 @@ export default function NavigationScreen() {
     return R * c; // Distance in km
   };
 
+  // ========================================================================================================
+
   // Convert degrees to radians
   const deg2rad = (deg: number) => {
     return deg * (Math.PI / 180);
   };
+
+  // ========================================================================================================
 
   // Find the closest point on the route
   const findClosestPointOnRoute = (lat: number, lon: number, routeCoordinates: any[]) => {
@@ -276,9 +289,20 @@ export default function NavigationScreen() {
     return { point: closestPoint, distance: closestDistance };
   };
 
+  // ========================================================================================================
+
   const handleAddIncident = () => {
     router.push("/incident/report");
   };
+
+  // ========================================================================================================
+
+  const handleIncidentPress = (incident: Incident) => {
+    setSelectedIncident(incident);
+    setShowIncidentDetails(true);
+  };
+
+  // ========================================================================================================
 
   if (isLoading) {
     return (
@@ -325,13 +349,14 @@ export default function NavigationScreen() {
           )}
 
           {/* Incident Markers */}
-          {itinerary?.incidents?.map((incident) => (
+          {incidents.map((incident) => (
             <Marker
               key={incident.id}
               coordinate={{
                 latitude: incident.latitude,
                 longitude: incident.longitude,
               }}
+              onPress={() => handleIncidentPress(incident)}
             >
               <View className="bg-white p-2 rounded-full">
                 <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
@@ -379,6 +404,9 @@ export default function NavigationScreen() {
         <View className="absolute bottom-8 right-6">
           <IncidentButton onPress={handleAddIncident} />
         </View>
+
+        {/* Incident Details Modal */}
+        <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
       </View>
     </SafeAreaView>
   );

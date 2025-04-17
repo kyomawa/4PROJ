@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import * as Location from "expo-location";
 import Icon, { IconProps } from "../../../components/Icon";
 import Button from "../../../components/Button";
-import { reportIncident } from "../../../lib/api/incidents";
+import { useIncidents } from "../../../contexts/IncidentContext";
 import { StatusBar } from "expo-status-bar";
 
 // ========================================================================================================
@@ -32,6 +32,7 @@ export default function ReportIncidentScreen() {
   const [selectedIncident, setSelectedIncident] = useState<IncidentType | null>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { reportNewIncident } = useIncidents();
 
   // ========================================================================================================
 
@@ -64,7 +65,7 @@ export default function ReportIncidentScreen() {
 
     try {
       setIsSubmitting(true);
-      const result = await reportIncident({
+      const result = await reportNewIncident({
         type: selectedIncident,
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
