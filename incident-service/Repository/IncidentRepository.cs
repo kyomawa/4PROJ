@@ -10,6 +10,15 @@ namespace incident_service.Repository
 {
     public class IncidentRepository(DataContext context) : InterfaceIncidentRepository
     {
+        public async Task<List<Incident>> GetAllActive()
+        {
+            var incidents = await context.Incidents
+                .Where(i => i.Status == IncidentStatus.Active)
+                .Include(i => i.Votes)
+                .ToListAsync();
+            return incidents;
+        }
+
         public async Task<List<Incident>> GetAll()
         {
             var incidents = await context.Incidents

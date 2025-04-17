@@ -13,6 +13,7 @@ namespace incident_service.Controllers
     [Route("incident")]
     public class IncidentController(InterfaceIncidentService incidentService) : ControllerBase
     {
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IncidentDto>> GetAll()
         {
@@ -21,6 +22,20 @@ namespace incident_service.Controllers
                 var response = await incidentService.GetAll();
                 return Ok(response);
             } catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("active")]
+        public async Task<ActionResult<IncidentDto>> GetAllActiveIncident()
+        {
+            try
+            {
+                var response = await incidentService.GetAllActive();
+                return Ok(response);
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
@@ -85,7 +100,7 @@ namespace incident_service.Controllers
 
         [Authorize]
         [HttpPut("{id}/vote")]
-        public async Task<ActionResult<IncidentDto>> Vote(Guid id, [FromBody] VoteIncidentDto contributeIncidentDto)
+        public async Task<ActionResult<IncidentDto>> Vote(Guid id, [FromBody] VoteIncidentDto voteIncidentDto)
         {
             try
             {
@@ -96,12 +111,12 @@ namespace incident_service.Controllers
                     return Unauthorized(new { Message = "Invalid or missing user ID." });
                 }
 
-                if (!Enum.IsDefined(typeof(ReactionType), contributeIncidentDto.Reaction))
+                if (!Enum.IsDefined(typeof(ReactionType), voteIncidentDto.Reaction))
                 {
-                    return BadRequest(new { Message = $"Invalid reaction type : {contributeIncidentDto.Reaction}" });
+                    return BadRequest(new { Message = $"Invalid reaction type : {voteIncidentDto.Reaction}" });
                 }
 
-                var response = await incidentService.Vote(userId, id, contributeIncidentDto);
+                var response = await incidentService.Vote(userId, id, voteIncidentDto);
                 if (response == null)
                 {
                     return NotFound($"Incident {id} not found");

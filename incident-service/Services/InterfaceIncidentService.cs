@@ -8,6 +8,7 @@ namespace incident_service.Services
 {
     public interface InterfaceIncidentService
     {
+        public Task<List<IncidentDto>> GetAllActive();
         public Task<List<IncidentDto>> GetAll();
         public Task<List<IncidentDto>> GetByBoundingBox(BoundingBoxDto boundingBox);
         public Task<IncidentDto> Get(Guid id);
