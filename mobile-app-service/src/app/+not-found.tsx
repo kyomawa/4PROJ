@@ -3,10 +3,12 @@ import { Text, View } from "react-native";
 
 import Button from "../components/Button";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 
 export default function Notfound() {
   return (
     <SafeAreaView className="items-center w-full md:w-[550px]">
+      <StatusBar style="dark" />
       <View className="mb-4">
         <Text className="py-1 text-4xl text-center text-white md:text-6xl font-cbold">Section introuvable</Text>
         <Text className="text-xl text-center text-white md:text-2xl font-sregular">

@@ -4,36 +4,65 @@ import { Stack } from "expo-router";
 import "../styles/global.css";
 import { useEffect } from "react";
 import { fonts } from "../assets/fonts/font";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { LogBox } from "react-native";
+import { initializeAuth } from "../lib/api/auth";
+import { AuthProvider } from "../contexts/AuthContext";
+import { IncidentProvider } from "../contexts/IncidentContext";
+import { NavigationProvider } from "../contexts/NavigationContext";
 
-// Keep the splash screen visible while we fetch resources
-// SplashScreen.preventAutoHideAsync();
+// ========================================================================================================
 
-// Set the animation options. This is optional.
-// SplashScreen.setOptions({
-//   duration: 1000,
-//   fade: true,
-// });
+LogBox.ignoreLogs([
+  "Non-serializable values were found in the navigation state",
+  "Sending `onAnimatedValueUpdate` with no listeners registered",
+]);
+
+SplashScreen.preventAutoHideAsync();
+
+// ========================================================================================================
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts(fonts);
 
   useEffect(() => {
-    if (error) throw error;
+    const prepare = async () => {
+      try {
+        await initializeAuth();
+        if (fontsLoaded && !error) {
+          await SplashScreen.hideAsync();
+        }
+      } catch (e) {
+        console.error("Error during app initialization:", e);
+        if (fontsLoaded) await SplashScreen.hideAsync();
+      }
+    };
 
-    if (fontsLoaded) SplashScreen.hideAsync();
+    prepare();
   }, [fontsLoaded, error]);
 
   if (!fontsLoaded && !error) return null;
 
   return (
-    <Stack
-      screenOptions={{
-        animation: "fade_from_bottom",
-        // navigationBarColor: "#2C2480",
-      }}
-    >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <NavigationProvider>
+          <IncidentProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: "fade_from_bottom",
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(root)" options={{ animation: "fade" }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </IncidentProvider>
+        </NavigationProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
+
+// ========================================================================================================
