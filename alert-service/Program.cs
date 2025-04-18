@@ -1,43 +1,31 @@
-using System.Net.WebSockets;
+using alert_service.Hub;
+using alert_service.Services.AlertService;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddScoped<AlertHub>();
+
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-app.UseWebSockets(new WebSocketOptions
+if (app.Environment.IsDevelopment())
 {
-    KeepAliveInterval = TimeSpan.FromSeconds(120)
-});
-
-app.MapGet("/alert", async (HttpContext context) =>
-{
-    if (context.WebSockets.IsWebSocketRequest)
-    {
-        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-
-        await HandleWebSocketAsync(webSocket);
-    }
-    else
-    {
-        context.Response.StatusCode = 400; 
-    }
-});
-
-app.UseSwagger();
-app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
+app.MapHub<AlertHub>("/hub");
 app.MapControllers();
 
 app.Run();

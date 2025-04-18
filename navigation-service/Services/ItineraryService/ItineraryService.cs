@@ -15,7 +15,7 @@ namespace navigation_service.Services.ItineraryService
         private string _tomtomApiKey = configuration["TOMTOM_APIKEY"];
         private static readonly Dictionary<string, double> IncidentSizes = new()
         {
-            { "Crash", 0.003 }, // en mètre
+            { "Crash", 0.003 }, // 0.001 degree is around 111 meters
             { "Bottling", 0.002 },
             { "ClosedRoad", 0.005 },
             { "PoliceControl", 0.001 },

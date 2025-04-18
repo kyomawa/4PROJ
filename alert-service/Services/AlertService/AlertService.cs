@@ -1,24 +1,28 @@
-﻿using System.Net.Http;
+﻿using alert_service.DTO;
 
 namespace alert_service.Services.AlertService
 {
     public class AlertService(HttpClient httpClient) : IAlertService
     {
-        public async Task<string> CheckNearIncident()
-        {
-            var response = await httpClient.GetAsync("http://incident-service/incidents");
+        private const double offsetDegree = 0.002;
 
-            Console.WriteLine("reponse = " + response);
+        public async Task<string> CheckNearIncidents(CoordinatesDto coordinatesDto)
+        {
+            var minLat = coordinatesDto.Latitude - offsetDegree;
+            var maxLat = coordinatesDto.Latitude + offsetDegree;
+            var minLon = coordinatesDto.Longitude - offsetDegree;
+            var maxLon = coordinatesDto.Longitude + offsetDegree;
+
+            var response = await httpClient.GetAsync($"http://incident-service:8080/incident/bounding-box?minLat={minLat}&maxLat={maxLat}&minLon={minLon}&maxLon={maxLon}");
+
             if (response.IsSuccessStatusCode)
             {
                 var incidentsNear = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("incidentsNear = " + incidentsNear);
-
                 return incidentsNear;
             }
             else
             {
-                return "No incidents found nearby.";
+                throw new Exception("Cannot get near incidents");
             }
         }
     }

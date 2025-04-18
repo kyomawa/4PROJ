@@ -1,7 +1,9 @@
-﻿namespace alert_service.Services.AlertService
+﻿using alert_service.DTO;
+
+namespace alert_service.Services.AlertService
 {
     public interface IAlertService
     {
-        public Task<string> CheckNearIncident();
+        public Task<string> CheckNearIncidents(CoordinatesDto coordinatesDto);
     }
 }
