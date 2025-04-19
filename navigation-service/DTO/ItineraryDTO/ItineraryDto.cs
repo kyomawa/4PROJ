@@ -1,4 +1,6 @@
-﻿namespace navigation_service.DTO.ItineraryDTO
+﻿using navigation_service.Models;
+
+namespace navigation_service.DTO.ItineraryDTO
 {
     public class ItineraryDto
     {
@@ -8,5 +10,6 @@
         public List<StepDto> Steps { get; set; }
         public List<CoordinateDto> Coordinates { get; set; }
         public List<IncidentDto> Incidents { get; set; } = new List<IncidentDto>();
+        public BoundingBox BoundingBox { get; set; }
     }
 }
