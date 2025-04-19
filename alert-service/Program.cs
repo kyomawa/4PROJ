@@ -1,5 +1,7 @@
+using alert_service;
 using alert_service.Hub;
 using alert_service.Services.AlertService;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +14,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddScoped<AlertHub>();
 
-builder.Services.AddSignalR();
-
+builder.Services.AddSignalR(options =>
+{
+    options.AddFilter<RateLimitHubFilter>();
+});
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

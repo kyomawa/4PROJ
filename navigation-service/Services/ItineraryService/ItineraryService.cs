@@ -25,10 +25,10 @@ namespace navigation_service.Services.ItineraryService
         public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMethod, string routeType)
         {
 
-            var itineraryBoundingBox = GetBoundingBox(new List<(double Latitude, double Longitude)>
+            var itineraryBoundingBox = GetBoundingBox(new List<CoordinateDto>
             {
-                (departure_lat, departure_lon),
-                (arrival_lat, arrival_lon)
+                new CoordinateDto { Latitude = departure_lat, Longitude = departure_lon },
+                new CoordinateDto { Latitude = arrival_lat, Longitude = arrival_lon }
             });
 
             var incidents = await GetIncidentsInBoundingBox(itineraryBoundingBox);
@@ -36,14 +36,17 @@ namespace navigation_service.Services.ItineraryService
             if (incidents.Count == 0)
             {
                 // creer l'itineraire en db
-                return await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
+                var itinerary = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
+                itinerary.BoundingBox = itineraryBoundingBox;
+                return itinerary;
             }
 
             var areasToAvoid = AreasToAvoid(incidents);
-            var newItinerary = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, areasToAvoid);
-            newItinerary.Incidents = incidents;
+            var itineraryWithIncidents = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, areasToAvoid);
+            itineraryWithIncidents.Incidents = incidents;
+            itineraryWithIncidents.BoundingBox = itineraryBoundingBox;
 
-            return newItinerary;
+            return itineraryWithIncidents;
         }
 
         private async Task<ItineraryDto> GetRoute(double departure_lat, double departure_lon, double arrival_lat, double arrival_lon, string travelMethod, string routeType, object avoidAreas)
@@ -104,7 +107,7 @@ namespace navigation_service.Services.ItineraryService
             }
         }
 
-        private BoundingBox GetBoundingBox(IEnumerable<(double Latitude, double Longitude)> points)
+        private BoundingBox GetBoundingBox(IEnumerable<CoordinateDto> points)
         {
             double minLat = double.MaxValue;
             double maxLat = double.MinValue;
