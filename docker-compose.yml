@@ -70,17 +70,43 @@ services:
     networks:
       - 4proj_dev
 
+  navigation-db:
+    image: "mysql:8.0"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NAV_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${NAV_DB}
+      MYSQL_USER: ${NAV_DB_USER}
+      MYSQL_PASSWORD: ${NAV_DB_PSW}
+    ports:
+      - "3303:3306"
+    volumes:
+      - 4proj-nav-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - 4proj_dev
+
   navigation-service:
     build:
       context: ./navigation-service
       dockerfile: Dockerfile.dev
+    depends_on:
+      navigation-db:
+        condition: service_healthy
     environment:
-      - TOMTOM_URL=${TOMTOM_URL}
-      - TOMTOM_APIKEY=${TOMTOM_APIKEY}
-      - GEOAPIFY_URL=${GEOAPIFY_URL}
-      - GEOAPIFY_APIKEY=${GEOAPIFY_APIKEY}
-      - ASPNETCORE_ENVIRONMENT=Development
-      - DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+      TOMTOM_URL: ${TOMTOM_URL}
+      TOMTOM_APIKEY: ${TOMTOM_APIKEY}
+      GEOAPIFY_URL: ${GEOAPIFY_URL}
+      GEOAPIFY_APIKEY: ${GEOAPIFY_APIKEY}
+      NAV_DB: ${NAV_DB}
+      NAV_DB_USER: ${NAV_DB_USER}
+      NAV_DB_PSW: ${NAV_DB_PSW}
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
     volumes:
       - ./navigation-service:/app
       - navigation-service-nuget:/root/.nuget/packages
@@ -278,6 +304,7 @@ services:
 volumes:
   4proj-incident-database:
   4proj-user-database:
+  4proj-nav-database:
   navigation-service-nuget:
   incident-service-nuget:
   user-service-nuget:

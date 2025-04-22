@@ -1,15 +1,16 @@
 ﻿using System.Text.Json;
 using System.Net.Http.Headers;
-using navigation_service.Services.LocationService;
 using navigation_service.DTO;
 using AutoMapper;
 using navigation_service.Models;
 using System.Text.Json.Nodes;
 using navigation_service.DTO.ItineraryDTO;
+using navigation_service.Repositories.ItineraryRepository;
+using Microsoft.AspNetCore.Mvc;
 
 namespace navigation_service.Services.ItineraryService
 {
-    public class ItineraryService(HttpClient httpClient, ILocationService locationService, IConfiguration configuration, IMapper mapper) : InterfaceItineraryService
+    public class ItineraryService(HttpClient httpClient, IConfiguration configuration, IMapper mapper, InterfaceItineraryRepository interfaceItineraryRepository) : InterfaceItineraryService
     {
         private string _tomtomUrl = configuration["TOMTOM_URL"];
         private string _tomtomApiKey = configuration["TOMTOM_APIKEY"];
@@ -21,6 +22,48 @@ namespace navigation_service.Services.ItineraryService
             { "PoliceControl", 0.001 },
             { "Obstacle", 0.002 }
         };
+
+        public async Task<UserItineraryDto> GetAllByUser(Guid userId)
+        {
+            var itineraries = await interfaceItineraryRepository.GetUserItineraries(userId);
+            return mapper.Map<UserItineraryDto>(itineraries);
+        }
+
+        public async Task<SavedItineraryDto> GetById(Guid itineraryId, Guid userId)
+        {
+            var itinerary = await interfaceItineraryRepository.GetById(itineraryId);
+
+            if (itinerary.UserItinerary.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("You cannot access to this itinerary");
+            }
+            return mapper.Map<SavedItineraryDto>(itinerary);
+        }
+
+        public async Task<SavedItineraryDto> Save(Guid userId, CreateItineraryDto createItineraryDto)
+        {
+            var createdItinerary = await interfaceItineraryRepository.Save(userId, createItineraryDto);
+            return mapper.Map<SavedItineraryDto>(createdItinerary);
+        }
+
+        public async Task<SavedItineraryDto> Delete(Guid itineraryId, Guid userId)
+        {
+            var itinerary = await interfaceItineraryRepository.GetById(itineraryId);
+
+            if (itinerary == null)
+            {
+                return null;
+            }
+
+            if (itinerary.UserItinerary.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("You cannot access to this itinerary");
+            }
+
+            var deletedItinerary = await interfaceItineraryRepository.Delete(itinerary);
+
+            return mapper.Map<SavedItineraryDto>(deletedItinerary);
+        }
 
         public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMethod, string routeType)
         {
@@ -35,7 +78,6 @@ namespace navigation_service.Services.ItineraryService
 
             if (incidents.Count == 0)
             {
-                // creer l'itineraire en db
                 var itinerary = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
                 itinerary.BoundingBox = itineraryBoundingBox;
                 return itinerary;
@@ -77,7 +119,6 @@ namespace navigation_service.Services.ItineraryService
                     var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
 
                     JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
-                    // creer l'itineraire en db
 
                     return mapper.Map<ItineraryDto>(itineraryObject);
                 }
