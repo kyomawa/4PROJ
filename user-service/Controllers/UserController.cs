@@ -7,6 +7,7 @@ using user_service.Models;
 using user_service.Services;
 using user_service.Services.UserService;
 using user_service.Annotations;
+using user_service.Exceptions;
 
 namespace user_service.Controllers
 {
@@ -59,6 +60,10 @@ namespace user_service.Controllers
             }
             catch (Exception ex)
             {
+                if (ex is ConflictException)
+                {
+                    return Conflict(ex.Message);
+                }
                 return StatusCode(500, ex.Message);
             }
         }
