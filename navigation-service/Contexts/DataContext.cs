@@ -11,6 +11,18 @@ namespace navigation_service.Contexts
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
         public DataContext() { }
-        public DbSet<Itinerary> Incidents => Set<Itinerary>();
+        public DbSet<Itinerary> Itinerary => Set<Itinerary>();
+        public DbSet<UserItinerary> UserItinerary => Set<UserItinerary>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<UserItinerary>()
+                .HasMany(userItinerary => userItinerary.Itineraries)
+                .WithOne(itinerary => itinerary.UserItinerary)
+                .HasForeignKey(itinerary => itinerary.UserItineraryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

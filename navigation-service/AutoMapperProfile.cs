@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using navigation_service.DTO;
 using navigation_service.DTO.ItineraryDTO;
+using navigation_service.Models;
 using System.Text.Json.Nodes;
 
 namespace navigation_service
@@ -61,6 +62,9 @@ namespace navigation_service
                         })
                         .ToList()
                 ));
+
+            CreateMap<UserItinerary, UserItineraryDto>();
+            CreateMap<Itinerary, SavedItineraryDto>();
         }
     }
 }
