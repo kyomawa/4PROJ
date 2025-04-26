@@ -78,8 +78,7 @@ namespace incident_service.Repository
             {
                 Type = postIncidentDto.Type,
                 Longitude = (double)postIncidentDto.Longitude,
-                Latitude = (double)postIncidentDto.Latitude,
-                CreationDate = DateTime.Now
+                Latitude = (double)postIncidentDto.Latitude
             };
 
             var createdIncident = await context.Incidents.AddAsync(incident);

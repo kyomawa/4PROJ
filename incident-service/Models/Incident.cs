@@ -28,7 +28,7 @@ namespace incident_service.Models
         public IncidentStatus Status { get; set; } = IncidentStatus.Active;
 
         [Column("CreationDate")]
-        public DateTime CreationDate { get; init; }
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         public ICollection<UserIncidentVote> Votes { get; set; }
     }
 }
