@@ -2,9 +2,6 @@
 using navigation_service.Contexts;
 using navigation_service.DTO.ItineraryDTO;
 using navigation_service.Models;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-
 namespace navigation_service.Repositories.ItineraryRepository
 {
     public class ItineraryRepository(DataContext context) : InterfaceItineraryRepository

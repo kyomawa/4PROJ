@@ -14,6 +14,7 @@ namespace user_service.Models
         public required string PhoneNumber { get; set; }
         [Required]
         public string Password { get; set; }
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         public UserRole Role { get; set; } = UserRole.User;
     }
 }

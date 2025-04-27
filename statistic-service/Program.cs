@@ -1,33 +1,46 @@
-using incident_service.Contexts;
-using incident_service.Repository;
-using incident_service.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
-
+using statistic_service.Contexts;
+using statistic_service.Repositories.IncidentRepository;
+using statistic_service.Repositories.UserRepository;
+using statistic_service.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("ProdConnection");
+var userDbConnectionString = builder.Configuration.GetConnectionString("UserConnection");
+var incidentDbConnectionString = builder.Configuration.GetConnectionString("IncidentConnection");
 
-var mysqlDatabase = Environment.GetEnvironmentVariable("INCIDENT_DB");
-var mysqlUser = Environment.GetEnvironmentVariable("INCIDENT_DB_USER");
-var mysqlPassword = Environment.GetEnvironmentVariable("INCIDENT_DB_PSW");
+var userDb = Environment.GetEnvironmentVariable("USER_DB");
+var userDbUser = Environment.GetEnvironmentVariable("USER_DB_USER");
+var userDbPassword = Environment.GetEnvironmentVariable("USER_DB_PSW");
 
-if (string.IsNullOrEmpty(mysqlDatabase) || string.IsNullOrEmpty(mysqlUser) || string.IsNullOrEmpty(mysqlPassword))
+var incidentDb = Environment.GetEnvironmentVariable("INCIDENT_DB");
+var incidentDbUser = Environment.GetEnvironmentVariable("INCIDENT_DB_USER");
+var incidentDbPassword = Environment.GetEnvironmentVariable("INCIDENT_DB_PSW");
+
+if (string.IsNullOrEmpty(userDb) || string.IsNullOrEmpty(userDbUser) || string.IsNullOrEmpty(userDbPassword) || string.IsNullOrEmpty(incidentDb) || string.IsNullOrEmpty(incidentDbUser) || string.IsNullOrEmpty(incidentDbPassword))
 {
-    throw new InvalidOperationException("Error when loading environment variable related to DB");
+    throw new InvalidOperationException("Error when loading environment variable related to databases");
 }
 
-connectionString = connectionString
-    .Replace("${INCIDENT_DB}", mysqlDatabase)
-    .Replace("${INCIDENT_DB_USER}", mysqlUser)
-    .Replace("${INCIDENT_DB_PSW}", mysqlPassword);
+userDbConnectionString = userDbConnectionString
+    .Replace("${USER_DB}", userDb)
+    .Replace("${USER_DB_USER}", userDbUser)
+    .Replace("${USER_DB_PSW}", userDbPassword);
 
-builder.Services.AddDbContext<DataContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+incidentDbConnectionString = incidentDbConnectionString
+    .Replace("${INCIDENT_DB}", incidentDb)
+    .Replace("${INCIDENT_DB_USER}", incidentDbUser)
+    .Replace("${INCIDENT_DB_PSW}", incidentDbPassword);
+
+builder.Services.AddDbContext<UserContext>(options =>
+    options.UseMySql(userDbConnectionString, ServerVersion.AutoDetect(userDbConnectionString))
+);
+builder.Services.AddDbContext<IncidentContext>(options =>
+    options.UseMySql(incidentDbConnectionString, ServerVersion.AutoDetect(incidentDbConnectionString))
 );
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -56,7 +69,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -86,24 +98,15 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddAuthorization();
-builder.Services.AddHttpClient();
 
-builder.Services.AddScoped<InterfaceIncidentService, IncidentService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<InterfaceIncidentRepository, IncidentRepository>();
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<DataContext>();
-    if (context.Database.GetPendingMigrations().Any())
-    {
-        context.Database.Migrate();
-    }
-}
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

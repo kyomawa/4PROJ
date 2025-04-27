@@ -129,11 +129,7 @@ namespace navigation_service.Controllers
 
             try
             {
-                var response = await itineraryService.GetItinerary(
-                    queryParams.DepartureLon, queryParams.DepartureLat,
-                    queryParams.ArrivalLon, queryParams.ArrivalLat,
-                    queryParams.TravelMethod, queryParams.RouteType
-                );
+                var response = await itineraryService.GetItinerary(queryParams);
 
                 if (response == null)
                 {
