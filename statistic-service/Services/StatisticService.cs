@@ -1,25 +1,31 @@
-﻿using AutoMapper;
-using statistic_service.DTO;
-using statistic_service.DTO.IncidentDto;
+﻿using statistic_service.DTO.IncidentDto;
 using statistic_service.DTO.UserDto;
+using statistic_service.Enums;
 using statistic_service.Repositories.IncidentRepository;
 using statistic_service.Repositories.UserRepository;
-using System.Reflection.Metadata.Ecma335;
 
 namespace statistic_service.Services
 {
     public class StatisticService(IUserRepository userRepository, InterfaceIncidentRepository incidentRepository) : IStatisticService
     {
-        private static readonly string[] months =
+        private static readonly string[] Months =
         {
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         };
+
+        private static readonly string[] IncidentTypes =
+        {
+            "Crash", "Bottling", "ClosedRoad", "PoliceControl", "Obstacle"
+        };
+
+        private static readonly int HoursInDay = 24;
+
         public async Task<List<UserCountByMonthString>> UsersCountByMonth()
         {
             var usersCountByMonths = await userRepository.UsersCountByMonthThisYear();
 
-            var countsAsStringMonths = months.Select((monthName, index) =>
+            var countsAsStringMonths = Months.Select((monthName, index) =>
             {
                 var monthNumber = index + 1;
                 var count = usersCountByMonths.FirstOrDefault(x => x.Month == monthNumber)?.Count ?? 0;
@@ -39,12 +45,37 @@ namespace statistic_service.Services
         {
             var incidentsCountByTypes = await incidentRepository.GetIncidentsCountByType();
 
-            return incidentsCountByTypes;
+            var countsAsStringTypes = IncidentTypes.Select(typeName =>
+            {
+                var count = incidentsCountByTypes.FirstOrDefault(x => x.Type.ToString() == typeName)?.Count ?? 0;
+
+                return new IncidentsCountByType
+                {
+                    Type = Enum.Parse<IncidentType>(typeName),
+                    Count = count
+                };
+            }).ToList();
+
+            return countsAsStringTypes;
         }
 
-        public async Task<CongestionPeriodStatisticsDto> GetCongestionPeriodStatistics()
+        public async Task<List<IncidentsCountByHour>> GetCongestionsPeriod()
         {
-            return new CongestionPeriodStatisticsDto { };
+            var incidentsCountByHour = await incidentRepository.GetIncidentsCountsByHour();
+
+            var countsAsStringTypes = Enumerable.Range(0, HoursInDay).Select(hour =>
+            {
+                var count = incidentsCountByHour.FirstOrDefault(x => x.Hour == hour)?.Count ?? 0;
+
+                return new IncidentsCountByHour
+                {
+                    Hour = hour,
+                    Count = count
+                };
+            }).ToList();
+
+
+            return countsAsStringTypes;
         }
     }
 }

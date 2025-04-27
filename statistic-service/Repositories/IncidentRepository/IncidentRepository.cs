@@ -15,5 +15,19 @@ namespace statistic_service.Repositories.IncidentRepository
 
             return incidentsCounts;
         }
+
+        public async Task<List<IncidentsCountByHour>> GetIncidentsCountsByHour()
+        {
+            var congestionPeriod = await context.Incidents
+              .GroupBy(i => i.CreationDate.Hour)
+              .Select(g => new IncidentsCountByHour
+              {
+                  Hour = g.Key,
+                  Count = g.Count()
+              })
+              .ToListAsync();
+
+            return congestionPeriod;
+        }
     }
 }

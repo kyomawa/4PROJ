@@ -8,6 +8,6 @@ namespace statistic_service.Services
     {
         public Task<List<UserCountByMonthString>> UsersCountByMonth();
         public Task<List<IncidentsCountByType>> IncidentsCountByType();
-        public Task<CongestionPeriodStatisticsDto> GetCongestionPeriodStatistics();
+        public Task<List<IncidentsCountByHour>> GetCongestionsPeriod();
     }
 }

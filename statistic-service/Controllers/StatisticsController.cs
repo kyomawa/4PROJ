@@ -12,7 +12,7 @@ namespace statistic_service.Controllers
     public class StatisticsController(IStatisticService statisticService) : ControllerBase
     {
         [HttpGet("user")]
-        public async Task<ActionResult> UsersByMonth()
+        public async Task<ActionResult> UsersCountByMonth()
         {
             try 
             {
@@ -25,7 +25,7 @@ namespace statistic_service.Controllers
         }
 
         [HttpGet("incidents")]
-        public async Task<ActionResult> IncidentsByType()
+        public async Task<ActionResult> IncidentsCountByType()
         {
             try
             {
@@ -39,11 +39,11 @@ namespace statistic_service.Controllers
         }
 
         [HttpGet("congestion")]
-        public async Task<ActionResult> CongestionPeriod()
+        public async Task<ActionResult> CongestionPeriodByHour()
         {
             try
             {
-                var users = await statisticService.GetCongestionPeriodStatistics();
+                var users = await statisticService.GetCongestionsPeriod();
                 return Ok(users);
             }
             catch (Exception ex)
