@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using statistic_service.Models;
 using statistic_service.Services;
 
 namespace statistic_service.Controllers

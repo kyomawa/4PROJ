@@ -65,39 +65,44 @@ namespace navigation_service.Services.ItineraryService
             return mapper.Map<SavedItineraryDto>(deletedItinerary);
         }
 
-        public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMethod, string routeType)
+        public async Task<ItineraryDto> GetItinerary(ItineraryQueryParams queryParams)
         {
 
             var itineraryBoundingBox = GetBoundingBox(new List<CoordinateDto>
             {
-                new CoordinateDto { Latitude = departure_lat, Longitude = departure_lon },
-                new CoordinateDto { Latitude = arrival_lat, Longitude = arrival_lon }
+                new CoordinateDto { Latitude = queryParams.DepartureLat, Longitude = queryParams.DepartureLon },
+                new CoordinateDto { Latitude = queryParams.ArrivalLat, Longitude = queryParams.ArrivalLon }
             });
 
             var incidents = await GetIncidentsInBoundingBox(itineraryBoundingBox);
 
             if (incidents.Count == 0)
             {
-                var itinerary = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
+                var itinerary = await GetRoute(queryParams, null);
                 itinerary.BoundingBox = itineraryBoundingBox;
                 return itinerary;
             }
 
             var areasToAvoid = AreasToAvoid(incidents);
-            var itineraryWithIncidents = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, areasToAvoid);
+            var itineraryWithIncidents = await GetRoute(queryParams, areasToAvoid);
             itineraryWithIncidents.Incidents = incidents;
             itineraryWithIncidents.BoundingBox = itineraryBoundingBox;
 
             return itineraryWithIncidents;
         }
 
-        private async Task<ItineraryDto> GetRoute(double departure_lat, double departure_lon, double arrival_lat, double arrival_lon, string travelMethod, string routeType, object avoidAreas)
+        private async Task<ItineraryDto> GetRoute(ItineraryQueryParams queryParams, object avoidAreas)
         {
             try
             {
-                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{departure_lat},{departure_lon}:{arrival_lat},{arrival_lon}/json?key={_tomtomApiKey}&travelMode={travelMethod}&routeType={routeType}&instructionsType=text&traffic=true&language=fr";
+                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{queryParams.DepartureLat},{queryParams.DepartureLon}:{queryParams.ArrivalLat},{queryParams.ArrivalLon}/json?key={_tomtomApiKey}&travelMode={queryParams.TravelMethod}&routeType={queryParams.RouteType}&instructionsType=text&traffic=true&language=fr";
 
-                HttpResponseMessage itineraryResponse;
+                if (queryParams.AvoidTollRoads)
+                {
+                    url += "&avoid=tollRoads";
+                }
+
+                HttpResponseMessage itineraryResponse = new HttpResponseMessage { };
 
                 if (avoidAreas == null)
                 {
@@ -111,15 +116,12 @@ namespace navigation_service.Services.ItineraryService
                     content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
                     itineraryResponse = await httpClient.PostAsync(url, content);
-
                 }
 
                 if (itineraryResponse.IsSuccessStatusCode)
                 {
                     var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
-
                     JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
-
                     return mapper.Map<ItineraryDto>(itineraryObject);
                 }
                 else
