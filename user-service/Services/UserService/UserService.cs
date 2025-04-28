@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using System.Text;
 using user_service.DTO;
+using user_service.Exceptions;
 using user_service.Models;
 using user_service.Repositories;
 using user_service.Services.EncryptionService;
@@ -26,6 +27,11 @@ namespace user_service.Services.UserService
 
         public async Task<UserDto> Create(CreateUserDto createUserDto)
         {
+            var userExist = await userRepository.GetByEmail(createUserDto.Email);
+            if (userExist != null)
+            {
+                throw new ConflictException("A user with this email already exists");
+            }
             var createdUser = await userRepository.Create(createUserDto);
             return mapper.Map<UserDto>(createdUser);
         }

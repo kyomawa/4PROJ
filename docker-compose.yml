@@ -30,19 +30,19 @@ services:
     networks:
       - 4proj_dev
 
-  db-service:
+  incident-db:
     image: "mysql:8.0"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${INCIDENT_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${INCIDENT_DB}
+      MYSQL_USER: ${INCIDENT_DB_USER}
+      MYSQL_PASSWORD: ${INCIDENT_DB_PSW}
     ports:
       - "3305:3306"
     volumes:
-      - 4proj-database:/var/lib/mysql
+      - 4proj-incident-database:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,17 +70,43 @@ services:
     networks:
       - 4proj_dev
 
+  navigation-db:
+    image: "mysql:8.0"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NAV_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${NAV_DB}
+      MYSQL_USER: ${NAV_DB_USER}
+      MYSQL_PASSWORD: ${NAV_DB_PSW}
+    ports:
+      - "3303:3306"
+    volumes:
+      - 4proj-nav-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - 4proj_dev
+
   navigation-service:
     build:
       context: ./navigation-service
       dockerfile: Dockerfile.dev
+    depends_on:
+      navigation-db:
+        condition: service_healthy
     environment:
-      - TOMTOM_URL=${TOMTOM_URL}
-      - TOMTOM_APIKEY=${TOMTOM_APIKEY}
-      - GEOAPIFY_URL=${GEOAPIFY_URL}
-      - GEOAPIFY_APIKEY=${GEOAPIFY_APIKEY}
-      - ASPNETCORE_ENVIRONMENT=Development
-      - DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+      TOMTOM_URL: ${TOMTOM_URL}
+      TOMTOM_APIKEY: ${TOMTOM_APIKEY}
+      GEOAPIFY_URL: ${GEOAPIFY_URL}
+      GEOAPIFY_APIKEY: ${GEOAPIFY_APIKEY}
+      NAV_DB: ${NAV_DB}
+      NAV_DB_USER: ${NAV_DB_USER}
+      NAV_DB_PSW: ${NAV_DB_PSW}
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
     volumes:
       - ./navigation-service:/app
       - navigation-service-nuget:/root/.nuget/packages
@@ -110,12 +136,12 @@ services:
       context: ./incident-service
       dockerfile: Dockerfile.dev
     depends_on:
-      db-service:
+      incident-db:
         condition: service_healthy
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      INCIDENT_DB: ${INCIDENT_DB}
+      INCIDENT_DB_USER: ${INCIDENT_DB_USER}
+      INCIDENT_DB_PSW: ${INCIDENT_DB_PSW}
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
     volumes:
@@ -210,6 +236,76 @@ services:
       start_period: 30s
     networks:
       - 4proj_dev
+  
+  alert-service:
+    build:
+      context: ./alert-service
+      dockerfile: Dockerfile.dev
+    depends_on:
+      user-service:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.http.services.alert-service.loadbalancer.server.port=8080"
+        # API
+      - "traefik.http.routers.alert-api.rule=PathPrefix(`/api/alert`)"
+      - "traefik.http.routers.alert-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-alert-prefix.stripprefix.prefixes=/api/alert"
+      - "traefik.http.routers.alert-api.middlewares=strip-alert-prefix"
+      # Swagger
+      - "traefik.http.routers.alert-service.rule=Host(`alert.localhost`)"
+      - "traefik.http.routers.alert-service.entrypoints=http"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - 4proj_dev
+
+  statistics-service:
+    build:
+      context: ./statistic-service
+      dockerfile: Dockerfile.dev
+    depends_on:
+      user-db:
+        condition: service_healthy
+      incident-db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
+      USER_DB: ${USER_DB}
+      USER_DB_USER: ${USER_DB_USER}
+      USER_DB_PSW: ${USER_DB_PSW}
+      INCIDENT_DB: ${INCIDENT_DB}
+      INCIDENT_DB_USER: ${INCIDENT_DB_USER}
+      INCIDENT_DB_PSW: ${INCIDENT_DB_PSW}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.http.services.statistics-service.loadbalancer.server.port=8080"
+        # API
+      - "traefik.http.routers.statistics-api.rule=PathPrefix(`/api/statistics`)"
+      - "traefik.http.routers.statistics-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-statistics-prefix.stripprefix.prefixes=/api/statistics"
+      - "traefik.http.routers.statistics-api.middlewares=strip-statistics-prefix"
+      # Swagger
+      - "traefik.http.routers.statistics-service.rule=Host(`statistics.localhost`)"
+      - "traefik.http.routers.statistics-service.entrypoints=http"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - 4proj_dev
 
   mobile-app-service:
     build:
@@ -243,8 +339,9 @@ services:
       - 4proj_dev
 
 volumes:
-  4proj-database:
+  4proj-incident-database:
   4proj-user-database:
+  4proj-nav-database:
   navigation-service-nuget:
   incident-service-nuget:
   user-service-nuget:

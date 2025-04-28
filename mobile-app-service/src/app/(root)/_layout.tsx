@@ -83,6 +83,27 @@ export default function RootLayout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="profile/transport-settings"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile/saved-itineraries"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="admin/statistics"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

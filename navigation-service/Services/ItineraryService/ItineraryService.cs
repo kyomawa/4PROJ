@@ -1,57 +1,111 @@
 ﻿using System.Text.Json;
 using System.Net.Http.Headers;
-using navigation_service.Services.LocationService;
 using navigation_service.DTO;
 using AutoMapper;
 using navigation_service.Models;
 using System.Text.Json.Nodes;
 using navigation_service.DTO.ItineraryDTO;
+using navigation_service.Repositories.ItineraryRepository;
+using Microsoft.AspNetCore.Mvc;
 
 namespace navigation_service.Services.ItineraryService
 {
-    public class ItineraryService(HttpClient httpClient, ILocationService locationService, IConfiguration configuration, IMapper mapper) : InterfaceItineraryService
+    public class ItineraryService(HttpClient httpClient, IConfiguration configuration, IMapper mapper, InterfaceItineraryRepository interfaceItineraryRepository) : InterfaceItineraryService
     {
         private string _tomtomUrl = configuration["TOMTOM_URL"];
         private string _tomtomApiKey = configuration["TOMTOM_APIKEY"];
         private static readonly Dictionary<string, double> IncidentSizes = new()
         {
-            { "Crash", 0.003 },
+            { "Crash", 0.003 }, // 0.001 degree is around 111 meters
             { "Bottling", 0.002 },
             { "ClosedRoad", 0.005 },
             { "PoliceControl", 0.001 },
             { "Obstacle", 0.002 }
         };
 
-        public async Task<ItineraryDto> GetItinerary(double departure_lon, double departure_lat, double arrival_lon, double arrival_lat, string travelMethod, string routeType)
+        public async Task<UserItineraryDto> GetAllByUser(Guid userId)
+        {
+            var itineraries = await interfaceItineraryRepository.GetUserItineraries(userId);
+            return mapper.Map<UserItineraryDto>(itineraries);
+        }
+
+        public async Task<SavedItineraryDto> GetById(Guid itineraryId, Guid userId)
+        {
+            var itinerary = await interfaceItineraryRepository.GetById(itineraryId);
+
+            if (itinerary.UserItinerary.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("You cannot access to this itinerary");
+            }
+            return mapper.Map<SavedItineraryDto>(itinerary);
+        }
+
+        public async Task<SavedItineraryDto> Save(Guid userId, CreateItineraryDto createItineraryDto)
+        {
+            var createdItinerary = await interfaceItineraryRepository.Save(userId, createItineraryDto);
+            return mapper.Map<SavedItineraryDto>(createdItinerary);
+        }
+
+        public async Task<SavedItineraryDto> Delete(Guid itineraryId, Guid userId)
+        {
+            var itinerary = await interfaceItineraryRepository.GetById(itineraryId);
+
+            if (itinerary == null)
+            {
+                return null;
+            }
+
+            if (itinerary.UserItinerary.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("You cannot access to this itinerary");
+            }
+
+            var deletedItinerary = await interfaceItineraryRepository.Delete(itinerary);
+
+            return mapper.Map<SavedItineraryDto>(deletedItinerary);
+        }
+
+        public async Task<ItineraryDto> GetItinerary(ItineraryQueryParams queryParams)
         {
 
-            var itineraryBoundingBox = GetBoundingBox(new List<(double Latitude, double Longitude)>
+            var itineraryBoundingBox = GetBoundingBox(new List<CoordinateDto>
             {
-                (departure_lat, departure_lon),
-                (arrival_lat, arrival_lon)
+                new CoordinateDto { Latitude = queryParams.DepartureLat, Longitude = queryParams.DepartureLon },
+                new CoordinateDto { Latitude = queryParams.ArrivalLat, Longitude = queryParams.ArrivalLon }
             });
 
             var incidents = await GetIncidentsInBoundingBox(itineraryBoundingBox);
 
             if (incidents.Count == 0)
             {
-                return await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, null);
+                var itinerary = await GetRoute(queryParams, null);
+                itinerary.BoundingBox = itineraryBoundingBox;
+                return itinerary;
             }
 
             var areasToAvoid = AreasToAvoid(incidents);
-            var newItinerary = await GetRoute(departure_lat, departure_lon, arrival_lat, arrival_lon, travelMethod, routeType, areasToAvoid);
-            newItinerary.Incidents = incidents;
+            var itineraryWithIncidents = await GetRoute(queryParams, areasToAvoid);
+            itineraryWithIncidents.Incidents = incidents;
+            itineraryWithIncidents.BoundingBox = itineraryBoundingBox;
 
-            return newItinerary;
+            return itineraryWithIncidents;
         }
 
-        private async Task<ItineraryDto> GetRoute(double departure_lat, double departure_lon, double arrival_lat, double arrival_lon, string travelMethod, string routeType, object avoidAreas)
+        private async Task<ItineraryDto> GetRoute(ItineraryQueryParams queryParams, object avoidAreas)
         {
             try
             {
-                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{departure_lat},{departure_lon}:{arrival_lat},{arrival_lon}/json?key={_tomtomApiKey}&travelMode={travelMethod}&routeType={routeType}&instructionsType=text&traffic=true&language=fr";
+                // Map frontend travel method to TomTom API expected values
+                string tomtomTravelMode = MapToTomTomTravelMode(queryParams.TravelMethod);
 
-                HttpResponseMessage itineraryResponse;
+                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{queryParams.DepartureLat},{queryParams.DepartureLon}:{queryParams.ArrivalLat},{queryParams.ArrivalLon}/json?key={_tomtomApiKey}&travelMode={tomtomTravelMode}&routeType={queryParams.RouteType}&instructionsType=text&traffic=true&language=fr";
+
+                if (queryParams.AvoidTollRoads)
+                {
+                    url += "&avoid=tollRoads";
+                }
+
+                HttpResponseMessage itineraryResponse = new HttpResponseMessage { };
 
                 if (avoidAreas == null)
                 {
@@ -65,16 +119,18 @@ namespace navigation_service.Services.ItineraryService
                     content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
                     itineraryResponse = await httpClient.PostAsync(url, content);
-
                 }
 
                 if (itineraryResponse.IsSuccessStatusCode)
                 {
                     var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
-
                     JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
-
-                    return mapper.Map<ItineraryDto>(itineraryObject);
+                    var mappedItinerary = mapper.Map<ItineraryDto>(itineraryObject);
+                    
+                    // Set the travel mode to the one requested by the frontend
+                    mappedItinerary.TravelMode = queryParams.TravelMethod;
+                    
+                    return mappedItinerary;
                 }
                 else
                 {
@@ -84,6 +140,19 @@ namespace navigation_service.Services.ItineraryService
             {
                 throw new Exception("An error occurred while calculating the route.", ex);
             }
+        }
+
+        // Map frontend travel methods to TomTom API expected values
+        private string MapToTomTomTravelMode(string travelMethod)
+        {
+            return travelMethod.ToLower() switch
+            {
+                "car" => "car",
+                "bike" => "bicycle",
+                "foot" => "pedestrian",
+                "train" => "publicTransport",
+                _ => "car" // Default to car if unknown
+            };
         }
 
         private async Task<List<IncidentDto>> GetIncidentsInBoundingBox(BoundingBox boundingBox)
@@ -102,7 +171,7 @@ namespace navigation_service.Services.ItineraryService
             }
         }
 
-        private BoundingBox GetBoundingBox(IEnumerable<(double Latitude, double Longitude)> points)
+        private BoundingBox GetBoundingBox(IEnumerable<CoordinateDto> points)
         {
             double minLat = double.MaxValue;
             double maxLat = double.MinValue;

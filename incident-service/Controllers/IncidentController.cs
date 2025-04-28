@@ -3,6 +3,9 @@ using incident_service.Services;
 using Microsoft.AspNetCore.Mvc;
 using incident_service.DTO.BoundingBox;
 using incident_service.Enums;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using incident_service.DTO.Vote;
 
 namespace incident_service.Controllers
 {
@@ -10,6 +13,7 @@ namespace incident_service.Controllers
     [Route("incident")]
     public class IncidentController(InterfaceIncidentService incidentService) : ControllerBase
     {
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IncidentDto>> GetAll()
         {
@@ -18,6 +22,20 @@ namespace incident_service.Controllers
                 var response = await incidentService.GetAll();
                 return Ok(response);
             } catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("active")]
+        public async Task<ActionResult<IncidentDto>> GetAllActiveIncident()
+        {
+            try
+            {
+                var response = await incidentService.GetAllActive();
+                return Ok(response);
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
@@ -80,18 +98,25 @@ namespace incident_service.Controllers
             }
         }
 
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] PutIncidentDto putIncidentDto)
+        [Authorize]
+        [HttpPut("{id}/vote")]
+        public async Task<ActionResult<IncidentDto>> Vote(Guid id, [FromBody] VoteIncidentDto voteIncidentDto)
         {
             try
             {
-                if (!Enum.IsDefined(typeof(ReactionType), putIncidentDto.Reaction))
+                var currentUserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(currentUserId) || !Guid.TryParse(currentUserId, out Guid userId))
                 {
-                    return BadRequest(new { Message = $"Invalid reaction type : {putIncidentDto.Reaction}" });
+                    return Unauthorized(new { Message = "Invalid or missing user ID." });
                 }
 
-                var response = await incidentService.Update(id, putIncidentDto);
+                if (!Enum.IsDefined(typeof(ReactionType), voteIncidentDto.Reaction))
+                {
+                    return BadRequest(new { Message = $"Invalid reaction type : {voteIncidentDto.Reaction}" });
+                }
+
+                var response = await incidentService.Vote(userId, id, voteIncidentDto);
                 if (response == null)
                 {
                     return NotFound($"Incident {id} not found");
@@ -104,12 +129,75 @@ namespace incident_service.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<IncidentDto>> Update(Guid id, [FromBody] UpdateIncidentDto updateIncidentDto)
+        {
+            try
+            {
+                if (updateIncidentDto.Status.HasValue && !Enum.IsDefined(typeof(IncidentStatus), updateIncidentDto.Status))
+                {
+                    return BadRequest(new { Message = $"Invalid status type : {updateIncidentDto.Status}" });
+                }
+
+                var response = await incidentService.Update(id, updateIncidentDto);
+                if (response == null)
+                {
+                    return NotFound($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<IncidentDto>> Delete(Guid id)
         {
             try
             {
                 var response = await incidentService.Delete(id);
+                if (response == null)
+                {
+                    return BadRequest($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/enable")]
+        public async Task<ActionResult<IncidentDto>> Enable(Guid id)
+        {
+            try
+            {
+                var response = await incidentService.Enable(id);
+                if (response == null)
+                {
+                    return BadRequest($"Incident {id} not found");
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/disable")]
+        public async Task<ActionResult<IncidentDto>> Disable(Guid id)
+        {
+            try
+            {
+                var response = await incidentService.Disable(id);
                 if (response == null)
                 {
                     return BadRequest($"Incident {id} not found");

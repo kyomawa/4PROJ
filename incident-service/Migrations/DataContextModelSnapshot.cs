@@ -32,21 +32,18 @@ namespace incident_service.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreationDate");
 
-                    b.Property<int>("Dislike")
-                        .HasColumnType("int")
-                        .HasColumnName("Dislike");
-
                     b.Property<double>("Latitude")
                         .HasColumnType("double")
                         .HasColumnName("Latitude");
 
-                    b.Property<int>("Like")
-                        .HasColumnType("int")
-                        .HasColumnName("Like");
-
                     b.Property<double>("Longitude")
                         .HasColumnType("double")
                         .HasColumnName("Longitude");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("Status");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -56,6 +53,44 @@ namespace incident_service.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Incident");
+                });
+
+            modelBuilder.Entity("incident_service.Models.UserIncidentVote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Reaction")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId");
+
+                    b.ToTable("UserIncidentVotes");
+                });
+
+            modelBuilder.Entity("incident_service.Models.UserIncidentVote", b =>
+                {
+                    b.HasOne("incident_service.Models.Incident", "Incident")
+                        .WithMany("Votes")
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Incident");
+                });
+
+            modelBuilder.Entity("incident_service.Models.Incident", b =>
+                {
+                    b.Navigation("Votes");
                 });
 #pragma warning restore 612, 618
         }

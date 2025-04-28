@@ -27,5 +27,8 @@ namespace navigation_service.DTO.ItineraryDTO
         [Required(ErrorMessage = "The type of route is mandatory (RouteType)")]
         [RegularExpression("^(fastest|shortest|eco|thrilling)$", ErrorMessage = "RouteType should be 'fastest', 'shortest', 'eco', or 'thrilling'")]
         public string RouteType { get; set; }
+
+        [Required(ErrorMessage = "AvoidTollRoads is mandatory")]
+        public bool AvoidTollRoads { get; set; }
     }
 }

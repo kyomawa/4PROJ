@@ -6,12 +6,16 @@ import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
+import SaveItineraryModal from "../../../components/SaveItineraryModal";
 import MapWithIncidents from "../../../components/MapWithIncidents";
 import { getItinerary, Itinerary, Step, ItineraryError } from "../../../lib/api/navigation";
 import { useIncidents } from "../../../contexts/IncidentContext";
 import { useNavigation } from "../../../contexts/NavigationContext";
 import { formatDistance, formatDuration, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
+import { usePreferences } from "../../../contexts/PreferencesContext";
+import { TransportMode, getTransportModeIcon, getTransportModeLabel } from "../../../components/TransportModeSelector";
+import TransportModeSelector from "../../../components/TransportModeSelector";
 
 // ========================================================================================================
 
@@ -28,10 +32,15 @@ export default function RouteScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDirections, setShowDirections] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showTransportSelector, setShowTransportSelector] = useState(false);
   const [navigationError, setNavigationError] = useState<string | null>(null);
   const [routeRequestCompleted, setRouteRequestCompleted] = useState(false);
+  const [departureAddress, setDepartureAddress] = useState<string>("Ma position");
+  const [selectedTransportMode, setSelectedTransportMode] = useState<TransportMode>("car");
 
   const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
+  const { defaultTransportMode } = usePreferences();
   const { setNavigationState, clearNavigation } = useNavigation();
 
   const destinationCoords = {
@@ -43,7 +52,8 @@ export default function RouteScreen() {
 
   useEffect(() => {
     clearNavigation();
-  }, []);
+    setSelectedTransportMode(defaultTransportMode);
+  }, [defaultTransportMode]);
 
   // ========================================================================================================
 
@@ -76,6 +86,26 @@ export default function RouteScreen() {
         const location = await Location.getCurrentPositionAsync({});
         setCurrentLocation(location);
 
+        // Try to get the departure address using reverse geocoding
+        try {
+          const addresses = await Location.reverseGeocodeAsync({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+          if (addresses && addresses.length > 0) {
+            const address = addresses[0];
+            const formattedAddress = [address.street, address.city, address.region, address.country]
+              .filter(Boolean)
+              .join(", ");
+
+            if (formattedAddress) {
+              setDepartureAddress(formattedAddress);
+            }
+          }
+        } catch (geoError) {
+          console.error("Error reverse geocoding:", geoError);
+        }
+
         // Fetch itinerary
         if (destLat && destLon) {
           await fetchItinerary(location);
@@ -91,7 +121,7 @@ export default function RouteScreen() {
     if (!routeRequestCompleted) {
       setupNavigation();
     }
-  }, [destLat, destLon, routeRequestCompleted]);
+  }, [destLat, destLon, routeRequestCompleted, selectedTransportMode]);
 
   // ========================================================================================================
 
@@ -104,8 +134,8 @@ export default function RouteScreen() {
         location.coords.longitude,
         destinationCoords.latitude,
         destinationCoords.longitude,
-        "car", // Default to car
-        "fastest" // Default to fastest route
+        selectedTransportMode,
+        "fastest"
       );
 
       if ("status" in routeResult) {
@@ -127,14 +157,6 @@ export default function RouteScreen() {
 
       const route = routeResult as Itinerary;
       setItinerary(route);
-      setNavigationState({
-        route,
-        destination: {
-          coords: destinationCoords,
-          name: destName || "Destination",
-        },
-        startedAt: new Date(),
-      });
 
       const boundingBox = calculateBoundingBox([
         { latitude: location.coords.latitude, longitude: location.coords.longitude },
@@ -145,7 +167,7 @@ export default function RouteScreen() {
         await fetchIncidents(
           (boundingBox.minLat + boundingBox.maxLat) / 2,
           (boundingBox.minLon + boundingBox.maxLon) / 2,
-          10 // 10km radius
+          10
         );
       }
 
@@ -183,6 +205,13 @@ export default function RouteScreen() {
 
   // ========================================================================================================
 
+  const handleTransportModeChange = (mode: TransportMode) => {
+    setSelectedTransportMode(mode);
+    setRouteRequestCompleted(false);
+  };
+
+  // ========================================================================================================
+
   const renderDirectionItem = ({ item, index }: { item: Step; index: number }) => (
     <View className="flex-row p-4 border-b border-neutral-200">
       <View className="w-8 items-center mr-3">
@@ -198,14 +227,25 @@ export default function RouteScreen() {
   // ========================================================================================================
 
   const handleStartNavigation = () => {
-    router.push({
-      pathname: "/navigation",
-      params: {
-        destLat: destinationCoords.latitude.toString(),
-        destLon: destinationCoords.longitude.toString(),
-        destName: destName || "Destination",
-      },
-    });
+    if (itinerary) {
+      setNavigationState({
+        route: itinerary,
+        destination: {
+          coords: destinationCoords,
+          name: destName || "Destination",
+        },
+        startedAt: new Date(),
+      });
+
+      router.push({
+        pathname: "/navigation" as any,
+        params: {
+          destLat: destinationCoords.latitude.toString(),
+          destLon: destinationCoords.longitude.toString(),
+          destName: destName || "Destination",
+        },
+      });
+    }
   };
 
   // ========================================================================================================
@@ -231,7 +271,6 @@ export default function RouteScreen() {
     );
   }
 
-  // If there's an error, display it with a retry button
   if (navigationError) {
     return (
       <SafeAreaView className="flex-1 bg-neutral-10">
@@ -279,7 +318,32 @@ export default function RouteScreen() {
           destinationCoords={destinationCoords}
           onIncidentPress={handleIncidentPress}
           showsUserLocation
+          initialRegion={
+            currentLocation
+              ? {
+                  latitude: currentLocation.coords.latitude,
+                  longitude: currentLocation.coords.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }
+              : undefined
+          }
         />
+
+        {/* Transport Mode Selector Button */}
+        <View className="absolute top-4 right-4">
+          <TouchableOpacity
+            onPress={() => setShowTransportSelector(true)}
+            className="bg-white p-2 rounded-full shadow-md"
+          >
+            <View className="flex-row items-center bg-primary-50 px-3 py-2 rounded-full">
+              <Icon name={getTransportModeIcon(selectedTransportMode)} className="size-5 text-primary-500 mr-2" />
+              <Text className="text-primary-500 font-satoshi-Medium">
+                {getTransportModeLabel(selectedTransportMode)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* Route Summary or Directions */}
         <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg">
@@ -316,13 +380,21 @@ export default function RouteScreen() {
                     </View>
                   </View>
 
-                  <TouchableOpacity
-                    onPress={handleStartNavigation}
-                    className="w-full h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
-                  >
-                    <Icon name="Navigation" className="text-white size-5 mr-2" />
-                    <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
-                  </TouchableOpacity>
+                  <View className="flex-row space-x-3">
+                    <TouchableOpacity
+                      onPress={() => setShowSaveModal(true)}
+                      className="w-14 h-14 bg-primary-100 rounded-full items-center justify-center"
+                    >
+                      <Icon name="Save" className="text-primary-500 size-5" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleStartNavigation}
+                      className="flex-1 h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
+                    >
+                      <Icon name="Navigation" className="text-white size-5 mr-2" />
+                      <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
+                    </TouchableOpacity>
+                  </View>
                 </>
               )}
             </View>
@@ -340,13 +412,21 @@ export default function RouteScreen() {
               }
               ListFooterComponent={
                 <View className="p-4">
-                  <TouchableOpacity
-                    onPress={handleStartNavigation}
-                    className="w-full h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
-                  >
-                    <Icon name="Navigation" className="text-white size-5 mr-2" />
-                    <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
-                  </TouchableOpacity>
+                  <View className="flex-row space-x-3">
+                    <TouchableOpacity
+                      onPress={() => setShowSaveModal(true)}
+                      className="w-14 h-14 bg-primary-100 rounded-full items-center justify-center"
+                    >
+                      <Icon name="Save" className="text-primary-500 size-5" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleStartNavigation}
+                      className="flex-1 h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
+                    >
+                      <Icon name="Navigation" className="text-white size-5 mr-2" />
+                      <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               }
             />
@@ -355,6 +435,24 @@ export default function RouteScreen() {
 
         {/* Incident Details Modal */}
         <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
+
+        {/* Save Itinerary Modal */}
+        <SaveItineraryModal
+          visible={showSaveModal}
+          setIsVisible={setShowSaveModal}
+          itinerary={itinerary}
+          departure={departureAddress}
+          destination={destName || "Destination"}
+          onSaveSuccess={() => {}}
+        />
+
+        {/* Transport Mode Selector Modal */}
+        <TransportModeSelector
+          visible={showTransportSelector}
+          onClose={() => setShowTransportSelector(false)}
+          selectedMode={selectedTransportMode}
+          onSelect={handleTransportModeChange}
+        />
       </View>
     </SafeAreaView>
   );

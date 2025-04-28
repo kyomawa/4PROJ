@@ -1,10 +1,12 @@
 import React, { createContext, useContext, ReactNode, useState, useCallback } from "react";
 import {
   fetchNearbyIncidents,
+  fetchActiveIncidents,
   reportIncident,
   reactToIncident,
   Incident,
   IncidentPostData,
+  getIncidentVoteCounts,
 } from "../lib/api/incidents";
 
 // ========================================================================================================
@@ -13,11 +15,13 @@ type IncidentContextType = {
   incidents: Incident[];
   isLoading: boolean;
   fetchIncidents: (latitude: number, longitude: number, radiusKm?: number) => Promise<void>;
+  fetchAllActiveIncidents: () => Promise<void>;
   clearIncidents: () => void;
   reportNewIncident: (data: IncidentPostData) => Promise<Incident | null>;
   reactToIncident: (incidentId: string, reaction: "Like" | "Dislike") => Promise<Incident | null>;
   selectedIncident: Incident | null;
   setSelectedIncident: (incident: Incident | null) => void;
+  getVoteCounts: (incident: Incident) => { likes: number; dislikes: number };
 };
 
 const IncidentContext = createContext<IncidentContextType | undefined>(undefined);
@@ -40,16 +44,13 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
       setIsLoading(true);
       const fetchedIncidents = await fetchNearbyIncidents(latitude, longitude, radiusKm);
 
-      // Merge new incidents with existing ones, avoiding duplicates
       setIncidents((prevIncidents) => {
         const uniqueIncidents = new Map();
 
-        // Add existing incidents to map using ID as key
         prevIncidents.forEach((incident) => {
           uniqueIncidents.set(incident.id, incident);
         });
 
-        // Add or update with new incidents
         fetchedIncidents.forEach((incident) => {
           uniqueIncidents.set(incident.id, incident);
         });
@@ -59,6 +60,20 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
       });
     } catch (error) {
       console.error("Error fetching incidents:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // ========================================================================================================
+
+  const fetchAllActiveIncidents = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const activeIncidents = await fetchActiveIncidents();
+      setIncidents(activeIncidents);
+    } catch (error) {
+      console.error("Error fetching active incidents:", error);
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +113,10 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
           setIncidents((prevIncidents) =>
             prevIncidents.map((incident) => (incident.id === incidentId ? updatedIncident : incident))
           );
+
+          if (selectedIncident?.id === incidentId) {
+            setSelectedIncident(updatedIncident);
+          }
         }
 
         return updatedIncident;
@@ -106,8 +125,14 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
         return null;
       }
     },
-    []
+    [selectedIncident]
   );
+
+  // ========================================================================================================
+
+  const getVoteCounts = useCallback((incident: Incident) => {
+    return getIncidentVoteCounts(incident);
+  }, []);
 
   // ========================================================================================================
 
@@ -115,11 +140,13 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
     incidents,
     isLoading,
     fetchIncidents,
+    fetchAllActiveIncidents,
     clearIncidents,
     reportNewIncident,
     reactToIncident: handleReactToIncident,
     selectedIncident,
     setSelectedIncident,
+    getVoteCounts,
   };
 
   return <IncidentContext.Provider value={value}>{children}</IncidentContext.Provider>;
