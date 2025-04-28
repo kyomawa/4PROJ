@@ -60,6 +60,12 @@ export default function ProfileScreen() {
 
   // ========================================================================================================
 
+  const navigateToTransportSettings = () => {
+    router.push("/profile/transport-settings" as any);
+  };
+
+  // ========================================================================================================
+
   const resumeNavigation = () => {
     router.push("/navigation" as any);
   };
@@ -120,6 +126,14 @@ export default function ProfileScreen() {
             >
               <Icon name="Map" className="size-6 text-neutral-600 mr-4" />
               <Text className="text-base flex-1">Itinéraires sauvegardés</Text>
+              <Icon name="ChevronRight" className="size-5 text-neutral-400" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-row items-center p-4 border-b border-neutral-100"
+              onPress={navigateToTransportSettings}
+            >
+              <Icon name="Car" className="size-6 text-neutral-600 mr-4" />
+              <Text className="text-base flex-1">Mode de transport</Text>
               <Icon name="ChevronRight" className="size-5 text-neutral-400" />
             </TouchableOpacity>
             <TouchableOpacity className="flex-row items-center p-4 border-b border-neutral-100">

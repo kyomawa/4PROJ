@@ -1,16 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Icon from "../../../components/Icon";
 import SavedItineraries from "../../../components/SavedItineraries";
 import { useAuthContext } from "../../../contexts/AuthContext";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 // ========================================================================================================
 
 export default function SavedItinerariesScreen() {
   const { isLoggedIn } = useAuthContext();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const navigation = useNavigation();
+
+  // ========================================================================================================
+
+  // Refresh list when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshTrigger((prev) => prev + 1);
+    }, [])
+  );
 
   // ========================================================================================================
 
@@ -60,7 +73,7 @@ export default function SavedItinerariesScreen() {
         <Text className="text-xl font-satoshi-Bold flex-1">Itinéraires sauvegardés</Text>
       </View>
 
-      <SavedItineraries />
+      <SavedItineraries refreshTrigger={refreshTrigger} />
     </SafeAreaView>
   );
 }

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { router } from "expo-router";
 import Icon from "./Icon";
 import { getUserItineraries, deleteItinerary, SavedItinerary } from "../lib/api/navigation";
@@ -9,25 +9,22 @@ import { formatDistance, formatDuration } from "../utils/mapUtils";
 
 type SavedItinerariesProps = {
   onItinerarySelect?: (itinerary: SavedItinerary) => void;
+  refreshTrigger?: number; // Increment this to trigger a refresh
 };
 
-export default function SavedItineraries({ onItinerarySelect }: SavedItinerariesProps) {
+export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0 }: SavedItinerariesProps) {
   const [itineraries, setItineraries] = useState<SavedItinerary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // ========================================================================================================
 
   // Load saved itineraries
-  useEffect(() => {
-    loadItineraries();
-  }, []);
-
-  // ========================================================================================================
-
-  // Load all user's saved itineraries
-  const loadItineraries = async () => {
+  const loadItineraries = useCallback(async (showLoadingIndicator = true) => {
     try {
-      setIsLoading(true);
+      if (showLoadingIndicator) {
+        setIsLoading(true);
+      }
       const result = await getUserItineraries();
       if (result) {
         setItineraries(result.itineraries || []);
@@ -37,8 +34,33 @@ export default function SavedItineraries({ onItinerarySelect }: SavedItineraries
       Alert.alert("Erreur", "Impossible de charger vos itinéraires sauvegardés");
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
+
+  // ========================================================================================================
+
+  // Initial load
+  useEffect(() => {
+    loadItineraries();
+  }, [loadItineraries]);
+
+  // ========================================================================================================
+
+  // Handle refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      loadItineraries();
+    }
+  }, [refreshTrigger, loadItineraries]);
+
+  // ========================================================================================================
+
+  // Handle pull-to-refresh
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadItineraries(false);
+  }, [loadItineraries]);
 
   // ========================================================================================================
 
@@ -138,7 +160,7 @@ export default function SavedItineraries({ onItinerarySelect }: SavedItineraries
 
   // ========================================================================================================
 
-  if (isLoading) {
+  if (isLoading && !refreshing) {
     return (
       <View className="items-center justify-center py-8">
         <ActivityIndicator size="large" color="#695BF9" />
@@ -157,6 +179,9 @@ export default function SavedItineraries({ onItinerarySelect }: SavedItineraries
         keyExtractor={(item) => item.id}
         ListEmptyComponent={renderEmptyState}
         contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#695BF9"]} tintColor="#695BF9" />
+        }
       />
     </View>
   );

@@ -6,7 +6,7 @@ import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import * as Speech from "expo-speech";
 import Icon from "../../../components/Icon";
-import IncidentButton from "@/src/components/IncidentButton";
+import IncidentButton from "../../../components/IncidentButton";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
 import MapWithIncidents from "../../../components/MapWithIncidents";
 import { getItinerary, Itinerary } from "../../../lib/api/navigation";
@@ -14,6 +14,8 @@ import { useIncidents } from "../../../contexts/IncidentContext";
 import { useNavigation } from "../../../contexts/NavigationContext";
 import { formatDistance, formatDuration, calculateBoundingBox } from "../../../utils/mapUtils";
 import { StatusBar } from "expo-status-bar";
+import { usePreferences } from "../../../contexts/PreferencesContext";
+import { TransportMode } from "../../../components/TransportModeSelector";
 
 // ========================================================================================================
 
@@ -37,6 +39,7 @@ export default function NavigationScreen() {
 
   const { fetchIncidents, setSelectedIncident, incidents } = useIncidents();
   const { navigationState, setNavigationState, clearNavigation } = useNavigation();
+  const { defaultTransportMode } = usePreferences();
 
   const destinationCoords = {
     latitude: parseFloat(destLat || "0"),
@@ -127,7 +130,7 @@ export default function NavigationScreen() {
         setWatchPosition(subscription);
 
         if (!itinerary && destLat && destLon) {
-          await fetchRoute(location);
+          await fetchRoute(location, defaultTransportMode);
         } else if (itinerary) {
           // Fetch incidents for the route
           await fetchIncidentsForRoute(itinerary, location);
@@ -149,7 +152,7 @@ export default function NavigationScreen() {
       }
       Speech.stop();
     };
-  }, []);
+  }, [defaultTransportMode]);
 
   // ========================================================================================================
 
@@ -177,7 +180,7 @@ export default function NavigationScreen() {
   // ========================================================================================================
 
   // Fetch the route
-  const fetchRoute = async (currentLoc: Location.LocationObject) => {
+  const fetchRoute = async (currentLoc: Location.LocationObject, transportMode: TransportMode = "car") => {
     try {
       setIsLoading(true);
       setIsRecalculating(true);
@@ -187,7 +190,7 @@ export default function NavigationScreen() {
         currentLoc.coords.longitude,
         destinationCoords.latitude,
         destinationCoords.longitude,
-        "car",
+        transportMode,
         "fastest"
       );
 
@@ -285,12 +288,21 @@ export default function NavigationScreen() {
       // If user is too far from route and recalculation isn't already in progress
       if (closestPointOnRoute.distance > 0.1 && !isRecalculating && !recalculationFailed) {
         speakInstruction("Recalcul de l'itinéraire");
-        await fetchRoute(location);
+        await fetchRoute(location, defaultTransportMode);
       }
     };
 
     checkProgressAlongRoute();
-  }, [location, itinerary, currentStep, currentStepIndex, clearNavigation, isRecalculating, recalculationFailed]);
+  }, [
+    location,
+    itinerary,
+    currentStep,
+    currentStepIndex,
+    clearNavigation,
+    isRecalculating,
+    recalculationFailed,
+    defaultTransportMode,
+  ]);
 
   // ========================================================================================================
 
@@ -298,7 +310,7 @@ export default function NavigationScreen() {
     if (!location) return;
 
     setRecalculationFailed(false);
-    await fetchRoute(location);
+    await fetchRoute(location, defaultTransportMode);
   };
 
   // ========================================================================================================
@@ -352,7 +364,7 @@ export default function NavigationScreen() {
   // ========================================================================================================
 
   const handleAddIncident = () => {
-    router.push("/incident/report");
+    router.push("/incident/report" as any);
   };
 
   // ========================================================================================================

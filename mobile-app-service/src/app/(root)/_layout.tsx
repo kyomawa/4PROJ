@@ -85,6 +85,13 @@ export default function RootLayout() {
       />
 
       <Tabs.Screen
+        name="profile/transport-settings"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
         name="profile/saved-itineraries"
         options={{
           href: null,

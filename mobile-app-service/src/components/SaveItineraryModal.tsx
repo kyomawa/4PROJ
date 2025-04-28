@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Modal, Alert } from "react-native";
 import Icon from "./Icon";
 import Button from "./Button";
 import { formatDistance, formatDuration } from "../utils/mapUtils";
-import { saveItinerary, Itinerary } from "../lib/api/navigation";
+import { saveItinerary, getUserItineraries, Itinerary } from "../lib/api/navigation";
 import { useAuthContext } from "../contexts/AuthContext";
 
 // ========================================================================================================
@@ -14,6 +14,7 @@ type SaveItineraryModalProps = {
   itinerary: Itinerary | null;
   departure: string;
   destination: string;
+  onSaveSuccess?: () => void;
 };
 
 export default function SaveItineraryModal({
@@ -22,6 +23,7 @@ export default function SaveItineraryModal({
   itinerary,
   departure,
   destination,
+  onSaveSuccess,
 }: SaveItineraryModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { isLoggedIn } = useAuthContext();
@@ -71,6 +73,11 @@ export default function SaveItineraryModal({
       });
 
       if (result) {
+        // Trigger refresh in the saved itineraries list if a callback was provided
+        if (onSaveSuccess) {
+          onSaveSuccess();
+        }
+
         Alert.alert("Succès", "Itinéraire sauvegardé avec succès", [
           {
             text: "OK",
