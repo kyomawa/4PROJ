@@ -95,7 +95,10 @@ namespace navigation_service.Services.ItineraryService
         {
             try
             {
-                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{queryParams.DepartureLat},{queryParams.DepartureLon}:{queryParams.ArrivalLat},{queryParams.ArrivalLon}/json?key={_tomtomApiKey}&travelMode={queryParams.TravelMethod}&routeType={queryParams.RouteType}&instructionsType=text&traffic=true&language=fr";
+                // Map frontend travel method to TomTom API expected values
+                string tomtomTravelMode = MapToTomTomTravelMode(queryParams.TravelMethod);
+
+                var url = $"{_tomtomUrl}/routing/1/calculateRoute/{queryParams.DepartureLat},{queryParams.DepartureLon}:{queryParams.ArrivalLat},{queryParams.ArrivalLon}/json?key={_tomtomApiKey}&travelMode={tomtomTravelMode}&routeType={queryParams.RouteType}&instructionsType=text&traffic=true&language=fr";
 
                 if (queryParams.AvoidTollRoads)
                 {
@@ -122,7 +125,12 @@ namespace navigation_service.Services.ItineraryService
                 {
                     var itineraryAsJson = await itineraryResponse.Content.ReadAsStringAsync();
                     JsonObject itineraryObject = JsonSerializer.Deserialize<JsonObject>(itineraryAsJson);
-                    return mapper.Map<ItineraryDto>(itineraryObject);
+                    var mappedItinerary = mapper.Map<ItineraryDto>(itineraryObject);
+                    
+                    // Set the travel mode to the one requested by the frontend
+                    mappedItinerary.TravelMode = queryParams.TravelMethod;
+                    
+                    return mappedItinerary;
                 }
                 else
                 {
@@ -132,6 +140,19 @@ namespace navigation_service.Services.ItineraryService
             {
                 throw new Exception("An error occurred while calculating the route.", ex);
             }
+        }
+
+        // Map frontend travel methods to TomTom API expected values
+        private string MapToTomTomTravelMode(string travelMethod)
+        {
+            return travelMethod.ToLower() switch
+            {
+                "car" => "car",
+                "bike" => "bicycle",
+                "foot" => "pedestrian",
+                "train" => "publicTransport",
+                _ => "car" // Default to car if unknown
+            };
         }
 
         private async Task<List<IncidentDto>> GetIncidentsInBoundingBox(BoundingBox boundingBox)
