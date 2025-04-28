@@ -135,7 +135,7 @@ export default function RouteScreen() {
         destinationCoords.latitude,
         destinationCoords.longitude,
         selectedTransportMode,
-        "fastest" // Default to fastest route
+        "fastest"
       );
 
       if ("status" in routeResult) {
@@ -158,8 +158,6 @@ export default function RouteScreen() {
       const route = routeResult as Itinerary;
       setItinerary(route);
 
-      // Don't set navigation state here - only when user explicitly starts navigation
-
       const boundingBox = calculateBoundingBox([
         { latitude: location.coords.latitude, longitude: location.coords.longitude },
         ...route.coordinates,
@@ -169,7 +167,7 @@ export default function RouteScreen() {
         await fetchIncidents(
           (boundingBox.minLat + boundingBox.maxLat) / 2,
           (boundingBox.minLon + boundingBox.maxLon) / 2,
-          10 // 10km radius
+          10
         );
       }
 
@@ -229,7 +227,6 @@ export default function RouteScreen() {
   // ========================================================================================================
 
   const handleStartNavigation = () => {
-    // Only set navigation state when explicitly starting navigation
     if (itinerary) {
       setNavigationState({
         route: itinerary,
@@ -274,7 +271,6 @@ export default function RouteScreen() {
     );
   }
 
-  // If there's an error, display it with a retry button
   if (navigationError) {
     return (
       <SafeAreaView className="flex-1 bg-neutral-10">
@@ -447,10 +443,7 @@ export default function RouteScreen() {
           itinerary={itinerary}
           departure={departureAddress}
           destination={destName || "Destination"}
-          onSaveSuccess={() => {
-            // This will trigger a refresh in the SavedItineraries component
-            // when the user navigates back to the saved itineraries screen
-          }}
+          onSaveSuccess={() => {}}
         />
 
         {/* Transport Mode Selector Modal */}

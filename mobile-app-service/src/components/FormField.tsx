@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import Icon from "./Icon";
 
+// ========================================================================================================
+
 type FormFieldProps = {
   name: string;
   label: string;
@@ -22,6 +24,8 @@ type FormFieldProps = {
   passwordField?: boolean;
   control: any;
 } & TextInputProps;
+
+// ========================================================================================================
 
 const FormField = forwardRef<TextInput, FormFieldProps>(
   ({ control, name, icon, label, placeholder, passwordField = false, ...props }, ref) => {
@@ -78,4 +82,8 @@ const FormField = forwardRef<TextInput, FormFieldProps>(
   }
 );
 
+// ========================================================================================================
+
 export default FormField;
+
+// ========================================================================================================

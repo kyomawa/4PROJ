@@ -9,7 +9,7 @@ import { formatDistance, formatDuration } from "../utils/mapUtils";
 
 type SavedItinerariesProps = {
   onItinerarySelect?: (itinerary: SavedItinerary) => void;
-  refreshTrigger?: number; // Increment this to trigger a refresh
+  refreshTrigger?: number;
 };
 
 export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0 }: SavedItinerariesProps) {
@@ -19,7 +19,6 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Load saved itineraries
   const loadItineraries = useCallback(async (showLoadingIndicator = true) => {
     try {
       if (showLoadingIndicator) {
@@ -40,14 +39,12 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Initial load
   useEffect(() => {
     loadItineraries();
   }, [loadItineraries]);
 
   // ========================================================================================================
 
-  // Handle refreshTrigger changes
   useEffect(() => {
     if (refreshTrigger > 0) {
       loadItineraries();
@@ -56,7 +53,6 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Handle pull-to-refresh
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadItineraries(false);
@@ -64,7 +60,6 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Handle itinerary deletion
   const handleDeleteItinerary = async (itineraryId: string) => {
     Alert.alert("Supprimer l'itinéraire", "Êtes-vous sûr de vouloir supprimer cet itinéraire ?", [
       {
@@ -97,7 +92,6 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Handle itinerary selection
   const handleSelectItinerary = (itinerary: SavedItinerary) => {
     if (onItinerarySelect) {
       onItinerarySelect(itinerary);
@@ -115,7 +109,6 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Render an individual itinerary item
   const renderItineraryItem = ({ item }: { item: SavedItinerary }) => (
     <TouchableOpacity className="bg-white rounded-xl p-4 mb-3 shadow-sm" onPress={() => handleSelectItinerary(item)}>
       <View className="flex-row justify-between items-center">
@@ -150,7 +143,6 @@ export default function SavedItineraries({ onItinerarySelect, refreshTrigger = 0
 
   // ========================================================================================================
 
-  // Empty state display
   const renderEmptyState = () => (
     <View className="items-center justify-center py-8">
       <Icon name="MapPin" className="size-10 text-neutral-300 mb-4" />

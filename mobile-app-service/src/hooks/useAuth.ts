@@ -23,11 +23,9 @@ export function useAuth() {
       try {
         setLoading(true);
 
-        // Check if the user is authenticated
         const auth = await isAuthenticated();
         setIsLoggedIn(auth);
 
-        // If authenticated, get user data
         if (auth) {
           const userData = await getCurrentUser();
           setUser(userData);

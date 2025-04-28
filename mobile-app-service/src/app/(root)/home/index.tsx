@@ -76,11 +76,11 @@ export default function HomeScreen() {
   };
 
   const handleAddIncident = () => {
-    router.push("/incident/report");
+    router.push("/incident/report" as any);
   };
 
   const handleSearch = () => {
-    router.push("/search");
+    router.push("/search" as any);
   };
 
   const centerOnUser = () => {
@@ -103,7 +103,7 @@ export default function HomeScreen() {
   };
 
   const resumeNavigation = () => {
-    router.push("/navigation");
+    router.push("/navigation" as any);
   };
 
   // ========================================================================================================

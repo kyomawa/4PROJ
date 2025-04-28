@@ -113,7 +113,6 @@ export const getItinerary = async (
     });
     return response.data;
   } catch (error: any) {
-    // Check for specific error message about invalid points
     const isInvalidPoints =
       error.response?.data?.message?.includes("Invalid points") || error.response?.data?.includes("Invalid points");
 

@@ -44,16 +44,13 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
       setIsLoading(true);
       const fetchedIncidents = await fetchNearbyIncidents(latitude, longitude, radiusKm);
 
-      // Merge new incidents with existing ones, avoiding duplicates
       setIncidents((prevIncidents) => {
         const uniqueIncidents = new Map();
 
-        // Add existing incidents to map using ID as key
         prevIncidents.forEach((incident) => {
           uniqueIncidents.set(incident.id, incident);
         });
 
-        // Add or update with new incidents
         fetchedIncidents.forEach((incident) => {
           uniqueIncidents.set(incident.id, incident);
         });

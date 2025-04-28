@@ -63,8 +63,7 @@ export const fetchNearbyIncidents = async (
   longitude: number,
   radiusKm: number = 5
 ): Promise<Incident[]> => {
-  // Calculate bounding box based on radius (approximate)
-  const latDelta = radiusKm / 111; // 1 degree latitude is approximately 111 km
+  const latDelta = radiusKm / 111;
   const lonDelta = radiusKm / (111 * Math.cos(latitude * (Math.PI / 180)));
 
   return fetchIncidentsByBoundingBox(

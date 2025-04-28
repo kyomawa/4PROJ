@@ -27,7 +27,6 @@ export function useAlertConnection() {
 
   // ========================================================================================================
 
-  // Initialize connection
   useEffect(() => {
     const hubConnection = new HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}/hub`)
@@ -35,7 +34,6 @@ export function useAlertConnection() {
       .configureLogging(LogLevel.Information)
       .build();
 
-    // Set up event handlers
     hubConnection.on("IncidentsNear", (data: string) => {
       try {
         const parsedData = JSON.parse(data);
@@ -65,7 +63,6 @@ export function useAlertConnection() {
 
     setConnection(hubConnection);
 
-    // Clean up on unmount
     return () => {
       if (hubConnection) {
         hubConnection.stop();

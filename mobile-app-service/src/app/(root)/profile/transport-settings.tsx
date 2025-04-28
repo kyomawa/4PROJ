@@ -16,14 +16,12 @@ export default function TransportSettingsScreen() {
 
   // ========================================================================================================
 
-  // Handle navigation back
   const handleBack = () => {
     router.back();
   };
 
   // ========================================================================================================
 
-  // Handle transport mode change
   const handleTransportModeChange = async (mode: TransportMode) => {
     await setDefaultTransportMode(mode);
   };

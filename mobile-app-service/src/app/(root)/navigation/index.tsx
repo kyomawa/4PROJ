@@ -54,7 +54,6 @@ export default function NavigationScreen() {
 
   // ========================================================================================================
 
-  // Handle navigation cancellation and cleanup
   const handleCancelNavigation = () => {
     Alert.alert("Arrêter la navigation", "Voulez-vous vraiment arrêter la navigation en cours ?", [
       {
@@ -65,7 +64,6 @@ export default function NavigationScreen() {
         text: "Oui",
         style: "destructive",
         onPress: () => {
-          // Clear only navigation state, not incidents
           clearNavigation();
           setItinerary(null);
           router.replace("/home");
@@ -76,10 +74,8 @@ export default function NavigationScreen() {
 
   // ========================================================================================================
 
-  // Reset component state when navigation params change
   useEffect(() => {
     if (destLat && destLon) {
-      // Reset route-related state when destination changes
       setItinerary(null);
       setCurrentStepIndex(0);
       setRecentlyPassedStep(false);
@@ -90,7 +86,6 @@ export default function NavigationScreen() {
   // ========================================================================================================
 
   useEffect(() => {
-    // If we have navigation state but no itinerary yet, initialize from navigation state
     if (!itinerary && navigationState?.route) {
       setItinerary(navigationState.route);
     }
@@ -119,8 +114,8 @@ export default function NavigationScreen() {
         const subscription = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
-            distanceInterval: 10, // Update every 10 meters
-            timeInterval: 5000, // Or every 5 seconds
+            distanceInterval: 10,
+            timeInterval: 5000,
           },
           (updatedLocation) => {
             setLocation(updatedLocation);
@@ -132,7 +127,6 @@ export default function NavigationScreen() {
         if (!itinerary && destLat && destLon) {
           await fetchRoute(location, defaultTransportMode);
         } else if (itinerary) {
-          // Fetch incidents for the route
           await fetchIncidentsForRoute(itinerary, location);
         }
       } catch (error) {
@@ -164,12 +158,10 @@ export default function NavigationScreen() {
       ]);
 
       if (boundingBox) {
-        // With the updated IncidentContext, this will now merge with existing incidents
-        // rather than replacing them
         await fetchIncidents(
           (boundingBox.minLat + boundingBox.maxLat) / 2,
           (boundingBox.minLon + boundingBox.maxLon) / 2,
-          10 // 10km radius
+          10
         );
       }
     } catch (error) {
@@ -194,12 +186,10 @@ export default function NavigationScreen() {
         "fastest"
       );
 
-      // Check if the result is an error
       if ("status" in routeResult) {
         console.error("Itinerary error:", routeResult);
         setRecalculationFailed(true);
 
-        // Don't show alert for recalculation failures, just show UI indication
         return;
       }
 
@@ -207,7 +197,6 @@ export default function NavigationScreen() {
       setItinerary(route);
       setRecalculationFailed(false);
 
-      // Update navigation state
       setNavigationState({
         route,
         destination: {
@@ -217,7 +206,6 @@ export default function NavigationScreen() {
         startedAt: new Date(),
       });
 
-      // Fetch incidents for the route area
       await fetchIncidentsForRoute(route, currentLoc);
 
       if (route.steps && route.steps.length > 0) {
@@ -247,14 +235,11 @@ export default function NavigationScreen() {
         );
 
         if (distanceToDestination < 0.05) {
-          // Notify user they've reached their destination
           Alert.alert("Destination atteinte", "Vous êtes arrivé à destination");
 
-          // Clear navigation state
           clearNavigation();
           setItinerary(null);
 
-          // Navigate back to home
           router.replace("/home");
         }
         return;
@@ -285,7 +270,6 @@ export default function NavigationScreen() {
         itinerary.coordinates
       );
 
-      // If user is too far from route and recalculation isn't already in progress
       if (closestPointOnRoute.distance > 0.1 && !isRecalculating && !recalculationFailed) {
         speakInstruction("Recalcul de l'itinéraire");
         await fetchRoute(location, defaultTransportMode);
@@ -326,26 +310,24 @@ export default function NavigationScreen() {
   // ========================================================================================================
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radius of the earth in km
+    const R = 6371;
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
+    return R * c;
   };
 
   // ========================================================================================================
 
-  // Convert degrees to radians
   const deg2rad = (deg: number) => {
     return deg * (Math.PI / 180);
   };
 
   // ========================================================================================================
 
-  // Find the closest point on the route
   const findClosestPointOnRoute = (lat: number, lon: number, routeCoordinates: any[]) => {
     let closestPoint = routeCoordinates[0];
     let closestDistance = calculateDistance(lat, lon, closestPoint.latitude, closestPoint.longitude);

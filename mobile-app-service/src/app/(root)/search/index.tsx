@@ -45,15 +45,13 @@ export default function SearchScreen() {
   // ========================================================================================================
 
   const handleLocationSelect = (location: LocationType) => {
-    // Store in recent searches (avoiding duplicates)
     setRecentSearches((prev) => {
       const filtered = prev.filter((item) => item.placeId !== location.placeId);
       return [location, ...filtered].slice(0, 5); // Keep only 5 recent searches
     });
 
-    // Navigate to route planning screen with the selected location
     router.push({
-      pathname: "/route",
+      pathname: "/route" as any,
       params: {
         destLat: location.latitude,
         destLon: location.longitude,

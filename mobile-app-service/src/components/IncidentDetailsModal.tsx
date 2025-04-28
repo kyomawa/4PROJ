@@ -11,12 +11,16 @@ type IncidentDetailsModalProps = {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+// ========================================================================================================
+
 export default function IncidentDetailsModal({ visible, setIsVisible }: IncidentDetailsModalProps) {
   const { selectedIncident, reactToIncident, getVoteCounts } = useIncidents();
 
   if (!selectedIncident) return null;
 
   const { likes, dislikes } = getVoteCounts(selectedIncident);
+
+  // ========================================================================================================
 
   const getIncidentLabel = (type: string): string => {
     switch (type) {
@@ -35,6 +39,8 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
     }
   };
 
+  // ========================================================================================================
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("fr-FR", {
@@ -44,6 +50,8 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
       minute: "2-digit",
     });
   };
+
+  // ========================================================================================================
 
   const handleReaction = async (reaction: "Like" | "Dislike") => {
     try {
@@ -56,6 +64,8 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
       Alert.alert("Erreur", "Impossible d'enregistrer votre réaction");
     }
   };
+
+  // ========================================================================================================
 
   return (
     <Modal visible={visible} transparent animationType="fade">

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useNavigation } from "expo-router";
+import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Icon from "../../../components/Icon";
 import SavedItineraries from "../../../components/SavedItineraries";
@@ -14,11 +14,9 @@ import { useCallback } from "react";
 export default function SavedItinerariesScreen() {
   const { isLoggedIn } = useAuthContext();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const navigation = useNavigation();
 
   // ========================================================================================================
 
-  // Refresh list when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       setRefreshTrigger((prev) => prev + 1);
@@ -27,14 +25,12 @@ export default function SavedItinerariesScreen() {
 
   // ========================================================================================================
 
-  // Handle navigation back
   const handleBack = () => {
     router.back();
   };
 
   // ========================================================================================================
 
-  // If user is not logged in, show login prompt
   if (!isLoggedIn) {
     return (
       <SafeAreaView className="flex-1 bg-neutral-10">

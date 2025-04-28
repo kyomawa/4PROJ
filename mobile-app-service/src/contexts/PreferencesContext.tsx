@@ -36,7 +36,6 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
 
   // ========================================================================================================
 
-  // Load stored preferences on mount
   useEffect(() => {
     const loadPreferences = async () => {
       try {
@@ -56,7 +55,6 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
 
   // ========================================================================================================
 
-  // Save preferences to storage
   const savePreferences = async (newPreferences: StoredPreferences) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
@@ -68,7 +66,6 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
 
   // ========================================================================================================
 
-  // Set default transport mode
   const setDefaultTransportMode = async (mode: TransportMode) => {
     const newPreferences = {
       ...preferences,

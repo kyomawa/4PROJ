@@ -2,9 +2,13 @@ import React from "react";
 import { TouchableOpacity } from "react-native";
 import Icon from "./Icon";
 
+// ========================================================================================================
+
 type IncidentButtonProps = {
   onPress: () => void;
 };
+
+// ========================================================================================================
 
 export default function IncidentButton({ onPress }: IncidentButtonProps) {
   return (
@@ -17,3 +21,5 @@ export default function IncidentButton({ onPress }: IncidentButtonProps) {
     </TouchableOpacity>
   );
 }
+
+// ========================================================================================================

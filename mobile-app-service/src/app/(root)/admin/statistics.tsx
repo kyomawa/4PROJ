@@ -71,13 +71,11 @@ export default function StatisticsScreen() {
 
   // ========================================================================================================
 
-  // Helper to find the highest value in an array of objects with a count property
   const findMaxCount = (data: any[] | null): number => {
     if (!data || data.length === 0) return 0;
     return Math.max(...data.map((item) => item.count));
   };
 
-  // Maximum values for scaling the charts
   const maxUserCount = findMaxCount(userStats);
   const maxIncidentCount = findMaxCount(incidentStats);
   const maxCongestionCount = findMaxCount(congestionStats);
@@ -155,7 +153,7 @@ export default function StatisticsScreen() {
             <View className="h-40">
               <View className="flex-row justify-between h-full">
                 {congestionStats.map((item, index) => {
-                  if (index % 2 !== 0) return null; // Only show every other hour to save space
+                  if (index % 2 !== 0) return null;
                   const barHeight = maxCongestionCount > 0 ? (item.count / maxCongestionCount) * 100 : 0;
                   return (
                     <View key={index} className="flex-1 items-center justify-end">

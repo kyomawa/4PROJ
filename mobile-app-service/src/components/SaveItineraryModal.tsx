@@ -17,6 +17,8 @@ type SaveItineraryModalProps = {
   onSaveSuccess?: () => void;
 };
 
+// ========================================================================================================
+
 export default function SaveItineraryModal({
   visible,
   setIsVisible,
@@ -46,7 +48,6 @@ export default function SaveItineraryModal({
           text: "Se connecter",
           onPress: () => {
             setIsVisible(false);
-            // You would navigate to the login screen here
           },
         },
       ]);
@@ -56,7 +57,6 @@ export default function SaveItineraryModal({
     try {
       setIsLoading(true);
 
-      // Get coordinates of first and last points
       const firstCoord = itinerary.coordinates[0];
       const lastCoord = itinerary.coordinates[itinerary.coordinates.length - 1];
 
@@ -73,7 +73,6 @@ export default function SaveItineraryModal({
       });
 
       if (result) {
-        // Trigger refresh in the saved itineraries list if a callback was provided
         if (onSaveSuccess) {
           onSaveSuccess();
         }
