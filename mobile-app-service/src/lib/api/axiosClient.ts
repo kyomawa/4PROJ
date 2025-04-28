@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "axios/dist/axios.js";
 import { API_BASE_URL } from "../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
