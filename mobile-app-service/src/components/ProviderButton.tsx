@@ -8,6 +8,8 @@ type ProviderButtonProps = {
   handlePress: () => void;
 };
 
+// ========================================================================================================
+
 export default function ProviderButton({ title, iconSrc, handlePress }: ProviderButtonProps) {
   return (
     <TouchableOpacity

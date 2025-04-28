@@ -1,9 +1,6 @@
-declare module "axios/dist/axios.js" {
-  import axios from "axios";
-  export default axios;
-}
-
 import { Itinerary } from "../lib/api/navigation";
+
+// ========================================================================================================
 
 declare global {
   var navigationState: {
@@ -18,3 +15,5 @@ declare global {
     startedAt: Date;
   } | null;
 }
+
+// ========================================================================================================

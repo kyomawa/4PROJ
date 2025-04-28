@@ -1,5 +1,7 @@
 import { Text, TouchableOpacity } from "react-native";
 
+// ========================================================================================================
+
 type ButtonProps = {
   children: string;
   handlePress?: () => void;
@@ -7,6 +9,8 @@ type ButtonProps = {
   textClassName?: string;
   isLoading?: boolean;
 };
+
+// ========================================================================================================
 
 export default function Button({ children, handlePress, containerClassName, textClassName, isLoading }: ButtonProps) {
   return (
@@ -24,3 +28,5 @@ export default function Button({ children, handlePress, containerClassName, text
     </TouchableOpacity>
   );
 }
+
+// ========================================================================================================

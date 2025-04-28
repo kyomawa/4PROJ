@@ -45,11 +45,9 @@ export const login = async (loginData: LoginData): Promise<AuthResponse | null> 
     const response = await axiosClient.post(`${endpoint}/auth`, loginData);
 
     if (response.data) {
-      // Store authentication token
       await AsyncStorage.setItem("userToken", response.data.token);
       await AsyncStorage.setItem("userData", JSON.stringify(response.data.data));
 
-      // Add token to axios headers for future requests
       axiosClient.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
 
       return response.data;
@@ -92,11 +90,9 @@ export const register = async (signUpData: SignUpData): Promise<User | null> => 
  */
 export const logout = async (): Promise<void> => {
   try {
-    // Remove auth token and user data
     await AsyncStorage.removeItem("userToken");
     await AsyncStorage.removeItem("userData");
 
-    // Remove token from axios headers
     delete axiosClient.defaults.headers.common["Authorization"];
   } catch (error) {
     console.error("Error during logout:", error);

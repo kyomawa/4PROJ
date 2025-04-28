@@ -1,9 +1,10 @@
 import { router } from "expo-router";
 import { Text, View } from "react-native";
-
 import Button from "../components/Button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+
+// ========================================================================================================
 
 export default function Notfound() {
   return (
@@ -19,3 +20,5 @@ export default function Notfound() {
     </SafeAreaView>
   );
 }
+
+// ========================================================================================================

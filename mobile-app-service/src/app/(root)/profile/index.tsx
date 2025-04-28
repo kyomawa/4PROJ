@@ -49,19 +49,25 @@ export default function ProfileScreen() {
   // ========================================================================================================
 
   const navigateToEditProfile = () => {
-    router.push("/profile/edit");
+    router.push("/profile/edit" as any);
   };
 
   // ========================================================================================================
 
   const navigateToAccountSettings = () => {
-    router.push("/profile/account-settings");
+    router.push("/profile/account-settings" as any);
+  };
+
+  // ========================================================================================================
+
+  const navigateToTransportSettings = () => {
+    router.push("/profile/transport-settings" as any);
   };
 
   // ========================================================================================================
 
   const resumeNavigation = () => {
-    router.push("/navigation");
+    router.push("/navigation" as any);
   };
 
   // ========================================================================================================
@@ -114,6 +120,22 @@ export default function ProfileScreen() {
         <View className="px-4 mt-4">
           <Text className="text-lg font-satoshi-Medium mb-3">Paramètres du compte</Text>
           <View className="bg-white rounded-xl overflow-hidden">
+            <TouchableOpacity
+              className="flex-row items-center p-4 border-b border-neutral-100"
+              onPress={() => router.push("/profile/saved-itineraries" as any)}
+            >
+              <Icon name="Map" className="size-6 text-neutral-600 mr-4" />
+              <Text className="text-base flex-1">Itinéraires sauvegardés</Text>
+              <Icon name="ChevronRight" className="size-5 text-neutral-400" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-row items-center p-4 border-b border-neutral-100"
+              onPress={navigateToTransportSettings}
+            >
+              <Icon name="Car" className="size-6 text-neutral-600 mr-4" />
+              <Text className="text-base flex-1">Mode de transport</Text>
+              <Icon name="ChevronRight" className="size-5 text-neutral-400" />
+            </TouchableOpacity>
             <TouchableOpacity className="flex-row items-center p-4 border-b border-neutral-100">
               <Icon name="Bell" className="size-6 text-neutral-600 mr-4" />
               <Text className="text-base flex-1">Notifications</Text>
@@ -127,8 +149,19 @@ export default function ProfileScreen() {
               <Text className="text-base flex-1">Paramètres du compte</Text>
               <Icon name="ChevronRight" className="size-5 text-neutral-400" />
             </TouchableOpacity>
+            {user && user.role === "Admin" && (
+              <TouchableOpacity
+                className="flex-row items-center p-4 border-b border-neutral-100"
+                onPress={() => router.push("/admin/statistics" as any)}
+              >
+                <Icon name="ChartBar" className="size-6 text-neutral-600 mr-4" />
+                <Text className="text-base flex-1">Statistiques</Text>
+                <Icon name="ChevronRight" className="size-5 text-neutral-400" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
+
         {/* Logout Button */}
         <View className="px-4 py-6 mt-4">
           <Button handlePress={handleLogout} containerClassName="bg-red-500" isLoading={isLoggingOut}>
