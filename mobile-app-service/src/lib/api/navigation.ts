@@ -25,6 +25,7 @@ export type Itinerary = {
   steps: Step[];
   coordinates: Coordinate[];
   incidents: Incident[];
+  boundingBox?: BoundingBox;
 };
 
 export type Location = {
@@ -48,6 +49,42 @@ export type ItineraryError = {
   isInvalidPoints?: boolean;
 };
 
+export type BoundingBox = {
+  minLat: number;
+  maxLat: number;
+  minLon: number;
+  maxLon: number;
+};
+
+export type SavedItinerary = {
+  id: string;
+  departure: string;
+  departureLon: number;
+  departureLat: number;
+  arrival: string;
+  arrivalLon: number;
+  arrivalLat: number;
+  travelMode: string;
+  distance: number;
+  duration: number;
+};
+
+export type UserItineraries = {
+  itineraries: SavedItinerary[];
+};
+
+export type CreateItineraryData = {
+  departure: string;
+  departureLon: number;
+  departureLat: number;
+  arrival: string;
+  arrivalLon: number;
+  arrivalLat: number;
+  travelMode: string;
+  distance: number;
+  duration: number;
+};
+
 // ========================================================================================================
 
 /**
@@ -59,10 +96,11 @@ export const getItinerary = async (
   arrivalLat: number,
   arrivalLon: number,
   travelMethod: "car" | "bike" | "foot" | "train" = "car",
-  routeType: "fastest" | "shortest" | "eco" | "thrilling" = "fastest"
+  routeType: "fastest" | "shortest" | "eco" | "thrilling" = "fastest",
+  avoidTollRoads: boolean = false
 ): Promise<Itinerary | ItineraryError> => {
   try {
-    const response = await axiosClient.get(`${endpoint}/itinerary`, {
+    const response = await axiosClient.get(`${endpoint}/itinerary/calculate`, {
       params: {
         departureLat,
         departureLon,
@@ -70,6 +108,7 @@ export const getItinerary = async (
         arrivalLon,
         travelMethod,
         routeType,
+        avoidTollRoads,
       },
     });
     return response.data;
@@ -80,7 +119,7 @@ export const getItinerary = async (
 
     return {
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch itinerary",
+      message: error.response?.data?.message || error.message || "Échec du calcul d'itinéraire",
       isInvalidPoints: isInvalidPoints,
     };
   }
@@ -101,7 +140,66 @@ export const geocodeLocation = async (textLocation: string): Promise<Location[] 
     return response.data;
   } catch (error) {
     console.error("Error geocoding location:", error);
+    return null;
+  }
+};
 
+// ========================================================================================================
+
+/**
+ * Save an itinerary for a user
+ */
+export const saveItinerary = async (itineraryData: CreateItineraryData): Promise<SavedItinerary | null> => {
+  try {
+    const response = await axiosClient.post(`${endpoint}/itinerary/save`, itineraryData);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving itinerary:", error);
+    return null;
+  }
+};
+
+// ========================================================================================================
+
+/**
+ * Get all saved itineraries for the current user
+ */
+export const getUserItineraries = async (): Promise<UserItineraries | null> => {
+  try {
+    const response = await axiosClient.get(`${endpoint}/itinerary`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user itineraries:", error);
+    return null;
+  }
+};
+
+// ========================================================================================================
+
+/**
+ * Get a specific saved itinerary by ID
+ */
+export const getItineraryById = async (itineraryId: string): Promise<SavedItinerary | null> => {
+  try {
+    const response = await axiosClient.get(`${endpoint}/itinerary/${itineraryId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching itinerary by ID:", error);
+    return null;
+  }
+};
+
+// ========================================================================================================
+
+/**
+ * Delete a saved itinerary
+ */
+export const deleteItinerary = async (itineraryId: string): Promise<SavedItinerary | null> => {
+  try {
+    const response = await axiosClient.delete(`${endpoint}/itinerary/${itineraryId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting itinerary:", error);
     return null;
   }
 };

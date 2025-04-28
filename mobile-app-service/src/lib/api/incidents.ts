@@ -4,14 +4,20 @@ import axiosClient from "./axiosClient";
 
 const endpoint = "/api/incident";
 
+export type Vote = {
+  id: string;
+  userId: string;
+  reaction: "Like" | "Dislike";
+};
+
 export type Incident = {
   id: string;
   type: string;
   latitude: number;
   longitude: number;
-  like: number;
-  dislike: number;
+  status: string;
   creationDate: string;
+  votes: Vote[];
 };
 
 export type IncidentPostData = {
@@ -72,6 +78,21 @@ export const fetchNearbyIncidents = async (
 // ========================================================================================================
 
 /**
+ * Fetch only active incidents
+ */
+export const fetchActiveIncidents = async (): Promise<Incident[]> => {
+  try {
+    const response = await axiosClient.get(`${endpoint}/incident/active`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching active incidents:", error);
+    return [];
+  }
+};
+
+// ========================================================================================================
+
+/**
  * Report a new incident
  */
 export const reportIncident = async (incidentData: IncidentPostData): Promise<Incident | null> => {
@@ -88,10 +109,11 @@ export const reportIncident = async (incidentData: IncidentPostData): Promise<In
 
 /**
  * React to an incident (like or dislike)
+ * Updated to use the new endpoint structure
  */
 export const reactToIncident = async (incidentId: string, reaction: "Like" | "Dislike"): Promise<Incident | null> => {
   try {
-    const response = await axiosClient.put(`${endpoint}/incident/${incidentId}`, {
+    const response = await axiosClient.put(`${endpoint}/incident/${incidentId}/vote`, {
       reaction,
     });
     return response.data;
@@ -99,6 +121,22 @@ export const reactToIncident = async (incidentId: string, reaction: "Like" | "Di
     console.error("Error reacting to incident:", error);
     return null;
   }
+};
+
+// ========================================================================================================
+
+/**
+ * Get total likes and dislikes for an incident
+ */
+export const getIncidentVoteCounts = (incident: Incident): { likes: number; dislikes: number } => {
+  if (!incident || !incident.votes) {
+    return { likes: 0, dislikes: 0 };
+  }
+
+  const likes = incident.votes.filter((vote) => vote.reaction === "Like").length;
+  const dislikes = incident.votes.filter((vote) => vote.reaction === "Dislike").length;
+
+  return { likes, dislikes };
 };
 
 // ========================================================================================================

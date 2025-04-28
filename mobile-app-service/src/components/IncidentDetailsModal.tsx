@@ -12,9 +12,11 @@ type IncidentDetailsModalProps = {
 };
 
 export default function IncidentDetailsModal({ visible, setIsVisible }: IncidentDetailsModalProps) {
-  const { selectedIncident, reactToIncident } = useIncidents();
+  const { selectedIncident, reactToIncident, getVoteCounts } = useIncidents();
 
   if (!selectedIncident) return null;
+
+  const { likes, dislikes } = getVoteCounts(selectedIncident);
 
   const getIncidentLabel = (type: string): string => {
     switch (type) {
@@ -49,7 +51,6 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
       if (!success) {
         Alert.alert("Erreur", "Impossible d'enregistrer votre réaction");
       }
-      setIsVisible(false);
     } catch (error) {
       console.error("Error reacting to incident:", error);
       Alert.alert("Erreur", "Impossible d'enregistrer votre réaction");
@@ -76,13 +77,18 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
           <View className="flex-row justify-between mb-12">
             <TouchableOpacity onPress={() => handleReaction("Like")} className="flex-row items-center">
               <Icon name="ThumbsUp" className="text-green-500 size-8 mr-1" />
-              <Text className="text-neutral-600">{selectedIncident.like}</Text>
+              <Text className="text-neutral-600">{likes}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => handleReaction("Dislike")} className="flex-row items-center">
               <Icon name="ThumbsDown" className="text-red-500 size-8 mr-1" />
-              <Text className="text-neutral-600">{selectedIncident.dislike}</Text>
+              <Text className="text-neutral-600">{dislikes}</Text>
             </TouchableOpacity>
           </View>
+          {selectedIncident.status === "Inactive" && (
+            <View className="bg-red-100 p-3 rounded-lg mb-4">
+              <Text className="text-red-700 text-center">Cet incident n'est plus actif</Text>
+            </View>
+          )}
           <TouchableOpacity
             onPress={() => setIsVisible(false)}
             className="bg-primary-500 py-3 rounded-full items-center mt-4"

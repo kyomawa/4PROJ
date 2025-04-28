@@ -6,6 +6,7 @@ import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import Icon from "../../../components/Icon";
 import IncidentDetailsModal from "../../../components/IncidentDetailsModal";
+import SaveItineraryModal from "../../../components/SaveItineraryModal";
 import MapWithIncidents from "../../../components/MapWithIncidents";
 import { getItinerary, Itinerary, Step, ItineraryError } from "../../../lib/api/navigation";
 import { useIncidents } from "../../../contexts/IncidentContext";
@@ -28,8 +29,10 @@ export default function RouteScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDirections, setShowDirections] = useState(false);
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [navigationError, setNavigationError] = useState<string | null>(null);
   const [routeRequestCompleted, setRouteRequestCompleted] = useState(false);
+  const [departureAddress, setDepartureAddress] = useState<string>("Ma position");
 
   const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
   const { setNavigationState, clearNavigation } = useNavigation();
@@ -75,6 +78,26 @@ export default function RouteScreen() {
         // Get current location
         const location = await Location.getCurrentPositionAsync({});
         setCurrentLocation(location);
+
+        // Try to get the departure address using reverse geocoding
+        try {
+          const addresses = await Location.reverseGeocodeAsync({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+          if (addresses && addresses.length > 0) {
+            const address = addresses[0];
+            const formattedAddress = [address.street, address.city, address.region, address.country]
+              .filter(Boolean)
+              .join(", ");
+
+            if (formattedAddress) {
+              setDepartureAddress(formattedAddress);
+            }
+          }
+        } catch (geoError) {
+          console.error("Error reverse geocoding:", geoError);
+        }
 
         // Fetch itinerary
         if (destLat && destLon) {
@@ -199,7 +222,7 @@ export default function RouteScreen() {
 
   const handleStartNavigation = () => {
     router.push({
-      pathname: "/navigation",
+      pathname: "/navigation" as any,
       params: {
         destLat: destinationCoords.latitude.toString(),
         destLon: destinationCoords.longitude.toString(),
@@ -316,13 +339,21 @@ export default function RouteScreen() {
                     </View>
                   </View>
 
-                  <TouchableOpacity
-                    onPress={handleStartNavigation}
-                    className="w-full h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
-                  >
-                    <Icon name="Navigation" className="text-white size-5 mr-2" />
-                    <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
-                  </TouchableOpacity>
+                  <View className="flex-row space-x-3">
+                    <TouchableOpacity
+                      onPress={() => setShowSaveModal(true)}
+                      className="w-14 h-14 bg-primary-100 rounded-full items-center justify-center"
+                    >
+                      <Icon name="Save" className="text-primary-500 size-5" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleStartNavigation}
+                      className="flex-1 h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
+                    >
+                      <Icon name="Navigation" className="text-white size-5 mr-2" />
+                      <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
+                    </TouchableOpacity>
+                  </View>
                 </>
               )}
             </View>
@@ -340,13 +371,21 @@ export default function RouteScreen() {
               }
               ListFooterComponent={
                 <View className="p-4">
-                  <TouchableOpacity
-                    onPress={handleStartNavigation}
-                    className="w-full h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
-                  >
-                    <Icon name="Navigation" className="text-white size-5 mr-2" />
-                    <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
-                  </TouchableOpacity>
+                  <View className="flex-row space-x-3">
+                    <TouchableOpacity
+                      onPress={() => setShowSaveModal(true)}
+                      className="w-14 h-14 bg-primary-100 rounded-full items-center justify-center"
+                    >
+                      <Icon name="Save" className="text-primary-500 size-5" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleStartNavigation}
+                      className="flex-1 h-14 bg-primary-500 rounded-full items-center justify-center flex-row"
+                    >
+                      <Icon name="Navigation" className="text-white size-5 mr-2" />
+                      <Text className="text-white text-lg font-satoshi-Bold">Démarrer la navigation</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               }
             />
@@ -355,6 +394,15 @@ export default function RouteScreen() {
 
         {/* Incident Details Modal */}
         <IncidentDetailsModal visible={showIncidentDetails} setIsVisible={setShowIncidentDetails} />
+
+        {/* Save Itinerary Modal */}
+        <SaveItineraryModal
+          visible={showSaveModal}
+          setIsVisible={setShowSaveModal}
+          itinerary={itinerary}
+          departure={departureAddress}
+          destination={destName || "Destination"}
+        />
       </View>
     </SafeAreaView>
   );
