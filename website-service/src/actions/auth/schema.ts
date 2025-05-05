@@ -15,7 +15,7 @@ export const registerSchema = z
       .max(32, {
         message: "Le pseudo ne doit pas dépasser 20 caractères",
       }),
-    telephone: z
+    phoneNumber: z
       .string()
       .min(8, { message: "Veuillez entrer un numéro de téléphone valide" })
       .regex(/^\d+$/, { message: "Le numéro de téléphone doit contenir uniquement des chiffres" }),

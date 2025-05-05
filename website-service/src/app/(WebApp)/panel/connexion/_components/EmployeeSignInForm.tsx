@@ -4,7 +4,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@/actions/authentication/schema";
+import { loginSchema } from "@/actions/auth/schema";
 import { Form } from "@/components/ui/form";
 import { z } from "zod";
 import { FormInputField } from "@/components/FormFields/FormInputField";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { serialize } from "object-to-formdata";
 import toast from "react-hot-toast";
-import { employeeLogin } from "@/actions/authentication/action";
+import { loginAdmin } from "@/actions/auth/action";
 import { useRouter } from "next/navigation";
 
 // =============================================================================
@@ -33,7 +33,7 @@ export default function EmployeeSignInForm() {
     setIsLoading(true);
     const toastId = toast.loading("Connexion en cours");
     const formData = serialize({ ...values });
-    const { success, message } = await employeeLogin(formData);
+    const { success, message } = await loginAdmin(formData);
 
     if (!success) {
       toast.error(message, { id: toastId });

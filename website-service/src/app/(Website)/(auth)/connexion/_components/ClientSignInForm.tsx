@@ -13,8 +13,8 @@ import { useState } from "react";
 import { serialize } from "object-to-formdata";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { loginSchema } from "@/actions/authentication/schema";
-import { login } from "@/actions/authentication/action";
+import { loginSchema } from "@/actions/auth/schema";
+import { login } from "@/actions/auth/action";
 
 // =============================================================================
 
