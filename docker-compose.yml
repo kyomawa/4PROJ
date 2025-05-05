@@ -236,7 +236,7 @@ services:
       start_period: 30s
     networks:
       - 4proj_dev
-  
+
   alert-service:
     build:
       context: ./alert-service
@@ -345,6 +345,8 @@ services:
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_TOMTOM_API_KEY=${TOMTOM_APIKEY}
     volumes:
       - ./website-service:/app
       - /app/node_modules

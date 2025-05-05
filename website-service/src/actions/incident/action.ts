@@ -2,36 +2,8 @@
 
 import { cookies } from "next/headers";
 import { API_BASE_URL } from "@/constants/api";
-import { IncidentType, ReactionType } from "@/types/incident";
-
-// =================================================================================================================
-
-export type Incident = {
-  id: string;
-  type: string;
-  latitude: number;
-  longitude: number;
-  status: string;
-  creationDate: string;
-  votes: Array<{
-    id: string;
-    userId: string;
-    reaction: "Like" | "Dislike";
-  }>;
-};
-
-export type ReportIncidentParams = {
-  type: IncidentType;
-  latitude: number;
-  longitude: number;
-};
-
-export type BoundingBoxParams = {
-  minLat: number;
-  maxLat: number;
-  minLon: number;
-  maxLon: number;
-};
+import { Incident, ReportIncidentParams, BoundingBoxParams } from "./types";
+import { ReactionType } from "@/types/incident";
 
 // =================================================================================================================
 
@@ -123,7 +95,7 @@ export async function fetchActiveIncidents(): Promise<ApiResponse<Incident[]>> {
 /**
  * Signale un nouvel incident
  */
-export async function reportIncident(params: ReportIncidentParams): Promise<ApiResponse<Incident[]>> {
+export async function reportIncident(params: ReportIncidentParams): Promise<ApiResponse<Incident>> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -182,7 +154,7 @@ export async function reportIncident(params: ReportIncidentParams): Promise<ApiR
 /**
  * Vote pour un incident (Like ou Dislike)
  */
-export async function voteOnIncident(incidentId: string, reaction: ReactionType): Promise<ApiResponse<Incident[]>> {
+export async function voteOnIncident(incidentId: string, reaction: ReactionType): Promise<ApiResponse<Incident>> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;

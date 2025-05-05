@@ -2,45 +2,7 @@
 
 import { cookies } from "next/headers";
 import { API_BASE_URL } from "@/constants/api";
-
-// =================================================================================================================
-
-export type LocationResult = {
-  placeId: string;
-  latitude: number;
-  longitude: number;
-  formatted: string;
-  wayNumber?: string;
-  street?: string;
-  postalCode?: string;
-  city?: string;
-  borough?: string;
-  area?: string;
-  country?: string;
-  boundingBox?: number[];
-};
-
-export type RouteParams = {
-  departureLat: number;
-  departureLon: number;
-  arrivalLat: number;
-  arrivalLon: number;
-  travelMethod: "car" | "bike" | "foot" | "train";
-  routeType: "fastest" | "shortest" | "eco" | "thrilling";
-  avoidTollRoads: boolean;
-};
-
-export type SaveItineraryParams = {
-  departure: string;
-  departureLat: number;
-  departureLon: number;
-  arrival: string;
-  arrivalLat: number;
-  arrivalLon: number;
-  travelMode: string;
-  distance: number;
-  duration: number;
-};
+import { RouteParams, SaveItineraryParams, LocationResult, Itinerary, SavedItinerary, UserItineraries } from "./types";
 
 // =================================================================================================================
 
@@ -84,7 +46,7 @@ export async function searchLocation(query: string): Promise<ApiResponse<Locatio
 /**
  * Calcule un itinéraire entre deux points
  */
-export async function calculateRoute(params: RouteParams): Promise<ApiResponse<unknown>> {
+export async function calculateRoute(params: RouteParams): Promise<ApiResponse<Itinerary>> {
   try {
     const queryParams = new URLSearchParams({
       departureLat: params.departureLat.toString(),
@@ -133,7 +95,7 @@ export async function calculateRoute(params: RouteParams): Promise<ApiResponse<u
 /**
  * Sauvegarde un itinéraire
  */
-export async function saveItinerary(params: SaveItineraryParams): Promise<ApiResponse<unknown>> {
+export async function saveItinerary(params: SaveItineraryParams): Promise<ApiResponse<SavedItinerary>> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -184,7 +146,7 @@ export async function saveItinerary(params: SaveItineraryParams): Promise<ApiRes
 /**
  * Récupère les itinéraires sauvegardés de l'utilisateur
  */
-export async function getUserItineraries(): Promise<ApiResponse<unknown>> {
+export async function getUserItineraries(): Promise<ApiResponse<UserItineraries>> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -234,7 +196,7 @@ export async function getUserItineraries(): Promise<ApiResponse<unknown>> {
 /**
  * Supprime un itinéraire sauvegardé
  */
-export async function deleteItinerary(itineraryId: string): Promise<ApiResponse<unknown>> {
+export async function deleteItinerary(itineraryId: string): Promise<ApiResponse<SavedItinerary>> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
