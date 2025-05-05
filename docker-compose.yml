@@ -350,6 +350,7 @@ services:
     volumes:
       - ./website-service:/app
       - /app/node_modules
+      - /app/.next
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_4proj_dev"
