@@ -1,6 +1,5 @@
 "use client";
 
-import { getConnectedUserPayload } from "@/actions/user/action";
 import Image from "@/components/Image";
 // =========================================================================================================
 
@@ -21,7 +20,7 @@ import { useState } from "react";
 // =========================================================================================================
 
 type HeaderAvatarProps = {
-  user: getConnectedUserPayload;
+  user: any;
 };
 
 export default function HeaderAvatar({ user }: HeaderAvatarProps) {
@@ -58,14 +57,11 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
           />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" className="mr-2">
+      <DropdownMenuContent side="bottom" className="mr-2 z-[50000]">
         <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="cursor-pointer hover:bg-black/5 transition-colors duration-150">
           <Link href="/profil">Mon profil</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer hover:bg-black/5 transition-colors duration-150">
-          <Link href="/reservations">Mes réservations</Link>
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer hover:bg-black/5 transition-colors duration-150"

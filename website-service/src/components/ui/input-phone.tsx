@@ -12,15 +12,23 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckIcon, ChevronsUpDown } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 
 export const InputComponent = cn(Input, "rounded-e-lg rounded-s-none");
 
-// TODO UI
+const WrappedInput = React.forwardRef<React.ElementRef<typeof Input>, React.ComponentPropsWithoutRef<typeof Input>>(
+  ({ className, ...props }, ref) => (
+    <Input ref={ref} className={cn(className, "rounded-e-lg rounded-s-none")} {...props} />
+  )
+);
+WrappedInput.displayName = "WrappedInput";
 
-export const InputPhone: React.ForwardRefExoticComponent<InputPhoneProps> = React.forwardRef<
+export const InputPhone = React.forwardRef<
   React.ElementRef<typeof RPNInput.default>,
-  InputPhoneProps
+  Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> &
+    Omit<RPNInput.Props<typeof RPNInput.default>, "onChange"> & {
+      onChange?: (_value: RPNInput.Value) => void;
+    }
 >(({ className, onChange, ...props }, ref) => {
   return (
     <RPNInput.default
@@ -28,16 +36,8 @@ export const InputPhone: React.ForwardRefExoticComponent<InputPhoneProps> = Reac
       className={cn("flex", className)}
       flagComponent={FlagComponent}
       countrySelectComponent={CountrySelect}
-      inputComponent={InputComponent as React.ElementType<any, keyof React.JSX.IntrinsicElements> | undefined}
-      /**
-       * Handles the onChange event.
-       *
-       * react-phone-number-input might trigger the onChange event as undefined
-       * when a valid phone number is not entered. To prevent this,
-       * the value is coerced to an empty string.
-       *
-       * @param {E164Number | undefined} value - The entered value
-       */
+      // ← on passe notre vrai composant React, pas une string
+      inputComponent={WrappedInput}
       onChange={(value) => {
         if (value) onChange?.(value);
       }}
@@ -70,7 +70,7 @@ const CountrySelect = ({ disabled, value, onChange, options }: CountrySelectProp
           disabled={disabled}
         >
           <FlagComponent country={value} countryName={value} />
-          <ChevronsUpDown className={cn("-mr-2 size-4 opacity-50", disabled ? "hidden" : "opacity-100")} />
+          {/* <ChevronsUpDown className={cn("-mr-2 size-4 opacity-50", disabled ? "hidden" : "opacity-100")} /> */}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">
@@ -110,9 +110,7 @@ const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
   const Flag = flags[country];
 
   return (
-    <span className="bg-foreground/20 flex h-4 w-6 overflow-hidden rounded-sm">
-      {Flag && <Flag title={countryName} />}
-    </span>
+    <span className="bg-foreground/20 h-4 w-6 overflow-hidden rounded-sm">{Flag && <Flag title={countryName} />}</span>
   );
 };
 FlagComponent.displayName = "FlagComponent";
@@ -120,11 +118,6 @@ FlagComponent.displayName = "FlagComponent";
 /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
 /*                       ✨ TYPES ✨                          */
 /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-type InputPhoneProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> &
-  Omit<RPNInput.Props<typeof RPNInput.default>, "onChange"> & {
-    onChange?: (_value: RPNInput.Value) => void;
-  };
 
 type CountrySelectOption = { label: string; value: RPNInput.Country };
 

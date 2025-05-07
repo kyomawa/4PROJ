@@ -18,7 +18,7 @@ function FilterInput<TData>({ header, isHeaderSticky, isScrolled }: FilterInputP
         variant="datatableFilter"
       />
       <button
-        className="absolute right-0 px-2.5 py-2 top-1/2 peer/buttonfilter -translate-y-1/2 bg-[#F9E6EA] text-neutral-800 hover:text-primary-800 duration-200 transition-colors"
+        className="absolute right-0 px-2.5 py-2 top-1/2 peer/buttonfilter -translate-y-1/2 bg-[#ECE9F9] text-neutral-800 hover:text-primary-800 duration-200 transition-colors"
         aria-label={`Trier par ${header.column.id}`}
         onClick={() => header.column.toggleSorting(header.column.getIsSorted() === "asc")}
       >
