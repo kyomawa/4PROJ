@@ -2,30 +2,14 @@
 
 import { cookies } from "next/headers";
 import { API_BASE_URL } from "@/constants/api";
-
-// =================================================================================================================
-
-export type MonthlyUserStats = {
-  month: string;
-  count: number;
-};
-
-export type IncidentTypeStats = {
-  type: string;
-  count: number;
-};
-
-export type HourlyIncidentStats = {
-  hour: number;
-  count: number;
-};
+import { MonthlyUserStats, IncidentTypeStats, HourlyIncidentStats } from "./types";
 
 // =================================================================================================================
 
 /**
  * Récupère les statistiques d'utilisateurs par mois
  */
-export async function getUserCountByMonth(): Promise<ApiResponse<MonthlyUserStats[]>> {
+export const getUserCountByMonth = async (): Promise<ApiResponse<MonthlyUserStats[]>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("adminToken")?.value;
@@ -69,14 +53,14 @@ export async function getUserCountByMonth(): Promise<ApiResponse<MonthlyUserStat
       error: error instanceof Error ? error.message : "Erreur inconnue",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Récupère les statistiques d'incidents par type
  */
-export async function getIncidentCountByType(): Promise<ApiResponse<IncidentTypeStats[]>> {
+export const getIncidentCountByType = async (): Promise<ApiResponse<IncidentTypeStats[]>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("adminToken")?.value;
@@ -120,14 +104,14 @@ export async function getIncidentCountByType(): Promise<ApiResponse<IncidentType
       error: error instanceof Error ? error.message : "Erreur inconnue",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Récupère les statistiques de congestion par heure
  */
-export async function getCongestionPeriodByHour(): Promise<ApiResponse<HourlyIncidentStats[]>> {
+export const getCongestionPeriodByHour = async (): Promise<ApiResponse<HourlyIncidentStats[]>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("adminToken")?.value;
@@ -171,6 +155,6 @@ export async function getCongestionPeriodByHour(): Promise<ApiResponse<HourlyInc
       error: error instanceof Error ? error.message : "Erreur inconnue",
     };
   }
-}
+};
 
 // =================================================================================================================

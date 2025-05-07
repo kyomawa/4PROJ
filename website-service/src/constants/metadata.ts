@@ -59,11 +59,11 @@ export const commonMetadata: Metadata = {
 // =========================================================================================================
 
 export const homeMetadata: Metadata = {
-  title: "Accueil",
-  description: "Bienvenue sur Laynz...",
-  keywords: "...",
+  title: "Carte",
+  description: "Visualisez vos itinéraires sur une carte.",
+  keywords: "carte, itinéraires, espace client",
   alternates: {
-    canonical: `${baseUrl}/`,
+    canonical: `${baseUrl}/carte`,
   },
 };
 
@@ -89,6 +89,28 @@ export const loginMetadata: Metadata = {
   },
 };
 
+// =========================================================================================================
+
+export const itinerariesMetadata: Metadata = {
+  title: "Mes itinéraires",
+  description: "Gérez vos itinéraires enregistrés.",
+  keywords: "itinéraires, itinéraire, espace client",
+  alternates: {
+    canonical: `${baseUrl}/itineraires`,
+  },
+};
+
+// =========================================================================================================
+
+export const profileMetadata: Metadata = {
+  title: "Mon profil",
+  description: "Gérez vos informations personnelles.",
+  keywords: "profil, espace client",
+  alternates: {
+    canonical: `${baseUrl}/profil`,
+  },
+};
+
 // =================================== PANEL (EMPLOYEE / ADMIN SECTION) ====================================
 
 export const panelLoginMetadata: Metadata = {
@@ -97,6 +119,28 @@ export const panelLoginMetadata: Metadata = {
   keywords: "connexion, login, espace client",
   alternates: {
     canonical: `${baseUrl}/panel/connexion`,
+  },
+};
+
+// =========================================================================================================
+
+export const incidentsMetadata: Metadata = {
+  title: "Incidents",
+  description: "Signalez un incident sur la route.",
+  keywords: "incidents, itinéraires, espace client",
+  alternates: {
+    canonical: `${baseUrl}/incidents`,
+  },
+};
+
+// =========================================================================================================
+
+export const statisticsMetadata: Metadata = {
+  title: "Statistiques",
+  description: "Consultez les statistiques de vos itinéraires.",
+  keywords: "statistiques, itinéraires, espace client",
+  alternates: {
+    canonical: `${baseUrl}/statistiques`,
   },
 };
 

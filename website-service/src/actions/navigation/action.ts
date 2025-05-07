@@ -9,7 +9,7 @@ import { RouteParams, SaveItineraryParams, LocationResult, Itinerary, SavedItine
 /**
  * Recherche un lieu par text
  */
-export async function searchLocation(query: string): Promise<ApiResponse<LocationResult[]>> {
+export const searchLocation = async (query: string): Promise<ApiResponse<LocationResult[]>> => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/navigation/location?textLocation=${encodeURIComponent(query)}`, {
       method: "GET",
@@ -30,7 +30,11 @@ export async function searchLocation(query: string): Promise<ApiResponse<Locatio
     }
 
     const data = await response.json();
-    return data;
+    return {
+      success: true,
+      message: "Lieux trouvés avec succès",
+      data,
+    };
   } catch (error) {
     console.error("Erreur lors de la recherche de lieu:", error);
     return {
@@ -39,14 +43,14 @@ export async function searchLocation(query: string): Promise<ApiResponse<Locatio
       error: error instanceof Error ? error.message : "Erreur inconnue lors de la recherche de lieu",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Calcule un itinéraire entre deux points
  */
-export async function calculateRoute(params: RouteParams): Promise<ApiResponse<Itinerary>> {
+export const calculateRoute = async (params: RouteParams): Promise<ApiResponse<Itinerary>> => {
   try {
     const queryParams = new URLSearchParams({
       departureLat: params.departureLat.toString(),
@@ -74,7 +78,7 @@ export async function calculateRoute(params: RouteParams): Promise<ApiResponse<I
       };
     }
 
-    const data = await response.json();
+    const data: Itinerary = await response.json();
     return {
       success: true,
       message: "Calcul de l'itinéraire réussi",
@@ -88,14 +92,14 @@ export async function calculateRoute(params: RouteParams): Promise<ApiResponse<I
       error: error instanceof Error ? error.message : "Erreur inconnue lors du calcul de l'itinéraire",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Sauvegarde un itinéraire
  */
-export async function saveItinerary(params: SaveItineraryParams): Promise<ApiResponse<SavedItinerary>> {
+export const saveItinerary = async (params: SaveItineraryParams): Promise<ApiResponse<SavedItinerary>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -125,7 +129,7 @@ export async function saveItinerary(params: SaveItineraryParams): Promise<ApiRes
       };
     }
 
-    const data = await response.json();
+    const data: SavedItinerary = await response.json();
     return {
       success: true,
       message: "Sauvegarde de l'itinéraire réussie",
@@ -139,14 +143,14 @@ export async function saveItinerary(params: SaveItineraryParams): Promise<ApiRes
       error: error instanceof Error ? error.message : "Erreur inconnue lors de la sauvegarde de l'itinéraire",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Récupère les itinéraires sauvegardés de l'utilisateur
  */
-export async function getUserItineraries(): Promise<ApiResponse<UserItineraries>> {
+export const getUserItineraries = async (): Promise<ApiResponse<UserItineraries>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -175,7 +179,7 @@ export async function getUserItineraries(): Promise<ApiResponse<UserItineraries>
       };
     }
 
-    const data = await response.json();
+    const data: UserItineraries = await response.json();
     return {
       success: true,
       message: "Récupération des itinéraires réussie",
@@ -189,14 +193,14 @@ export async function getUserItineraries(): Promise<ApiResponse<UserItineraries>
       error: error instanceof Error ? error.message : "Erreur inconnue lors de la récupération des itinéraires",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Supprime un itinéraire sauvegardé
  */
-export async function deleteItinerary(itineraryId: string): Promise<ApiResponse<SavedItinerary>> {
+export const deleteItinerary = async (itineraryId: string): Promise<ApiResponse<SavedItinerary>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -225,7 +229,7 @@ export async function deleteItinerary(itineraryId: string): Promise<ApiResponse<
       };
     }
 
-    const data = await response.json();
+    const data: SavedItinerary = await response.json();
     return {
       success: true,
       message: "Suppression de l'itinéraire réussie",
@@ -239,6 +243,6 @@ export async function deleteItinerary(itineraryId: string): Promise<ApiResponse<
       error: error instanceof Error ? error.message : "Erreur inconnue lors de la suppression de l'itinéraire",
     };
   }
-}
+};
 
 // =================================================================================================================

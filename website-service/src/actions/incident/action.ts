@@ -10,7 +10,7 @@ import { ReactionType } from "@/types/incident";
 /**
  * Récupère les incidents dans une zone géographique
  */
-export async function fetchIncidents(params: BoundingBoxParams): Promise<ApiResponse<Incident[]>> {
+export const fetchIncidents = async (params: BoundingBoxParams): Promise<ApiResponse<Incident[]>> => {
   try {
     const queryParams = new URLSearchParams({
       minLat: params.minLat.toString(),
@@ -49,14 +49,14 @@ export async function fetchIncidents(params: BoundingBoxParams): Promise<ApiResp
       error: error instanceof Error ? error.message : "Erreur inconnue lors de la récupération des incidents",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Récupère tous les incidents actifs
  */
-export async function fetchActiveIncidents(): Promise<ApiResponse<Incident[]>> {
+export const fetchActiveIncidents = async (): Promise<ApiResponse<Incident[]>> => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/incident/incident/active`, {
       method: "GET",
@@ -88,14 +88,14 @@ export async function fetchActiveIncidents(): Promise<ApiResponse<Incident[]>> {
       error: error instanceof Error ? error.message : "Erreur inconnue lors de la récupération des incidents actifs",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Signale un nouvel incident
  */
-export async function reportIncident(params: ReportIncidentParams): Promise<ApiResponse<Incident>> {
+export const reportIncident = async (params: ReportIncidentParams): Promise<ApiResponse<Incident>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -147,14 +147,14 @@ export async function reportIncident(params: ReportIncidentParams): Promise<ApiR
       error: error instanceof Error ? error.message : "Erreur inconnue lors du signalement de l'incident",
     };
   }
-}
+};
 
 // =================================================================================================================
 
 /**
  * Vote pour un incident (Like ou Dislike)
  */
-export async function voteOnIncident(incidentId: string, reaction: ReactionType): Promise<ApiResponse<Incident>> {
+export const reactToIncident = async (incidentId: string, reaction: ReactionType): Promise<ApiResponse<Incident>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -198,6 +198,6 @@ export async function voteOnIncident(incidentId: string, reaction: ReactionType)
       error: error instanceof Error ? error.message : "Erreur inconnue lors du vote",
     };
   }
-}
+};
 
 // =================================================================================================================

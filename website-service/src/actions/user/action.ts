@@ -3,12 +3,33 @@
 import { cookies } from "next/headers";
 import { API_BASE_URL } from "@/constants/api";
 
-// =======================================================================================
+export interface UserData {
+  id: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  role: "User" | "Admin";
+  img?: string | null;
+  pseudo?: string;
+}
+
+export interface UpdateUserProfileData {
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+  currentPassword: string;
+}
+
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
 
 /**
  * Récupère l'utilisateur connecté actuellement
  */
-export const getConnectedUser = async (): Promise<ApiResponse<unknown>> => {
+export const getConnectedUser = async (): Promise<ApiResponse<UserData>> => {
   try {
     const cookieStore = await cookies();
     const userToken = cookieStore.get("userToken")?.value;
@@ -25,7 +46,7 @@ export const getConnectedUser = async (): Promise<ApiResponse<unknown>> => {
     return {
       success: true,
       message: "Utilisateur récupéré avec succès",
-      data: JSON.parse(session),
+      data: JSON.parse(session) as UserData,
     };
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur connecté:", error);
@@ -37,12 +58,10 @@ export const getConnectedUser = async (): Promise<ApiResponse<unknown>> => {
   }
 };
 
-// =======================================================================================
-
 /**
  * Récupère l'employé (admin) connecté actuellement
  */
-export const getConnectedEmployee = async (): Promise<ApiResponse<unknown>> => {
+export const getConnectedEmployee = async (): Promise<ApiResponse<UserData>> => {
   try {
     const cookieStore = await cookies();
     const adminToken = cookieStore.get("adminToken")?.value;
@@ -59,7 +78,7 @@ export const getConnectedEmployee = async (): Promise<ApiResponse<unknown>> => {
     return {
       success: true,
       message: "Administrateur récupéré avec succès",
-      data: JSON.parse(session),
+      data: JSON.parse(session) as UserData,
     };
   } catch (error) {
     console.error("Erreur lors de la récupération de l'administrateur connecté:", error);
@@ -71,12 +90,10 @@ export const getConnectedEmployee = async (): Promise<ApiResponse<unknown>> => {
   }
 };
 
-// =======================================================================================
-
 /**
  * Met à jour le profil utilisateur
  */
-export const updateUserProfile = async (userId: string, formData: FormData): Promise<ApiResponse<unknown>> => {
+export const updateUserProfile = async (userId: string, formData: FormData): Promise<ApiResponse<UserData>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -105,7 +122,7 @@ export const updateUserProfile = async (userId: string, formData: FormData): Pro
       };
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as UserData;
 
     const sessionData = cookieStore.get("session")?.value;
     if (sessionData) {
@@ -138,12 +155,10 @@ export const updateUserProfile = async (userId: string, formData: FormData): Pro
   }
 };
 
-// =======================================================================================
-
 /**
  * Change le mot de passe de l'utilisateur
  */
-export const changePassword = async (userId: string, formData: FormData): Promise<ApiResponse<unknown>> => {
+export const changePassword = async (userId: string, formData: FormData): Promise<ApiResponse<null>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("userToken")?.value;
@@ -186,5 +201,3 @@ export const changePassword = async (userId: string, formData: FormData): Promis
     };
   }
 };
-
-// =======================================================================================

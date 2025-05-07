@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MapPin, Navigation, Trash } from "lucide-react";
+import { SavedItinerary } from "@/actions/navigation/types";
 
 // =============================================================================================
 
@@ -57,18 +58,7 @@ function EmptyState() {
 // =============================================================================================
 
 type ItineraryCardProps = {
-  itinerary: {
-    id: string;
-    departure: string;
-    departureLat: number;
-    departureLon: number;
-    arrival: string;
-    arrivalLat: number;
-    arrivalLon: number;
-    travelMode: string;
-    distance: number;
-    duration: number;
-  };
+  itinerary: SavedItinerary;
 };
 
 function ItineraryCard({ itinerary }: ItineraryCardProps) {

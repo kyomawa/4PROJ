@@ -55,7 +55,7 @@ export const registerSchema = z
   })
   .refine(({ password, confirmPassword }) => password === confirmPassword, {
     message: "Les mots de passe ne correspondent pas",
-    path: ["password"],
+    path: ["confirmPassword"],
   });
 
 // =======================================================================================

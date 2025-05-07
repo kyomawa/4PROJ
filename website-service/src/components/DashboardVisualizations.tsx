@@ -16,23 +16,11 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { MonthlyUserStats, IncidentTypeStats, HourlyIncidentStats } from "@/actions/statistics/types";
 
-interface UserStat {
-  month: string;
-  count: number;
-}
+// =============================================================================================
 
-interface IncidentStat {
-  type: string;
-  count: number;
-}
-
-interface CongestionStat {
-  hour: number;
-  count: number;
-}
-
-const defaultUserData: UserStat[] = [
+const defaultUserData: MonthlyUserStats[] = [
   { month: "Janvier", count: 0 },
   { month: "Février", count: 0 },
   { month: "Mars", count: 0 },
@@ -47,7 +35,7 @@ const defaultUserData: UserStat[] = [
   { month: "Décembre", count: 0 },
 ];
 
-const defaultIncidentData: IncidentStat[] = [
+const defaultIncidentData: IncidentTypeStats[] = [
   { type: "Accident", count: 0 },
   { type: "Embouteillage", count: 0 },
   { type: "Route fermée", count: 0 },
@@ -55,18 +43,22 @@ const defaultIncidentData: IncidentStat[] = [
   { type: "Obstacle", count: 0 },
 ];
 
-const defaultCongestionData: CongestionStat[] = Array.from({ length: 24 }, (_, i) => ({
+const defaultCongestionData: HourlyIncidentStats[] = Array.from({ length: 24 }, (_, i) => ({
   hour: i,
   count: 0,
 }));
 
 const COLORS = ["#695bf9", "#ff8042", "#ffc658", "#00C49F", "#0088fe", "#82ca9d"];
 
+// =============================================================================================
+
 interface DashboardVisualizationsProps {
-  userData?: UserStat[];
-  incidentData?: IncidentStat[];
-  congestionData?: CongestionStat[];
+  userData?: MonthlyUserStats[];
+  incidentData?: IncidentTypeStats[];
+  congestionData?: HourlyIncidentStats[];
 }
+
+// =============================================================================================
 
 export default function DashboardVisualizations({
   userData = defaultUserData,
@@ -173,3 +165,5 @@ export default function DashboardVisualizations({
     </div>
   );
 }
+
+// =============================================================================================

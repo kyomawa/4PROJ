@@ -2,6 +2,6 @@ import { NavbarDataProps } from "./type";
 
 // =========================================================================================================
 
-export const navbarData: NavbarDataProps[] = [{ label: "Accueil", path: "/" }];
+export const navbarData: NavbarDataProps[] = [{ label: "Carte", path: "/" }];
 
 // =========================================================================================================

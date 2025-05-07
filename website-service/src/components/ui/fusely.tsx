@@ -112,7 +112,7 @@ const FuselyBody = ({ className, children, ...props }: FuselyProps) => {
   return (
     <div
       className={cn(
-        "overflow-y-auto [&::-webkit-scrollbar-thumb]:rounded-full p-6 [&::-webkit-scrollbar-thumb]:bg-neutral-200 blue:[&::-webkit-scrollbar-thumb]:bg-primary-200/65 [&::-webkit-scrollbar]:w-1.5",
+        "overflow-y-auto [&::-webkit-scrollbar-thumb]:rounded-full z-[5000] p-6 [&::-webkit-scrollbar-thumb]:bg-neutral-200 blue:[&::-webkit-scrollbar-thumb]:bg-primary-200/65 [&::-webkit-scrollbar]:w-1.5",
         className
       )}
       {...props}

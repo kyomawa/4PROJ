@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/panel/", "/api/"],
     },
     sitemap: "http://localhost/sitemap.xml",
   };

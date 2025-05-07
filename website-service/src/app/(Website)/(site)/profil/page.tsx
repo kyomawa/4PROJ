@@ -5,10 +5,13 @@ import Profile from "./components/Profile";
 // =============================================================================================
 
 export default async function ProfilePage() {
-  const { data, success } = await getConnectedUser();
-  if (!success) {
+  const result = await getConnectedUser();
+
+  if (!result.success) {
     redirect("/connexion");
   }
+
+  const { data } = result;
 
   return <Profile data={data} />;
 }

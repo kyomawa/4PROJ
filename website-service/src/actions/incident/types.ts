@@ -1,12 +1,12 @@
 import { IncidentType, IncidentStatus, ReactionType } from "@/types/incident";
 
-export type Vote = {
+export interface Vote {
   id: string;
   userId: string;
   reaction: ReactionType;
-};
+}
 
-export type Incident = {
+export interface Incident {
   id: string;
   type: IncidentType;
   latitude: number;
@@ -14,17 +14,21 @@ export type Incident = {
   status: IncidentStatus;
   creationDate: string;
   votes: Vote[];
-};
+}
 
-export type ReportIncidentParams = {
+export interface ReportIncidentParams {
   type: IncidentType;
   latitude: number;
   longitude: number;
-};
+}
 
-export type BoundingBoxParams = {
+export interface BoundingBoxParams {
   minLat: number;
   maxLat: number;
   minLon: number;
   maxLon: number;
-};
+}
+
+export interface VoteIncidentParams {
+  reaction: ReactionType;
+}

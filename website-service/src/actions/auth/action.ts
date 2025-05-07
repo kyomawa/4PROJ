@@ -4,9 +4,19 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { loginSchemaFormData, registerSchemaFormData } from "./schema";
 import { API_BASE_URL } from "@/constants/api";
+import { UserData } from "../user/action";
+
+// Types for authentication responses
+export interface AuthResponse {
+  token: string;
+  data: UserData;
+}
 
 // =================================================================================================================
 
+/**
+ * Register a new user account
+ */
 export async function register(formData: FormData): Promise<ApiResponse<null>> {
   const { success, data, error } = registerSchemaFormData.safeParse(formData);
 
@@ -53,6 +63,9 @@ export async function register(formData: FormData): Promise<ApiResponse<null>> {
 
 // =================================================================================================================
 
+/**
+ * Login a user with email and password
+ */
 export async function login(formData: FormData): Promise<ApiResponse<null>> {
   const { success, data, error } = loginSchemaFormData.safeParse(formData);
 
@@ -88,7 +101,7 @@ export async function login(formData: FormData): Promise<ApiResponse<null>> {
     };
   }
 
-  const apiData = await response.json();
+  const apiData: AuthResponse = await response.json();
 
   const cookieStore = await cookies();
   cookieStore.set("userToken", apiData.token, {
@@ -113,6 +126,9 @@ export async function login(formData: FormData): Promise<ApiResponse<null>> {
 }
 // =================================================================================================================
 
+/**
+ * Logout the current user
+ */
 export async function logout(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("userToken");
@@ -123,6 +139,9 @@ export async function logout(): Promise<void> {
 
 // =================================================================================================================
 
+/**
+ * Login as admin
+ */
 export async function loginAdmin(formData: FormData): Promise<ApiResponse<null>> {
   const { success, data, error } = loginSchemaFormData.safeParse(formData);
 
@@ -158,7 +177,7 @@ export async function loginAdmin(formData: FormData): Promise<ApiResponse<null>>
     };
   }
 
-  const apiData = await response.json();
+  const apiData: AuthResponse = await response.json();
 
   if (apiData.data.role !== "Admin") {
     return {
@@ -192,6 +211,9 @@ export async function loginAdmin(formData: FormData): Promise<ApiResponse<null>>
 
 // =================================================================================================================
 
+/**
+ * Logout admin
+ */
 export async function logoutAdmin(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("adminToken");

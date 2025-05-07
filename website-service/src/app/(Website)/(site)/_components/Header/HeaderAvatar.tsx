@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "@/components/Image";
+import { UserData } from "@/actions/user/action";
 // =========================================================================================================
 
 import {
@@ -20,12 +21,13 @@ import { useState } from "react";
 // =========================================================================================================
 
 type HeaderAvatarProps = {
-  user: any;
+  user: UserData;
 };
 
 export default function HeaderAvatar({ user }: HeaderAvatarProps) {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { img, pseudo } = user;
+  const { img, username } = user;
+
   return (
     <DropdownMenu open={showDropdown} onOpenChange={setShowDropdown}>
       <DropdownMenuTrigger id="avatarButton" className="outline-none">
@@ -36,7 +38,7 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
               containerClassName="size-10 rounded-full"
               className="rounded-full bg-primary-1050 object-cover"
               src={img}
-              alt={`Image de ${pseudo}`}
+              alt={`Image de ${username || "profil"}`}
               fill
               sizes="2.5rem"
             />
@@ -63,6 +65,9 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
         <DropdownMenuItem asChild className="cursor-pointer hover:bg-black/5 transition-colors duration-150">
           <Link href="/profil">Mon profil</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer hover:bg-black/5 transition-colors duration-150">
+          <Link href="/itineraires">Mes itinéraires</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer hover:bg-black/5 transition-colors duration-150"
           onClick={deleteSession}
@@ -74,4 +79,4 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
   );
 }
 
-// =========================================================================================================
+// ===================================================================================================

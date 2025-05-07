@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Trash2 } from "lucide-react";
 import { fetchActiveIncidents } from "@/actions/incident/action";
 import { IncidentType, incidentTypeLabels } from "@/types/incident";
-import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Incident } from "@/actions/incident/types";
+import SubHeader from "../_components/SubHeader";
+import { ExtendedColumnDef } from "@/constants/type";
 
 // =============================================================================================
 
@@ -30,7 +32,6 @@ type IncidentWithId = {
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<IncidentWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const loadIncidents = async () => {
@@ -38,7 +39,7 @@ export default function IncidentsPage() {
       try {
         const response = await fetchActiveIncidents();
         if (response.success && response.data) {
-          const transformedData = response.data.map((incident) => {
+          const transformedData = response.data.map((incident: Incident) => {
             const likesCount = incident.votes?.filter((v) => v.reaction === "Like").length || 0;
             const dislikesCount = incident.votes?.filter((v) => v.reaction === "Dislike").length || 0;
 
@@ -69,7 +70,7 @@ export default function IncidentsPage() {
     loadIncidents();
   }, []);
 
-  const columns = [
+  const columns: ExtendedColumnDef<IncidentWithId, string>[] = [
     {
       accessorKey: "type",
       header: "Type d'incident",
@@ -77,7 +78,25 @@ export default function IncidentsPage() {
         const type = row.getValue("type") as IncidentType;
         return (
           <div className="flex gap-2 items-center">
-            <Badge variant="secondary" className="bg-primary-100 text-primary-800 font-medium">
+            <Badge
+              variant="default"
+              className={(() => {
+                switch (type) {
+                  case IncidentType.Crash:
+                    return "bg-red-500";
+                  case IncidentType.Bottling:
+                    return "bg-orange-500";
+                  case IncidentType.ClosedRoad:
+                    return "bg-purple-500";
+                  case IncidentType.PoliceControl:
+                    return "bg-blue-500";
+                  case IncidentType.Obstacle:
+                    return "bg-yellow-500";
+                  default:
+                    return "bg-gray-500";
+                }
+              })()}
+            >
               {incidentTypeLabels[type] || type}
             </Badge>
           </div>
@@ -100,10 +119,23 @@ export default function IncidentsPage() {
         return (
           <Badge
             variant={status === "Active" ? "default" : "secondary"}
-            className={status === "Active" ? "bg-green-200" : "bg-red-500"}
+            className={status === "Active" ? "bg-green-500" : "bg-red-500"}
           >
             {status === "Active" ? "Actif" : "Inactif"}
           </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "coordinates",
+      header: "Coordonnées",
+      cell: ({ row }) => {
+        const latitude = row.original.latitude;
+        const longitude = row.original.longitude;
+        return (
+          <div className="font-mono text-xs">
+            {latitude.toFixed(5)}, {longitude.toFixed(5)}
+          </div>
         );
       },
     },
@@ -119,12 +151,12 @@ export default function IncidentsPage() {
     },
     {
       accessorKey: "position",
-      header: "Position",
+      header: "Actions",
       cell: ({ row }) => {
         const latitude = row.original.latitude;
         const longitude = row.original.longitude;
         return (
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Button
               variant="outlineBasic"
               size="sm"
@@ -134,15 +166,6 @@ export default function IncidentsPage() {
               <MapPin className="size-4" />
               Voir sur la carte
             </Button>
-          </div>
-        );
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-end gap-2">
             <Button
               variant="datatableOutlineDestructive"
               size="sm"
@@ -159,7 +182,7 @@ export default function IncidentsPage() {
   ];
 
   const showOnMap = (latitude: number, longitude: number) => {
-    router.push(`/?lat=${latitude}&lng=${longitude}`);
+    window.open(`/?lat=${latitude}&lng=${longitude}`, "_blank");
   };
 
   const handleDelete = async (id: string) => {
@@ -169,6 +192,8 @@ export default function IncidentsPage() {
 
   return (
     <div className="flex flex-col gap-y-6">
+      <SubHeader title="Incidents signalés" button={null} />
+
       <div className="bg-white rounded-lg">
         <DataTable
           columns={columns}
@@ -176,10 +201,11 @@ export default function IncidentsPage() {
           setData={setIncidents}
           title="Incidents signalés"
           isLoading={isLoading}
+          needCheckbox={true}
         />
       </div>
     </div>
   );
 }
 
-// =============================================================================================
+// ===================================================================================================

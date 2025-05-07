@@ -26,7 +26,7 @@ export default function Page() {
         className="object-cover"
         containerClassName="fixed inset-0 z-[-1] max-lg:hidden"
         src="/img/admin-authentication.webp"
-        alt="Image de l'un des hotels disponible chez akkorhotel"
+        alt="Image du panel d'administration"
         fill
         sizes="100vw"
         priority

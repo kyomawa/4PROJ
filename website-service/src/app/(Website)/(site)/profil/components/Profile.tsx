@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateUserProfile } from "@/actions/user/action";
+import { updateUserProfile, UserData } from "@/actions/user/action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,17 +24,19 @@ const profileSchema = z.object({
   currentPassword: z.string().min(1, "Le mot de passe actuel est requis"),
 });
 
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
 // =============================================================================================
 
 type ProfileProps = {
-  data: any;
+  data: UserData;
 };
 
 export default function Profile({ data }: ProfileProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const form = useForm({
+  const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: data?.username || "",
@@ -44,7 +46,7 @@ export default function Profile({ data }: ProfileProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof profileSchema>) => {
+  const onSubmit = async (values: ProfileFormValues) => {
     setIsLoading(true);
     const formData = new FormData();
 
@@ -142,4 +144,4 @@ export default function Profile({ data }: ProfileProps) {
   );
 }
 
-// =============================================================================================
+// ===================================================================================================

@@ -1,24 +1,30 @@
-export type Coordinate = {
+export interface Coordinate {
   latitude: number;
   longitude: number;
-};
+}
 
-export type Step = {
+export interface Step {
   distance: number;
   duration: number;
   instruction: string;
   type: string;
   wayPoints: Coordinate;
-};
+}
 
-export type BoundingBox = {
+export interface BoundingBox {
   minLat: number;
   maxLat: number;
   minLon: number;
   maxLon: number;
-};
+}
 
-export type Incident = {
+export interface Vote {
+  id: string;
+  userId: string;
+  reaction: "Like" | "Dislike";
+}
+
+export interface Incident {
   id: string;
   type: string;
   longitude: number;
@@ -26,15 +32,9 @@ export type Incident = {
   status: string;
   creationDate: string;
   votes: Vote[];
-};
+}
 
-export type Vote = {
-  id: string;
-  userId: string;
-  reaction: "Like" | "Dislike";
-};
-
-export type RouteParams = {
+export interface RouteParams {
   departureLat: number;
   departureLon: number;
   arrivalLat: number;
@@ -42,9 +42,9 @@ export type RouteParams = {
   travelMethod: "car" | "bike" | "foot" | "train";
   routeType: "fastest" | "shortest" | "eco" | "thrilling";
   avoidTollRoads: boolean;
-};
+}
 
-export type SaveItineraryParams = {
+export interface SaveItineraryParams {
   departure: string;
   departureLat: number;
   departureLon: number;
@@ -54,9 +54,9 @@ export type SaveItineraryParams = {
   travelMode: string;
   distance: number;
   duration: number;
-};
+}
 
-export type LocationResult = {
+export interface LocationResult {
   placeId: string;
   latitude: number;
   longitude: number;
@@ -69,9 +69,9 @@ export type LocationResult = {
   area?: string;
   country?: string;
   boundingBox?: number[];
-};
+}
 
-export type Itinerary = {
+export interface Itinerary {
   travelMode: string;
   distance: number;
   duration: number;
@@ -79,9 +79,9 @@ export type Itinerary = {
   coordinates: Coordinate[];
   incidents: Incident[];
   boundingBox?: BoundingBox;
-};
+}
 
-export type SavedItinerary = {
+export interface SavedItinerary {
   id: string;
   departure: string;
   departureLon: number;
@@ -92,8 +92,8 @@ export type SavedItinerary = {
   travelMode: string;
   distance: number;
   duration: number;
-};
+}
 
-export type UserItineraries = {
+export interface UserItineraries {
   itineraries: SavedItinerary[];
-};
+}
