@@ -342,15 +342,24 @@ services:
     build:
       context: ./website-service
       dockerfile: Dockerfile.dev
+    develop:
+      watch:
+        - action: sync
+          path: ./website-service
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+        - action: rebuild
+          path: ./website-service/package.json
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true
       - NEXT_PUBLIC_TOMTOM_API_KEY=${TOMTOM_APIKEY}
     volumes:
-      - ./website-service:/app
+      - ./website-service:/app:cached
       - /app/node_modules
-      - /app/.next
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=4proj_4proj_dev"
