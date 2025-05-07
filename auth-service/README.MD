@@ -1,15 +1,15 @@
-# Auth Service
+# Authentication Service
 
 ## Overview
 
-The Auth Service is responsible for handling authentication and token management in the Laynz application. This service:
+The Authentication Service is responsible for handling authentication and token management in the Laynz application. This service:
 
 - Authenticates users against the User Service
 - Generates JWT (JSON Web Tokens) for authenticated users
 - Handles secure password encryption/decryption
 - Provides token-based authentication for other services
 
-The Auth Service functions as a gateway for authentication, working closely with the User Service to verify credentials and provide secure access tokens.
+The Authentication Service functions as a gateway for authentication, working closely with the User Service to verify credentials and provide secure access tokens.
 
 ## Technologies
 
@@ -36,7 +36,7 @@ Authenticates a user and provides a JWT token.
 }
 ```
 
-**Response:**
+**Responses:**
 
 - `200 OK`: Returns an `AuthDto` containing the JWT token and user information
 - `404 Not Found`: Invalid credentials
@@ -57,69 +57,26 @@ Authenticates a user and provides a JWT token.
 }
 ```
 
+**Usage Example:**
+
+```bash
+curl -X POST http://auth.localhost/auth \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "Password123!"
+  }'
+```
+
 ## Authentication Process
 
 1. The client sends login credentials (email and password) to the `/auth` endpoint
-2. The Auth Service encrypts the password
-3. The Auth Service sends the email and encrypted password to the User Service's `/user/exist` endpoint
+2. The Authentication Service encrypts the password
+3. The Authentication Service sends the email and encrypted password to the User Service's `/user/exist` endpoint
 4. If credentials are valid, the User Service returns the user's information
-5. The Auth Service generates a JWT token containing the user's ID and role
-6. The Auth Service returns the token and user data to the client
+5. The Authentication Service generates a JWT token containing the user's ID and role
+6. The Authentication Service returns the token and user data to the client
 7. The client includes this token in the `Authorization` header of subsequent requests
-
-### Token Generation Implementation
-
-```csharp
-public string GenerateToken(Guid id, string role)
-{
-    var claims = new[]
-    {
-        new Claim(ClaimTypes.NameIdentifier, id.ToString()),
-        new Claim(ClaimTypes.Role, role),
-    };
-
-    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-    var token = new JwtSecurityToken(
-        issuer: _issuer,
-        audience: _audience,
-        claims: claims,
-        expires: DateTime.Now.AddHours(1),
-        signingCredentials: creds
-    );
-
-    return new JwtSecurityTokenHandler().WriteToken(token);
-}
-```
-
-### Password Encryption Implementation
-
-```csharp
-public string EncryptPassword(string password)
-{
-    using (Aes aesAlg = Aes.Create())
-    {
-        aesAlg.Key = Encoding.UTF8.GetBytes(_encryptionKey);
-        aesAlg.IV = new byte[16];
-
-        ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-
-        using (var msEncrypt = new MemoryStream())
-        {
-            using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-            {
-                using (var swEncrypt = new StreamWriter(csEncrypt))
-                {
-                    swEncrypt.Write(password);
-                }
-            }
-
-            return Convert.ToBase64String(msEncrypt.ToArray());
-        }
-    }
-}
-```
 
 ## Security Features
 
@@ -142,15 +99,6 @@ The service implements symmetric encryption for passwords using AES:
 
 - Passwords are encrypted before being sent to the User Service
 - This provides an additional security layer beyond the transport-level encryption
-
-## Architecture
-
-### Services
-
-- **IAuthService**: Defines authentication operations
-- **AuthService**: Implements authentication logic and coordinates with the User Service
-- **IEncryptionService**: Defines encryption-related operations
-- **EncryptionService**: Implements token generation and password encryption
 
 ## Configuration
 
@@ -180,6 +128,4 @@ docker build -f Dockerfile.dev -t auth-service .
 
 ## API Documentation
 
-Swagger UI is available at `/swagger` when the service is running.
-
-**URL** : [http://auth.localhost/swagger/index.html](http://auth.localhost/swagger/index.html)
+**Swagger API URL:** [http://auth.localhost/swagger/index.html](http://auth.localhost/swagger/index.html)
