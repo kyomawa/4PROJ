@@ -13,8 +13,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": ["location", "fetch"],
-        "NSLocationWhenInUseUsageDescription": "Cette application a besoin d'accéder à votre position pour la navigation.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Cette application a besoin d'accéder à votre position pour la navigation."
+        "NSLocationWhenInUseUsageDescription": "Autorisez l'accès à votre position : indispensable pour afficher votre localisation sur la carte",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Autorisez l'accès à votre position : indispensable pour afficher votre localisation sur la carte"
       }
     },
     "android": {
@@ -49,7 +49,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Autoriser Supmap à utiliser votre position pour la navigation et le signalement d'incidents."
+          "locationAlwaysAndWhenInUsePermission": "Autorisez l'accès à votre position : indispensable pour afficher votre localisation sur la carte"
         }
       ]
     ],
