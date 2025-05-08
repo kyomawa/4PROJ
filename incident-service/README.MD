@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Incident Service is responsible for managing traffic incidents in the Laynz application. It handles:
+The Incident Service is responsible for managing traffic incidents in the Supmap application. It handles:
 
 - Creation of new incident reports (accidents, bottlenecks, closed roads, etc.)
 - Retrieval of incidents within geographic areas
@@ -27,10 +27,34 @@ This service maintains a database of user-reported traffic conditions that the n
 
 Retrieves all incidents.
 
-**Response:**
+**Authentication:** Required (Admin role)
+
+**Responses:**
 
 - `200 OK`: Returns a list of all `IncidentDto` objects
 - `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X GET http://incident.localhost/incident \
+  -H "Authorization: Bearer {token}"
+```
+
+#### `GET /incident/active`
+
+Retrieves all active incidents.
+
+**Responses:**
+
+- `200 OK`: Returns a list of all active `IncidentDto` objects
+- `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X GET http://incident.localhost/incident/active
+```
 
 #### `GET /incident/bounding-box`
 
@@ -43,10 +67,16 @@ Retrieves incidents within a geographical bounding box.
 - `minLon` (double, required): Minimum longitude bound
 - `maxLon` (double, required): Maximum longitude bound
 
-**Response:**
+**Responses:**
 
 - `200 OK`: Returns a list of `IncidentDto` objects within the specified bounds
 - `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X GET "http://incident.localhost/incident/bounding-box?minLat=45.7&maxLat=45.8&minLon=4.8&maxLon=4.9"
+```
 
 #### `GET /incident/{id}`
 
@@ -56,11 +86,17 @@ Retrieves a specific incident by ID.
 
 - `id` (GUID, required): The unique identifier of the incident
 
-**Response:**
+**Responses:**
 
 - `200 OK`: Returns the requested `IncidentDto`
 - `404 Not Found`: Incident with the specified ID was not found
 - `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X GET http://incident.localhost/incident/3fa85f64-5717-4562-b3fc-2c963f66afa6
+```
 
 #### `POST /incident`
 
@@ -76,16 +112,30 @@ Creates a new incident report.
 }
 ```
 
-**Response:**
+**Responses:**
 
 - `200 OK`: Returns the created `IncidentDto`
 - `400 Bad Request`: Invalid incident type or coordinates
 - `409 Conflict`: An incident of the same type already exists at these coordinates
 - `500 Internal Server Error`: Server error with error message
 
-#### `PUT /incident/{id}`
+**Usage Example:**
+
+```bash
+curl -X POST http://incident.localhost/incident \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "Crash",
+    "longitude": 4.8357,
+    "latitude": 45.7640
+  }'
+```
+
+#### `PUT /incident/{id}/vote`
 
 Updates an incident with a user reaction (like or dislike).
+
+**Authentication:** Required
 
 **Path Parameters:**
 
@@ -99,26 +149,131 @@ Updates an incident with a user reaction (like or dislike).
 }
 ```
 
-**Response:**
+**Responses:**
 
 - `200 OK`: Returns the updated `IncidentDto`
 - `400 Bad Request`: Invalid reaction type
 - `404 Not Found`: Incident with the specified ID was not found
 - `500 Internal Server Error`: Server error with error message
 
-#### `DELETE /incident/{id}`
+**Usage Example:**
 
-Deletes an incident.
+```bash
+curl -X PUT http://incident.localhost/incident/3fa85f64-5717-4562-b3fc-2c963f66afa6/vote \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reaction": "Like"
+  }'
+```
+
+#### `PATCH /incident/{id}`
+
+Updates incident information.
+
+**Authentication:** Required (Admin role)
 
 **Path Parameters:**
 
 - `id` (GUID, required): The unique identifier of the incident
 
-**Response:**
+**Request Body:**
+
+```json
+{
+  "type": "Crash|Bottling|ClosedRoad|PoliceControl|Obstacle",
+  "longitude": 0.0,
+  "latitude": 0.0,
+  "status": "Active|Inactive"
+}
+```
+
+**Responses:**
+
+- `200 OK`: Returns the updated `IncidentDto`
+- `400 Bad Request`: Invalid status type
+- `404 Not Found`: Incident with the specified ID was not found
+- `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X PATCH http://incident.localhost/incident/3fa85f64-5717-4562-b3fc-2c963f66afa6 \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "Inactive"
+  }'
+```
+
+#### `DELETE /incident/{id}`
+
+Deletes an incident.
+
+**Authentication:** Required (Admin role)
+
+**Path Parameters:**
+
+- `id` (GUID, required): The unique identifier of the incident
+
+**Responses:**
 
 - `200 OK`: Returns the deleted `IncidentDto`
 - `400 Bad Request`: Incident with the specified ID was not found
 - `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X DELETE http://incident.localhost/incident/3fa85f64-5717-4562-b3fc-2c963f66afa6 \
+  -H "Authorization: Bearer {token}"
+```
+
+#### `PUT /incident/{id}/enable`
+
+Enables an incident.
+
+**Authentication:** Required (Admin role)
+
+**Path Parameters:**
+
+- `id` (GUID, required): The unique identifier of the incident
+
+**Responses:**
+
+- `200 OK`: Returns the enabled `IncidentDto`
+- `400 Bad Request`: Incident with the specified ID was not found
+- `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X PUT http://incident.localhost/incident/3fa85f64-5717-4562-b3fc-2c963f66afa6/enable \
+  -H "Authorization: Bearer {token}"
+```
+
+#### `PUT /incident/{id}/disable`
+
+Disables an incident.
+
+**Authentication:** Required (Admin role)
+
+**Path Parameters:**
+
+- `id` (GUID, required): The unique identifier of the incident
+
+**Responses:**
+
+- `200 OK`: Returns the disabled `IncidentDto`
+- `400 Bad Request`: Incident with the specified ID was not found
+- `500 Internal Server Error`: Server error with error message
+
+**Usage Example:**
+
+```bash
+curl -X PUT http://incident.localhost/incident/3fa85f64-5717-4562-b3fc-2c963f66afa6/disable \
+  -H "Authorization: Bearer {token}"
+```
 
 ### Health Controller
 
@@ -129,6 +284,12 @@ Checks the health of the service.
 **Response:**
 
 - `200 OK`: Returns a simple status message
+
+**Usage Example:**
+
+```bash
+curl -X GET http://incident.localhost/health
+```
 
 ## Data Models
 
@@ -141,9 +302,9 @@ public class Incident
     public IncidentType Type { get; set; }
     public double Longitude { get; set; }
     public double Latitude { get; set; }
-    public int Like { get; set; }
-    public int Dislike { get; set; }
+    public IncidentStatus Status { get; set; }
     public DateTime CreationDate { get; init; }
+    public ICollection<UserIncidentVote> Votes { get; set; }
 }
 ```
 
@@ -157,6 +318,16 @@ public enum IncidentType
     ClosedRoad,
     PoliceControl,
     Obstacle
+}
+```
+
+### IncidentStatus (Enum)
+
+```csharp
+public enum IncidentStatus
+{
+    Active,
+    Inactive
 }
 ```
 
@@ -176,7 +347,7 @@ public enum ReactionType
 
 The service uses a repository pattern to abstract data access:
 
-- **IIncidentRepository**: Interface defining data access methods
+- **InterfaceIncidentRepository**: Interface defining data access methods
 - **IncidentRepository**: Implementation for MySQL database
 
 ### Services
@@ -198,7 +369,9 @@ public async Task<List<Incident>> GetByBoundingBox(BoundingBoxDto boundingBox)
             i.Latitude >= boundingBox.MinLat &&
             i.Latitude <= boundingBox.MaxLat &&
             i.Longitude >= boundingBox.MinLon &&
-            i.Longitude <= boundingBox.MaxLon)
+            i.Longitude <= boundingBox.MaxLon &&
+            i.Status == IncidentStatus.Active)
+        .Include(i => i.Votes)
         .ToListAsync();
 
     return incidents;
@@ -212,18 +385,27 @@ This optimized query allows the navigation service to efficiently retrieve only 
 The service implements a community-based validation system for incidents:
 
 ```csharp
-public async Task<Incident> AddLike(Incident incident)
+public async Task<IncidentDto> Vote(Guid currentUserId, Guid id, VoteIncidentDto voteIncidentDto)
 {
-    incident.Like++;
-    await context.SaveChangesAsync();
-    return incident;
-}
+    var incident = await incidentRepository.Get(id);
 
-public async Task<Incident> AddDislike(Incident incident)
-{
-    incident.Dislike++;
-    await context.SaveChangesAsync();
-    return incident;
+    if (incident == null)
+    {
+        return null;
+    }
+
+    var userVote = await HandleUserVote(currentUserId, incident, voteIncidentDto.Reaction);
+    var votesOnIncident = await incidentRepository.GetAllVotesOnIncident(incident);
+
+    var totalLikes = votesOnIncident.Count(v => v.Reaction == ReactionType.Like);
+    var totalDislikes = votesOnIncident.Count(v => v.Reaction == ReactionType.Dislike);
+
+    if (totalDislikes >= totalLikes + MaxDislikesBeforeDelete)
+    {
+        incident = await incidentRepository.Disable(incident);
+    }
+
+    return mapper.Map<IncidentDto>(incident);
 }
 ```
 
@@ -235,23 +417,31 @@ The service uses MySQL for data persistence with Entity Framework Core as the OR
 
 ### Schema
 
-The database contains a single table `Incident` with the following structure:
+The database contains two main tables:
+
+#### `Incident` table with the following structure:
 
 - `Id` (GUID, Primary Key)
 - `Type` (string, converted from enum)
 - `Longitude` (double)
 - `Latitude` (double)
-- `Like` (int)
-- `Dislike` (int)
+- `Status` (string, converted from enum)
 - `CreationDate` (datetime)
+
+#### `UserIncidentVotes` table with the following structure:
+
+- `Id` (GUID, Primary Key)
+- `IncidentId` (GUID, Foreign Key)
+- `UserId` (GUID)
+- `Reaction` (int)
 
 ## Configuration
 
 The service requires the following environment variables:
 
-- `MYSQL_DATABASE`: Name of the MySQL database
-- `MYSQL_USER`: Username for database access
-- `MYSQL_PASSWORD`: Password for database access
+- `INCIDENT_DB`: Name of the MySQL database
+- `INCIDENT_DB_USER`: Username for database access
+- `INCIDENT_DB_PSW`: Password for database access
 
 ## Development
 
@@ -272,6 +462,4 @@ docker build -f Dockerfile.dev -t incident-service .
 
 ## API Documentation
 
-Swagger UI is available at `/swagger` when the service is running.
-
-**URL** : [http://incident.localhost/swagger/index.html](http://incident.localhost/swagger/index.html)
+**Swagger API URL:** [http://incident.localhost/swagger/index.html](http://incident.localhost/swagger/index.html)

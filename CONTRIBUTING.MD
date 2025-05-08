@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to the Laynz project! This document contains information to help you get started with contributing to the project.
+Thank you for your interest in contributing to the Supmap project! This document contains information to help you get started with contributing to the project.
 
 ## Code of Conduct
 

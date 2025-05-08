@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply 2k:text-[16.25px] 3k:text-[18.25px] 4k:text-[21px] 4.5k:text-[24.5px] 5k:text-[32px] 6k:text-[40px] 8k:text-[48px] 10k:text-[64px] 12k:text-[80px] !scroll-smooth;
+  }
+
+  body {
+    @apply [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary-400 [&::-webkit-scrollbar]:w-1.5 selection:bg-primary-300;
+  }
+}
+
+@layer utilities {
+  .specialContainer {
+    @apply mx-auto w-full px-4 md:px-8 2xl:w-[80vw];
+  }
+}
