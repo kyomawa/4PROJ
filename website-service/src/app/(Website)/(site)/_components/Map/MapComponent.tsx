@@ -10,6 +10,10 @@ import { IncidentType, incidentTypeLabels, ReactionType } from "@/types/incident
 import { toast } from "react-hot-toast";
 import { useDebounce } from "@/hooks/useDebounce";
 import ReportIncidentModal from "./ReportIncidentModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // ========================================================================================================
 
@@ -26,7 +30,6 @@ const DefaultIcon =
       })
     : null;
 
-// --- Types ---
 type MapPosition = { lat: number; lng: number };
 type SelectedLocation = { name: string; position: MapPosition };
 type SearchResult = { name: string; position: MapPosition };
@@ -55,23 +58,13 @@ type MapComponentProps = {
   onRouteSelect?: (routeInfo: RouteInfo) => void;
 };
 
-// --- Hook pour gérer événements map ---
-function MapEvents(props: { onClick: (e: L.LeafletMouseEvent) => void; onBoundsChange: () => void }) {
-  useMapEvents({
-    click: props.onClick,
-    zoomend: props.onBoundsChange,
-    moveend: props.onBoundsChange,
-  });
-  return null;
-}
+// ========================================================================================================
 
-// --- Composant principal ---
 export default function MapComponent({
   initialCenter = { lat: 46.603354, lng: 1.888334 },
   initialZoom = 6,
   onRouteSelect,
 }: MapComponentProps) {
-  // états
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [incidents, setIncidents] = useState<IncidentMarker[]>([]);
@@ -87,10 +80,8 @@ export default function MapComponent({
   const [showReportModal, setShowReportModal] = useState(false);
   const [clickedPosition, setClickedPosition] = useState<MapPosition | null>(null);
 
-  // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // ref vers l'instance Leaflet
   const mapRef = useRef<L.Map | null>(null);
 
   // Get user's location on component mount
@@ -385,30 +376,29 @@ export default function MapComponent({
   return (
     <div className="w-full h-full flex flex-col">
       {/* Barre recherche & options */}
-      <div className="p-4 bg-white shadow-md z-[49]">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="p-4 bg-white shadow-sm z-[49]">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex flex-1 gap-2 relative">
-            <input
+            <Input
               type="text"
-              className="flex-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-primary-500"
+              className="flex-1 px-4 py-2 border rounded-md"
               placeholder="Rechercher un lieu…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-            <button
-              onClick={handleSearch}
-              className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600"
-              disabled={isSearching}
-            >
-              {isSearching ? "Recherche..." : "Rechercher"}
-            </button>
+            <Button className="rounded-md px-4 py-2 font-normal" onClick={handleSearch} isLoading={isSearching}>
+              Rechercher
+            </Button>
 
             {/* Résultats de recherche */}
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white shadow-lg rounded-md p-2 max-h-60 overflow-y-auto z-20">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white shadow-lg rounded-md p-2 max-h-72 overflow-y-auto z-20">
                 {searchResults.map((result, index) => (
-                  <div key={index} className="p-2 hover:bg-gray-100 rounded cursor-pointer">
+                  <div
+                    key={index}
+                    className="p-2 hover:bg-gray-100 rounded flex max-lg:flex-col lg:justify-between lg:items-center"
+                  >
                     <div className="font-medium">{result.name}</div>
                     <div className="flex gap-2 mt-1">
                       <button
@@ -430,35 +420,42 @@ export default function MapComponent({
             )}
           </div>
           <div className="flex gap-2">
-            <select
-              value={travelMode}
-              onChange={(e) => setTravelMode(e.target.value as RouteInfo["travelMode"])}
-              className="px-3 py-2 border rounded-md"
-            >
-              <option value="car">Voiture</option>
-              <option value="bike">Vélo</option>
-              <option value="foot">À pied</option>
-              <option value="train">Transport</option>
-            </select>
-            <select
-              value={routeType}
-              onChange={(e) => setRouteType(e.target.value as RouteInfo["routeType"])}
-              className="px-3 py-2 border rounded-md"
-            >
-              <option value="fastest">Le plus rapide</option>
-              <option value="shortest">Le plus court</option>
-              <option value="eco">Écologique</option>
-              <option value="thrilling">Touristique</option>
-            </select>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
+            <Select value={travelMode} onValueChange={(value) => setTravelMode(value as RouteInfo["travelMode"])}>
+              <SelectTrigger>
+                <SelectValue placeholder="Transport" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="car">Voiture</SelectItem>
+                <SelectItem value="bike">Vélo</SelectItem>
+                <SelectItem value="foot">À pied</SelectItem>
+                <SelectItem value="train">Transport</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={routeType} onValueChange={(value) => setRouteType(value as RouteInfo["routeType"])}>
+              <SelectTrigger>
+                <SelectValue placeholder="Type de route" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fastest">Le plus rapide</SelectItem>
+                <SelectItem value="shortest">Le plus court</SelectItem>
+                <SelectItem value="eco">Écologique</SelectItem>
+                <SelectItem value="thrilling">Touristique</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="toll"
                 checked={avoidTollRoads}
-                onChange={(e) => setAvoidTollRoads(e.target.checked)}
+                onCheckedChange={(value) => setAvoidTollRoads(value as boolean)}
               />
-              Éviter péages
-            </label>
+              <label
+                htmlFor="tool"
+                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Éviter péages
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -616,3 +613,16 @@ export default function MapComponent({
     </div>
   );
 }
+
+// ========================================================================================================
+
+function MapEvents(props: { onClick: (e: L.LeafletMouseEvent) => void; onBoundsChange: () => void }) {
+  useMapEvents({
+    click: props.onClick,
+    zoomend: props.onBoundsChange,
+    moveend: props.onBoundsChange,
+  });
+  return null;
+}
+
+// ========================================================================================================

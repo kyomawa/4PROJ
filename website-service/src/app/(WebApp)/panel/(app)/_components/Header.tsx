@@ -5,15 +5,14 @@ import { unauthorized } from "next/navigation";
 // =============================================================================================
 
 export default async function Header() {
-  const { data, success } = await getConnectedEmployee();
+  const res = await getConnectedEmployee();
 
-  if (!success) {
+  if (!res.success) {
     return unauthorized();
   }
+  const { username, img } = res.data;
 
-  const { pseudo, img } = data;
-
-  return <Navbar pseudo={pseudo} img={img} />;
+  return <Navbar pseudo={username} img={(img as string) || undefined} />;
 }
 
 // =============================================================================================

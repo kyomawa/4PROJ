@@ -20,38 +20,6 @@ import { MonthlyUserStats, IncidentTypeStats, HourlyIncidentStats } from "@/acti
 
 // =============================================================================================
 
-const defaultUserData: MonthlyUserStats[] = [
-  { month: "Janvier", count: 0 },
-  { month: "Février", count: 0 },
-  { month: "Mars", count: 0 },
-  { month: "Avril", count: 0 },
-  { month: "Mai", count: 0 },
-  { month: "Juin", count: 0 },
-  { month: "Juillet", count: 0 },
-  { month: "Août", count: 0 },
-  { month: "Septembre", count: 0 },
-  { month: "Octobre", count: 0 },
-  { month: "Novembre", count: 0 },
-  { month: "Décembre", count: 0 },
-];
-
-const defaultIncidentData: IncidentTypeStats[] = [
-  { type: "Accident", count: 0 },
-  { type: "Embouteillage", count: 0 },
-  { type: "Route fermée", count: 0 },
-  { type: "Contrôle policier", count: 0 },
-  { type: "Obstacle", count: 0 },
-];
-
-const defaultCongestionData: HourlyIncidentStats[] = Array.from({ length: 24 }, (_, i) => ({
-  hour: i,
-  count: 0,
-}));
-
-const COLORS = ["#695bf9", "#ff8042", "#ffc658", "#00C49F", "#0088fe", "#82ca9d"];
-
-// =============================================================================================
-
 interface DashboardVisualizationsProps {
   userData?: MonthlyUserStats[];
   incidentData?: IncidentTypeStats[];
@@ -165,5 +133,37 @@ export default function DashboardVisualizations({
     </div>
   );
 }
+
+// =============================================================================================
+
+const defaultUserData: MonthlyUserStats[] = [
+  { month: "Janvier", count: 0 },
+  { month: "Février", count: 0 },
+  { month: "Mars", count: 0 },
+  { month: "Avril", count: 0 },
+  { month: "Mai", count: 0 },
+  { month: "Juin", count: 0 },
+  { month: "Juillet", count: 0 },
+  { month: "Août", count: 0 },
+  { month: "Septembre", count: 0 },
+  { month: "Octobre", count: 0 },
+  { month: "Novembre", count: 0 },
+  { month: "Décembre", count: 0 },
+];
+
+const defaultIncidentData: IncidentTypeStats[] = [
+  { type: "Accident", count: 0 },
+  { type: "Embouteillage", count: 0 },
+  { type: "Route fermée", count: 0 },
+  { type: "Contrôle policier", count: 0 },
+  { type: "Obstacle", count: 0 },
+];
+
+const defaultCongestionData: HourlyIncidentStats[] = Array.from({ length: 24 }, (_, i) => ({
+  hour: i,
+  count: 0,
+}));
+
+const COLORS = ["#695bf9", "#ff8042", "#ffc658", "#00C49F", "#0088fe", "#82ca9d"];
 
 // =============================================================================================

@@ -10,7 +10,6 @@ export interface UserData {
   phoneNumber: string;
   role: "User" | "Admin";
   img?: string | null;
-  pseudo?: string;
 }
 
 export interface UpdateUserProfileData {

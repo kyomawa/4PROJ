@@ -201,3 +201,50 @@ export const reactToIncident = async (incidentId: string, reaction: ReactionType
 };
 
 // =================================================================================================================
+
+export const deleteIncident = async (incidentId: string): Promise<ApiResponse<Incident>> => {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("employeeSession")?.value;
+
+    if (!token) {
+      return {
+        success: false,
+        message: "Vous devez être connecté pour supprimer un incident",
+        error: "Vous devez être connecté pour supprimer un incident",
+      };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/incident/incident/${incidentId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: "Une erreur est survenue lors de la suppression de l'incident",
+        error: `Erreur lors de la suppression de l'incident (${response.status}): ${response.statusText}`,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      message: "Suppression de l'incident réussie",
+      data,
+    };
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'incident:", error);
+    return {
+      success: false,
+      message: "Une erreur est survenue lors de la suppression de l'incident",
+      error: error instanceof Error ? error.message : "Erreur inconnue lors de la suppression de l'incident",
+    };
+  }
+};
+
+// =================================================================================================================

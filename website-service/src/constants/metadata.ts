@@ -135,12 +135,12 @@ export const incidentsMetadata: Metadata = {
 
 // =========================================================================================================
 
-export const statisticsMetadata: Metadata = {
-  title: "Statistiques",
+export const dashboardMetadata: Metadata = {
+  title: "Tableau de bord",
   description: "Consultez les statistiques de vos itinéraires.",
-  keywords: "statistiques, itinéraires, espace client",
+  keywords: "statistiques, itinéraires, espace client, tableau de bord",
   alternates: {
-    canonical: `${baseUrl}/statistiques`,
+    canonical: `${baseUrl}/tableau-de-bord`,
   },
 };
 

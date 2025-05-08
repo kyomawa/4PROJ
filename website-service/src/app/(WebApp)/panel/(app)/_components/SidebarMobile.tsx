@@ -48,7 +48,7 @@ export default function SidebarMobile({ showSidebar, setShowSidebar }: SidebarMo
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-center border-b border-neutral-400/15 p-4">
-            <Logo className="size-8 dark:*:!fill-white" />
+            <Logo className="dark:*:!fill-white" />
           </div>
           {/* NavItems */}
           <div className="flex flex-1 flex-col gap-y-1.5 p-4">

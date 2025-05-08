@@ -1,5 +1,5 @@
-import MapWrapper from "@/components/Map/MapWrapper";
 import { homeMetadata } from "@/constants/metadata";
+import MapWrapper from "./_components/Map/MapWrapper";
 
 // =============================================================================================
 

@@ -18,13 +18,12 @@ import { cn } from "@/lib/utils";
 import Image from "@/components/Image";
 import { deleteEmployeeSession } from "@/lib/sessionEmployee";
 import SidebarMobile from "./SidebarMobile";
-import { User } from "@prisma/client";
 
 // ===================================================================================================
 
 type NavbarProps = {
-  img: User["img"];
-  pseudo: User["pseudo"];
+  img?: string;
+  pseudo?: string;
 };
 
 export default function Navbar({ img, pseudo }: NavbarProps) {
@@ -58,7 +57,7 @@ function NavbarLogo() {
       className="flex gap-x-3 items-center hover:scale-105 transition-transform duration-150 lg:w-[14.5rem] max-lg:hidden"
     >
       <Logo noAnimation />
-      <p className="text-lg">Akkor Hotel</p>
+      <p className="text-lg">Supmap</p>
     </Link>
   );
 }

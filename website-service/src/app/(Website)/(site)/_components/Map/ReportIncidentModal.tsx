@@ -8,7 +8,14 @@ import { reportIncident } from "@/actions/incident/action";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Fusely, FuselyBody, FuselyContent, FuselyDescription, FuselyHeader, FuselyTitle } from "../ui/fusely";
+import {
+  Fusely,
+  FuselyBody,
+  FuselyContent,
+  FuselyDescription,
+  FuselyHeader,
+  FuselyTitle,
+} from "@/components/ui/fusely";
 
 // =============================================================================================
 
