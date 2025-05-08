@@ -6,14 +6,12 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import carImage from "../assets/images/car.png";
-import googleIcon from "../assets/icons/google.png";
-import facebookIcon from "../assets/icons/facebook.png";
 
-import ProviderButton from "../components/ProviderButton";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
 import Button from "../components/Button";
 import { isAuthenticated } from "../lib/api/auth";
+import { useAuthContext } from "../contexts/AuthContext";
 
 // ========================================================================================================
 
@@ -25,6 +23,8 @@ export default function Index() {
   const [authType, setAuthType] = useState<AuthType>("NONE");
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const { setGuestMode } = useAuthContext();
+
   const isHomeScreen = authType === "NONE";
   const title = authType === "SIGNIN" ? "Bienvenue 👋" : "Créer votre compte";
 
@@ -60,6 +60,15 @@ export default function Index() {
     router.replace("/home");
   };
 
+  const handleGuestAccess = async () => {
+    try {
+      await setGuestMode(true);
+      router.replace("/home");
+    } catch (error) {
+      console.error("Erreur lors de l'accès en mode invité:", error);
+    }
+  };
+
   if (isAuthChecking) {
     return (
       <View className="flex-1 justify-center items-center bg-neutral-10">
@@ -92,7 +101,7 @@ export default function Index() {
         {authType === "SIGNIN" && <SignIn onSubmit={handleLoginSubmit} />}
         {authType === "SIGNUP" && <SignUp />}
         {/* Buttons */}
-        <ButtonList authType={authType} setAuthType={setAuthType} />
+        <ButtonList authType={authType} setAuthType={setAuthType} onGuestAccess={handleGuestAccess} />
       </View>
     </ScrollView>
   );
@@ -116,9 +125,10 @@ function WelcomeMessage() {
 type ButtonListProps = {
   authType: AuthType;
   setAuthType: React.Dispatch<React.SetStateAction<AuthType>>;
+  onGuestAccess: () => void;
 };
 
-function ButtonList({ authType, setAuthType }: ButtonListProps) {
+function ButtonList({ authType, setAuthType, onGuestAccess }: ButtonListProps) {
   const handleSignInClick = () => {
     setAuthType("SIGNIN");
   };
@@ -129,52 +139,23 @@ function ButtonList({ authType, setAuthType }: ButtonListProps) {
 
   return (
     <>
-      {/* Sign up button if on home screen */}
+      {/* Sign up and Guest buttons if on home screen */}
       {authType === "NONE" && (
         <>
           <Button handlePress={handleSignUpClick}>S'inscrire</Button>
+          <Button
+            handlePress={onGuestAccess}
+            containerClassName="!bg-transparent  !border-2 !border-primary-500"
+            textClassName="!text-neutral-800"
+          >
+            Continuer en tant qu'invité
+          </Button>
         </>
       )}
-      {/* Divider */}
-      <Divider />
-      {/* Provider buttons */}
-      <ProviderButtons setAuthType={setAuthType} />
+
       {/* Authentication sentence */}
       <AuthSentence authType={authType} setAuthType={setAuthType} />
     </>
-  );
-}
-
-// ========================================================================================================
-
-function Divider() {
-  return (
-    <View className="flex-row items-center gap-x-2">
-      <View className="flex-1 h-px bg-neutral-200" />
-      <Text className="text-xl font-Satoshi-Bold text-neutral-400">OU</Text>
-      <View className="flex-1 h-px bg-neutral-200" />
-    </View>
-  );
-}
-
-// ========================================================================================================
-
-type ProviderButtonsProps = {
-  setAuthType: React.Dispatch<React.SetStateAction<AuthType>>;
-};
-
-function ProviderButtons({ setAuthType }: ProviderButtonsProps) {
-  const handleProviderLogin = () => {
-    AsyncStorage.setItem("userToken", "dummy-oauth-token").then(() => {
-      router.replace("/home");
-    });
-  };
-
-  return (
-    <View className="flex flex-col gap-y-2">
-      <ProviderButton title="Connexion avec Google" iconSrc={googleIcon} handlePress={handleProviderLogin} />
-      <ProviderButton title="Connexion avec Facebook" iconSrc={facebookIcon} handlePress={handleProviderLogin} />
-    </View>
   );
 }
 
@@ -199,7 +180,6 @@ function AuthSentence({ authType, setAuthType }: AuthSentenceProps) {
       </Text>
       <TouchableOpacity onPress={toggleAuthType} activeOpacity={0.75}>
         <Text className="text-xl text-center text-primary-500 font-satoshi">
-          {" "}
           {isSignIn ? "S'inscrire" : "Se connecter"}
         </Text>
       </TouchableOpacity>

@@ -9,11 +9,13 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   isLoggedIn: boolean;
+  isGuest: boolean;
   login: (data: LoginData) => Promise<boolean>;
   register: (data: SignUpData) => Promise<boolean>;
   logout: () => Promise<boolean>;
   updateProfile: (data: UpdateUserData) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
+  setGuestMode: (enabled: boolean) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
