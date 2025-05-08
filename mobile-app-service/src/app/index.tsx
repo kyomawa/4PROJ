@@ -82,7 +82,7 @@ export default function Index() {
               : "bottom-2 left-5 text-4xl font-satoshi text-neutral-500"
           }`}
         >
-          {isHomeScreen ? "Bienvenue sur Laynz" : title}
+          {isHomeScreen ? "Bienvenue sur Supmap" : title}
         </Text>
       </View>
       {/* Section Content */}
