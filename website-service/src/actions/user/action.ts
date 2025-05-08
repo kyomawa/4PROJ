@@ -105,19 +105,35 @@ export const updateUserProfile = async (userId: string, formData: FormData): Pro
       };
     }
 
+    // Extract data from formData
+    const username = formData.get("username") as string;
+    const email = formData.get("email") as string;
+    const phoneNumber = formData.get("phoneNumber") as string;
+    const currentPassword = formData.get("currentPassword") as string;
+
+    // Create JSON payload
+    const payload = {
+      username,
+      email,
+      phoneNumber,
+      currentPassword,
+    };
+
     const response = await fetch(`${API_BASE_URL}/api/user/user/${userId}`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-      body: formData,
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
       return {
         success: false,
-        message: `Erreur lors de la mise à jour du profil (${response.status})`,
-        error: await response.text(),
+        message: `Erreur lors de la mise à jour du profil (${response.status}): ${errorText}`,
+        error: errorText,
       };
     }
 

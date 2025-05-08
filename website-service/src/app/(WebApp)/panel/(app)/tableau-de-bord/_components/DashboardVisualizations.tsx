@@ -26,6 +26,22 @@ interface DashboardVisualizationsProps {
   congestionData?: HourlyIncidentStats[];
 }
 
+// Mapping des mois en anglais vers le français (si nécessaire)
+const monthNameMapping: Record<string, string> = {
+  January: "Janvier",
+  February: "Février",
+  March: "Mars",
+  April: "Avril",
+  May: "Mai",
+  June: "Juin",
+  July: "Juillet",
+  August: "Août",
+  September: "Septembre",
+  October: "Octobre",
+  November: "Novembre",
+  December: "Décembre",
+};
+
 // =============================================================================================
 
 export default function DashboardVisualizations({
@@ -34,12 +50,25 @@ export default function DashboardVisualizations({
   congestionData = defaultCongestionData,
 }: DashboardVisualizationsProps) {
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  const [formattedUserData, setFormattedUserData] = useState<MonthlyUserStats[]>(userData);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Assurer que les noms des mois sont en français
+  useEffect(() => {
+    // Transformer les données si nécessaire
+    if (userData) {
+      const translatedData = userData.map((item) => ({
+        ...item,
+        month: monthNameMapping[item.month] || item.month, // Traduit le mois si nécessaire
+      }));
+      setFormattedUserData(translatedData);
+    }
+  }, [userData]);
 
   const formatHour = (hour: number) => {
     return `${hour}h`;
@@ -51,9 +80,9 @@ export default function DashboardVisualizations({
       <div className="bg-white rounded-lg shadow-md p-4">
         <h2 className="text-lg font-bold mb-4">Inscriptions d&apos;utilisateurs par mois</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={userData}>
+          <LineChart data={formattedUserData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
+            <XAxis dataKey="month" tick={{ fontSize: 14 }} />
             <YAxis />
             <Tooltip formatter={(value) => [`${value} utilisateurs`, "Inscriptions"]} />
             <Legend />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DataTable } from "@/components/ui/datatable/data-table";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { MapPin, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,18 @@ import { ExtendedColumnDef } from "@/constants/type";
 import { dateFilter, multiSelectFilter } from "@/lib/datatableFunctions";
 import { FilterFn } from "@tanstack/react-table";
 import { deleteIncident } from "@/actions/incident/action";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Link } from "next-view-transitions";
+import { cn } from "@/lib/utils";
 
 // =============================================================================================
 
@@ -33,16 +45,37 @@ type IncidentsProps = {
 
 export default function Incidents({ initialIncidents, error }: IncidentsProps) {
   const [incidents, setIncidents] = useState<IncidentWithId[]>(initialIncidents);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [incidentToDelete, setIncidentToDelete] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleDelete = async (id: string) => {
-    const res = await deleteIncident(id);
-    if (!res.success) {
-      toast.error("Une erreur est survenue lors de la suppression de l'incident");
-      return;
+  const handleShowDeleteDialog = (id: string) => {
+    setIncidentToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!incidentToDelete) return;
+
+    setIsLoading(true);
+    const id = incidentToDelete;
+
+    try {
+      const res = await deleteIncident(id);
+      if (!res.success) {
+        toast.error(res.message || "Une erreur est survenue lors de la suppression de l'incident");
+        return;
+      }
+      toast.success("Incident supprimé avec succès");
+      setIncidents((prev) => prev.filter((inc) => inc.id !== id));
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast.error("Une erreur technique est survenue lors de la suppression");
+    } finally {
+      setIsLoading(false);
+      setShowDeleteDialog(false);
+      setIncidentToDelete(null);
     }
-    toast.success("Incident supprimé avec succès");
-    setIncidents((prev) => prev.filter((inc) => inc.id !== id));
   };
 
   const columns: ExtendedColumnDef<IncidentWithId, unknown>[] = [
@@ -69,6 +102,16 @@ export default function Incidents({ initialIncidents, error }: IncidentsProps) {
       header: "Date de création",
       needDatePicker: true,
       filterFn: dateFilter as FilterFn<IncidentWithId>,
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("creationDate"));
+        return new Intl.DateTimeFormat("fr-FR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(date);
+      },
     },
     {
       accessorKey: "status",
@@ -92,26 +135,24 @@ export default function Incidents({ initialIncidents, error }: IncidentsProps) {
     { accessorKey: "dislikesCount", header: "Dislikes", cell: ({ row }) => row.getValue("dislikesCount") },
     {
       accessorKey: "actions",
-      header: "Actions",
+      noFilter: true,
+      header: "",
       cell: ({ row }) => {
         const { latitude, longitude, id } = row.original;
         return (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outlineBasic"
-              size="sm"
-              onClick={() => window.open(`/?lat=${latitude}&lng=${longitude}`, "_blank")}
+            <Link
+              href={`/?lat=${latitude}&lng=${longitude}`}
+              target="_blank"
+              className={cn(buttonVariants({ variant: "outlineBasic", size: "sm" }), "flex items-center gap-1.5")}
             >
-              <div className="flex items-center gap-1">
-                <MapPin className="size-4" />
-                <span>Voir sur la carte</span>
-              </div>
-            </Button>
-
+              <MapPin className="size-4" />
+              <span>Voir sur la carte</span>
+            </Link>
             <Button
               variant="datatableOutlineDestructive"
               size="sm"
-              onClick={() => handleDelete(id)}
+              onClick={() => handleShowDeleteDialog(id)}
               className="items-center gap-1"
             >
               <div className="flex items-center gap-1">
@@ -137,6 +178,26 @@ export default function Incidents({ initialIncidents, error }: IncidentsProps) {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet incident ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant="destructive" onClick={handleDelete} isLoading={isLoading}>
+                Supprimer
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

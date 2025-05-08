@@ -5,6 +5,16 @@ const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
   },
+  trailingSlash: false,
+  async redirects() {
+    return [
+      {
+        source: "/:path+/",
+        destination: "/:path+",
+        permanent: true,
+      },
+    ];
+  },
   webpack: (config) => {
     config.watchOptions = {
       poll: 500,

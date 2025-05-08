@@ -14,6 +14,17 @@ import { useRouter } from "next/navigation";
 import FormInputPhoneNumberField from "@/components/FormFields/FormInputPhoneNumberField";
 import { UserIcon } from "lucide-react";
 import { toE164 } from "@/utils/phone";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // =============================================================================================
 
@@ -35,6 +46,7 @@ type ProfileProps = {
 export default function Profile({ data }: ProfileProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -50,22 +62,30 @@ export default function Profile({ data }: ProfileProps) {
     setIsLoading(true);
     const formData = new FormData();
 
+    // Add data to FormData
     formData.append("username", values.username);
     formData.append("email", values.email);
     formData.append("phoneNumber", values.phoneNumber);
     formData.append("currentPassword", values.currentPassword);
 
-    const response = await updateUserProfile(data.id, formData);
+    try {
+      const response = await updateUserProfile(data.id, formData);
 
-    if (!response.success) {
-      toast.error(response.message || "Erreur lors de la mise à jour du profil");
+      if (!response.success) {
+        toast.error(response.message || "Erreur lors de la mise à jour du profil");
+        console.error("Profile update error:", response.error);
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success("Profil mis à jour avec succès");
+      router.refresh();
+    } catch (error) {
+      console.error("Error during profile update:", error);
+      toast.error("Une erreur technique est survenue lors de la mise à jour");
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    toast.success("Profil mis à jour avec succès");
-    router.refresh();
-    setIsLoading(false);
   };
 
   return (
@@ -130,13 +150,28 @@ export default function Profile({ data }: ProfileProps) {
               Mes itinéraires
             </Button>
 
-            <Button
-              variant="outline"
-              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-              onClick={() => {}}
-            >
-              Supprimer mon compte
-            </Button>
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                  Supprimer mon compte
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmation de suppression du compte</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Êtes-vous sûr de vouloir supprimer votre compte et toutes les données
+                    associées ?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <Button variant="destructive">Supprimer définitivement</Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>

@@ -204,7 +204,7 @@ export async function loginAdmin(formData: FormData): Promise<ApiResponse<null>>
 
   return {
     success: true,
-    message: "Connexion admin réussie",
+    message: "Connexion réussie",
     data: null,
   };
 }

@@ -2,12 +2,20 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { saveItinerary } from "@/actions/navigation/action";
 import { getConnectedUser } from "@/actions/user/action";
 import { SaveItineraryParams } from "@/actions/navigation/types";
+import { formatDuration, translateTravelMode } from "@/utils/utils";
+import {
+  Fusely,
+  FuselyBody,
+  FuselyContent,
+  FuselyDescription,
+  FuselyHeader,
+  FuselyTitle,
+} from "@/components/ui/fusely";
 
 // =============================================================================================
 
@@ -36,20 +44,12 @@ export default function SaveRouteModal({ isOpen, onClose, routeInfo }: SaveRoute
       const userResponse = await getConnectedUser();
 
       if (!userResponse.success) {
-        const confirmLogin = window.confirm(
-          "Vous devez être connecté pour sauvegarder un itinéraire. Voulez-vous vous connecter maintenant ?"
-        );
-
-        if (confirmLogin) {
-          router.push("/connexion");
-        }
-
+        toast.error("Vous devez être connecté pour sauvegarder un itinéraire");
         setIsLoading(false);
         onClose();
         return;
       }
 
-      // Prepare save data
       const saveData: SaveItineraryParams = {
         departure: routeInfo.departure.name,
         departureLat: routeInfo.departure.position.lat,
@@ -79,81 +79,56 @@ export default function SaveRouteModal({ isOpen, onClose, routeInfo }: SaveRoute
     }
   };
 
-  const formatDistance = (distance: number) => {
-    return distance >= 1000 ? `${(distance / 1000).toFixed(1)} km` : `${Math.round(distance)} m`;
-  };
+  const formattedDistance =
+    routeInfo.distance >= 1000 ? `${(routeInfo.distance / 1000).toFixed(1)} km` : `${Math.round(routeInfo.distance)} m`;
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours} h ${minutes > 0 ? `${minutes} min` : ""}`;
-    }
-
-    return `${minutes} min`;
-  };
-
-  const translateTravelMode = (mode: string): string => {
-    const translations: Record<string, string> = {
-      car: "voiture",
-      bike: "vélo",
-      foot: "à pied",
-      train: "transport",
-    };
-
-    return translations[mode.toLowerCase()] || mode;
-  };
+  const formattedDuration = formatDuration(routeInfo.duration);
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Sauvegarder l&apos;itinéraire</SheetTitle>
-          <SheetDescription>Enregistrez cet itinéraire pour y accéder facilement plus tard.</SheetDescription>
-        </SheetHeader>
-
-        <div className="py-6 space-y-6">
-          <div className="bg-primary-50 p-4 rounded-lg space-y-3">
-            <div className="space-y-1">
-              <p className="text-xs text-neutral-500">Départ</p>
-              <p className="font-medium">{routeInfo.departure.name}</p>
+    <Fusely open={isOpen} onOpenChange={onClose}>
+      <FuselyContent className="sm:max-w-md">
+        <FuselyHeader>
+          <FuselyTitle>Sauvegarder l&apos;itinéraire</FuselyTitle>
+          <FuselyDescription>Enregistrez cet itinéraire pour y accéder facilement plus tard.</FuselyDescription>
+        </FuselyHeader>
+        <FuselyBody>
+          <div className="py-6 space-y-6">
+            <div className="bg-primary-50 p-4 rounded-lg space-y-3">
+              <div className="space-y-1">
+                <p className="text-xs text-neutral-500">Départ</p>
+                <p className="font-medium">{routeInfo.departure.name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-neutral-500">Arrivée</p>
+                <p className="font-medium">{routeInfo.arrival.name}</p>
+              </div>
+              <div className="flex gap-4 pt-2">
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs text-neutral-500">Distance</p>
+                  <p className="font-medium">{formattedDistance}</p>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs text-neutral-500">Durée</p>
+                  <p className="font-medium">{formattedDuration}</p>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs text-neutral-500">Mode</p>
+                  <p className="font-medium capitalize">{translateTravelMode(routeInfo.travelMode)}</p>
+                </div>
+              </div>
             </div>
-
-            <div className="space-y-1">
-              <p className="text-xs text-neutral-500">Arrivée</p>
-              <p className="font-medium">{routeInfo.arrival.name}</p>
-            </div>
-
-            <div className="flex gap-4 pt-2">
-              <div className="flex-1 space-y-1">
-                <p className="text-xs text-neutral-500">Distance</p>
-                <p className="font-medium">{formatDistance(routeInfo.distance)}</p>
-              </div>
-
-              <div className="flex-1 space-y-1">
-                <p className="text-xs text-neutral-500">Durée</p>
-                <p className="font-medium">{formatDuration(routeInfo.duration)}</p>
-              </div>
-
-              <div className="flex-1 space-y-1">
-                <p className="text-xs text-neutral-500">Mode</p>
-                <p className="font-medium capitalize">{translateTravelMode(routeInfo.travelMode)}</p>
-              </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={onClose} disabled={isLoading}>
+                Annuler
+              </Button>
+              <Button onClick={handleSave} isLoading={isLoading}>
+                Sauvegarder
+              </Button>
             </div>
           </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={onClose} disabled={isLoading}>
-              Annuler
-            </Button>
-            <Button onClick={handleSave} isLoading={isLoading}>
-              Sauvegarder
-            </Button>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </FuselyBody>
+      </FuselyContent>
+    </Fusely>
   );
 }
 

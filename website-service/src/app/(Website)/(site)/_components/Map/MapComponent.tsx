@@ -1,40 +1,33 @@
-"use client";
-
 import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { fetchIncidents, reactToIncident } from "@/actions/incident/action";
-import { searchLocation, calculateRoute } from "@/actions/navigation/action";
+import { calculateRoute } from "@/actions/navigation/action";
 import { IncidentType, incidentTypeLabels, ReactionType } from "@/types/incident";
 import { toast } from "react-hot-toast";
-import { useDebounce } from "@/hooks/useDebounce";
 import ReportIncidentModal from "./ReportIncidentModal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import SearchBarSection from "./MapSearchSection";
+import MapSaveRouteModal from "./MapSaveRouteModal";
 
 // ========================================================================================================
 
-const DefaultIcon =
-  typeof window !== "undefined"
-    ? new L.Icon({
-        iconUrl: "/img/marker-icon.png",
-        iconRetinaUrl: "/img/marker-icon-2x.png",
-        shadowUrl: "/img/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      })
-    : null;
+const markerIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = markerIcon;
 
 type MapPosition = { lat: number; lng: number };
 type SelectedLocation = { name: string; position: MapPosition };
-type SearchResult = { name: string; position: MapPosition };
 
-type RouteInfo = {
+export type RouteInfo = {
   departure: SelectedLocation;
   arrival: SelectedLocation;
   travelMode: "car" | "bike" | "foot" | "train";
@@ -55,7 +48,11 @@ type IncidentMarker = {
 type MapComponentProps = {
   initialCenter?: MapPosition;
   initialZoom?: number;
-  onRouteSelect?: (routeInfo: RouteInfo) => void;
+  initialRoute?: {
+    departure: SelectedLocation;
+    arrival: SelectedLocation;
+    travelMode: "car" | "bike" | "foot" | "train";
+  };
 };
 
 // ========================================================================================================
@@ -63,24 +60,21 @@ type MapComponentProps = {
 export default function MapComponent({
   initialCenter = { lat: 46.603354, lng: 1.888334 },
   initialZoom = 6,
-  onRouteSelect,
+  initialRoute,
 }: MapComponentProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [incidents, setIncidents] = useState<IncidentMarker[]>([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [departure, setDeparture] = useState<SelectedLocation | null>(null);
-  const [arrival, setArrival] = useState<SelectedLocation | null>(null);
-  const [travelMode, setTravelMode] = useState<RouteInfo["travelMode"]>("car");
+  const [departure, setDeparture] = useState<SelectedLocation | null>(initialRoute?.departure || null);
+  const [arrival, setArrival] = useState<SelectedLocation | null>(initialRoute?.arrival || null);
+  const [travelMode, setTravelMode] = useState<RouteInfo["travelMode"]>(initialRoute?.travelMode || "car");
   const [routeType, setRouteType] = useState<RouteInfo["routeType"]>("fastest");
   const [avoidTollRoads, setAvoidTollRoads] = useState(false);
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [userLocation, setUserLocation] = useState<MapPosition | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [clickedPosition, setClickedPosition] = useState<MapPosition | null>(null);
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [calculatedRoute, setCalculatedRoute] = useState<{ distance: number; duration: number } | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
 
@@ -95,49 +89,24 @@ export default function MapComponent({
           };
           setUserLocation(userPos);
 
-          // Center map on user location if map is initialized
-          if (mapRef.current) {
+          // Center map on user location if map is initialized and no initial route
+          if (mapRef.current && !initialRoute) {
             mapRef.current.setView([userPos.lat, userPos.lng], 13);
           }
         },
         (error) => {
           console.error("Erreur lors de l'obtention de la position:", error);
-          toast.error("Impossible d'obtenir votre position");
         }
       );
     }
-  }, []);
+  }, [initialRoute]);
 
-  // Handle search term changes
+  // Process initial route if provided
   useEffect(() => {
-    if (!debouncedSearchTerm || debouncedSearchTerm.length < 3) {
-      setSearchResults([]);
-      return;
+    if (initialRoute && departure && arrival) {
+      calculateRouteAndDisplay(departure, arrival);
     }
-
-    const fetchLocations = async () => {
-      setIsSearching(true);
-      try {
-        const response = await searchLocation(debouncedSearchTerm);
-        if (response.success && response.data) {
-          const mappedResults = response.data.map((loc) => ({
-            name: loc.formatted || `${loc.street || ""} ${loc.city || ""}`.trim(),
-            position: { lat: loc.latitude, lng: loc.longitude },
-          }));
-          setSearchResults(mappedResults);
-        } else {
-          setSearchResults([]);
-        }
-      } catch (error) {
-        console.error("Erreur lors de la recherche de lieux:", error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    fetchLocations();
-  }, [debouncedSearchTerm]);
+  }, [initialRoute, departure, arrival]);
 
   // Charge les incidents pour la vue courante
   const loadIncidents = useCallback(async () => {
@@ -180,6 +149,20 @@ export default function MapComponent({
     }
   }, [loadIncidents]);
 
+  // Handle location selection from search
+  const handleLocationSelect = (location: SelectedLocation, isForDeparture: boolean) => {
+    if (isForDeparture) {
+      setDeparture(location);
+    } else {
+      setArrival(location);
+    }
+
+    // Center map on selected location
+    if (mapRef.current) {
+      mapRef.current.setView([location.position.lat, location.position.lng], 13);
+    }
+  };
+
   // Clic sur la carte
   const handleMapClick = (e: L.LeafletMouseEvent) => {
     const { lat, lng } = e.latlng;
@@ -203,33 +186,20 @@ export default function MapComponent({
     setTimeout(() => {
       document.querySelector(".set-departure")?.addEventListener("click", () => {
         mapRef.current!.closePopup();
-        setDeparture({
-          name: `(${lat.toFixed(5)}, ${lng.toFixed(5)})`,
+        const newDeparture = {
+          name: `Position (${lat.toFixed(5)}, ${lng.toFixed(5)})`,
           position: { lat, lng },
-        });
-        if (arrival) {
-          calculateRouteAndDisplay(
-            {
-              name: `(${lat.toFixed(5)}, ${lng.toFixed(5)})`,
-              position: { lat, lng },
-            },
-            arrival
-          );
-        }
+        };
+        setDeparture(newDeparture);
       });
 
       document.querySelector(".set-arrival")?.addEventListener("click", () => {
         mapRef.current!.closePopup();
-        setArrival({
-          name: `(${lat.toFixed(5)}, ${lng.toFixed(5)})`,
+        const newArrival = {
+          name: `Position (${lat.toFixed(5)}, ${lng.toFixed(5)})`,
           position: { lat, lng },
-        });
-        if (departure) {
-          calculateRouteAndDisplay(departure, {
-            name: `(${lat.toFixed(5)}, ${lng.toFixed(5)})`,
-            position: { lat, lng },
-          });
-        }
+        };
+        setArrival(newArrival);
       });
 
       document.querySelector(".report-incident")?.addEventListener("click", () => {
@@ -239,49 +209,13 @@ export default function MapComponent({
     }, 100);
   };
 
-  // Recherche de lieu
-  const handleSearch = async () => {
-    if (!searchTerm) return;
-    setIsSearching(true);
-    try {
-      const res = await searchLocation(searchTerm);
-      if (res.success && res.data) {
-        setSearchResults(
-          res.data.map((loc) => ({
-            name: loc.formatted || `${loc.street || ""} ${loc.city || ""}`.trim(),
-            position: { lat: loc.latitude, lng: loc.longitude },
-          }))
-        );
-      } else {
-        toast.error("Recherche impossible : " + (res.message || ""));
-      }
-    } catch (error) {
-      console.error("Erreur lors de la recherche:", error);
-      toast.error("Erreur lors de la recherche");
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Sélection d'un résultat
-  const selectSearchResult = (r: SearchResult, isDep: boolean) => {
-    if (isDep) {
-      setDeparture(r);
-      if (arrival) {
-        calculateRouteAndDisplay(r, arrival);
-      }
-    } else {
-      setArrival(r);
-      if (departure) {
-        calculateRouteAndDisplay(departure, r);
-      }
-    }
-    setSearchTerm("");
-    setSearchResults([]);
-  };
-
   // Calcule et affiche l'itinéraire
   const calculateRouteAndDisplay = async (from: SelectedLocation, to: SelectedLocation) => {
+    if (!from || !to) {
+      toast.error("Veuillez sélectionner un point de départ et d'arrivée");
+      return;
+    }
+
     setIsLoadingRoute(true);
     try {
       const res = await calculateRoute({
@@ -293,9 +227,14 @@ export default function MapComponent({
         routeType,
         avoidTollRoads,
       });
+
       if (res.success && res.data) {
         const coords = res.data.coordinates.map((c) => [c.latitude, c.longitude]) as [number, number][];
         setRouteCoordinates(coords);
+        setCalculatedRoute({
+          distance: res.data.distance,
+          duration: res.data.duration,
+        });
 
         const map = mapRef.current;
         if (map && coords.length) {
@@ -303,15 +242,6 @@ export default function MapComponent({
             padding: [50, 50],
           });
         }
-        onRouteSelect?.({
-          departure: from,
-          arrival: to,
-          travelMode,
-          routeType,
-          avoidTollRoads,
-          distance: res.data.distance,
-          duration: res.data.duration,
-        });
       } else {
         toast.error("Impossible de calculer l'itinéraire : " + (res.message || ""));
       }
@@ -331,7 +261,11 @@ export default function MapComponent({
         toast.success(`Vous avez ${reaction === "Like" ? "approuvé" : "réfuté"} cet incident`);
         loadIncidents(); // Recharger les incidents pour mettre à jour les compteurs
       } else {
-        toast.error("Erreur lors de la réaction à l'incident");
+        if (response.message.includes("connecté")) {
+          toast.error("Vous devez être connecté pour réagir aux incidents");
+        } else {
+          toast.error("Erreur lors de la réaction à l'incident");
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la réaction à l'incident:", error);
@@ -339,127 +273,70 @@ export default function MapComponent({
     }
   };
 
-  // Icône d'incident custom
-  const createIncidentIcon = (type: string) => {
-    const typeColors: Record<string, string> = {
-      Crash: "#ff4d4d", // rouge
-      Bottling: "#ff9900", // orange
-      ClosedRoad: "#cc0000", // rouge foncé
-      PoliceControl: "#0066ff", // bleu
-      Obstacle: "#ffcc00", // jaune
-    };
-
-    const color = typeColors[type] || "#ff4d4d";
-
-    return L.divIcon({
-      className: "custom-incident-marker",
-      html: `<div style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap;">${
-        incidentTypeLabels[type as IncidentType] || type
-      }</div>`,
-      iconSize: [40, 20],
-      iconAnchor: [20, 10],
-    });
+  const incidentIconUrls: Record<string, string> = {
+    Crash: "icons/crash.svg",
+    Bottling: "icons/bottling.svg",
+    ClosedRoad: "icons/closed-road.svg",
+    PoliceControl: "/icons/police-control.svg",
+    Obstacle: "icons/obstacle.svg",
   };
 
-  // Icône de marqueur personnalisée
-  const createMarkerIcon = (isStart = false) => {
-    return L.icon({
-      iconUrl: isStart ? "/img/marker-start.png" : "/img/marker-end.png",
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowUrl: "/img/marker-shadow.png",
-      shadowSize: [41, 41],
+  function createIncidentIcon(type: string) {
+    const url = incidentIconUrls[type] || incidentIconUrls["Crash"];
+    return new L.Icon({
+      iconUrl: url,
+      iconRetinaUrl: url,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16],
+      shadowUrl: "",
     });
+  }
+  const startIconUrl = "icons/departure.svg";
+  const endIconUrl = "icons/arrival.svg";
+
+  function createStartMarkerIcon() {
+    return new L.Icon({
+      iconUrl: startIconUrl,
+      iconRetinaUrl: startIconUrl,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16],
+      shadowUrl: "",
+    });
+  }
+
+  function createEndMarkerIcon() {
+    return new L.Icon({
+      iconUrl: endIconUrl,
+      iconRetinaUrl: endIconUrl,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16],
+      shadowUrl: "",
+    });
+  }
+
+  // Handle route calculation
+  const handleCalculateRoute = () => {
+    if (departure && arrival) {
+      calculateRouteAndDisplay(departure, arrival);
+    } else {
+      toast.error("Veuillez définir un point de départ et d'arrivée");
+    }
+  };
+
+  // Handle save route
+  const handleSaveRoute = () => {
+    if (departure && arrival && calculatedRoute) {
+      setShowSaveModal(true);
+    } else {
+      toast.error("Veuillez d'abord calculer un itinéraire");
+    }
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
-      {/* Barre recherche & options */}
-      <div className="p-4 bg-white shadow-sm z-[49]">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex flex-1 gap-2 relative">
-            <Input
-              type="text"
-              className="flex-1 px-4 py-2 border rounded-md"
-              placeholder="Rechercher un lieu…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <Button className="rounded-md px-4 py-2 font-normal" onClick={handleSearch} isLoading={isSearching}>
-              Rechercher
-            </Button>
-
-            {/* Résultats de recherche */}
-            {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white shadow-lg rounded-md p-2 max-h-72 overflow-y-auto z-20">
-                {searchResults.map((result, index) => (
-                  <div
-                    key={index}
-                    className="p-2 hover:bg-gray-100 rounded flex max-lg:flex-col lg:justify-between lg:items-center"
-                  >
-                    <div className="font-medium">{result.name}</div>
-                    <div className="flex gap-2 mt-1">
-                      <button
-                        onClick={() => selectSearchResult(result, true)}
-                        className="px-2 py-1 bg-blue-100 rounded text-sm hover:bg-blue-200"
-                      >
-                        Départ
-                      </button>
-                      <button
-                        onClick={() => selectSearchResult(result, false)}
-                        className="px-2 py-1 bg-green-100 rounded text-sm hover:bg-green-200"
-                      >
-                        Arrivée
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Select value={travelMode} onValueChange={(value) => setTravelMode(value as RouteInfo["travelMode"])}>
-              <SelectTrigger>
-                <SelectValue placeholder="Transport" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="car">Voiture</SelectItem>
-                <SelectItem value="bike">Vélo</SelectItem>
-                <SelectItem value="foot">À pied</SelectItem>
-                <SelectItem value="train">Transport</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={routeType} onValueChange={(value) => setRouteType(value as RouteInfo["routeType"])}>
-              <SelectTrigger>
-                <SelectValue placeholder="Type de route" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fastest">Le plus rapide</SelectItem>
-                <SelectItem value="shortest">Le plus court</SelectItem>
-                <SelectItem value="eco">Écologique</SelectItem>
-                <SelectItem value="thrilling">Touristique</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="toll"
-                checked={avoidTollRoads}
-                onCheckedChange={(value) => setAvoidTollRoads(value as boolean)}
-              />
-              <label
-                htmlFor="tool"
-                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Éviter péages
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="w-full h-full flex flex-col relative">
       {/* Carte */}
       <div className="flex-1 relative z-10">
         {typeof window !== "undefined" && (
@@ -470,22 +347,22 @@ export default function MapComponent({
             ref={mapRef}
           >
             <MapEvents onClick={handleMapClick} onBoundsChange={loadIncidents} />
-            <TileLayer
-              attribution="&copy; OpenStreetMap contributors"
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
 
+            <TileLayer
+              attribution="Google Maps"
+              url="https://www.google.cn/maps/vt?lyrs=m@189&gl=cn&x={x}&y={y}&z={z}"
+            />
             {/* Points départ/arrivée */}
-            {departure && DefaultIcon && (
-              <Marker position={[departure.position.lat, departure.position.lng]} icon={createMarkerIcon(true)}>
+            {departure && (
+              <Marker position={[departure.position.lat, departure.position.lng]} icon={createStartMarkerIcon()}>
                 <Popup>
                   <strong>Départ:</strong> {departure.name}
                 </Popup>
               </Marker>
             )}
 
-            {arrival && DefaultIcon && (
-              <Marker position={[arrival.position.lat, arrival.position.lng]} icon={createMarkerIcon(false)}>
+            {arrival && (
+              <Marker position={[arrival.position.lat, arrival.position.lng]} icon={createEndMarkerIcon()}>
                 <Popup>
                   <strong>Arrivée:</strong> {arrival.name}
                 </Popup>
@@ -548,17 +425,25 @@ export default function MapComponent({
         )}
       </div>
 
-      {/* Panneau info */}
-      <div className="p-4 bg-white shadow-md">
-        <div className="flex flex-col md:flex-row gap-4 justify-between">
-          <div>
-            <p>
-              <strong>Départ:</strong> {departure?.name || "Non défini"}
-            </p>
-            <p>
-              <strong>Arrivée:</strong> {arrival?.name || "Non défini"}
-            </p>
-          </div>
+      {/* Options de recherche et configuration */}
+      <div className="p-4 bg-white/95 backdrop-blur shadow-sm z-[49] absolute bottom-4 inset-x-4 md:bottom-8 md:inset-x-8 rounded-xl">
+        <div className="flex flex-col md:flex-row gap-4">
+          <SearchBarSection
+            onLocationSelect={handleLocationSelect}
+            userLocation={userLocation}
+            onCalculateRoute={handleCalculateRoute}
+            departureValue={departure?.name || ""}
+            arrivalValue={arrival?.name || ""}
+            isCalculatingRoute={isLoadingRoute}
+            travelMode={travelMode}
+            setTravelMode={setTravelMode}
+            routeType={routeType}
+            setRouteType={setRouteType}
+            avoidTollRoads={avoidTollRoads}
+            setAvoidTollRoads={setAvoidTollRoads}
+            calculatedRoute={calculatedRoute}
+            handleSaveRoute={handleSaveRoute}
+          />
         </div>
       </div>
 
@@ -571,7 +456,21 @@ export default function MapComponent({
         />
       )}
 
-      {/* Style pour l'animation du marqueur de position utilisateur */}
+      {/* Modal de sauvegarde d'itinéraire */}
+      {showSaveModal && departure && arrival && calculatedRoute && (
+        <MapSaveRouteModal
+          isOpen={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          routeInfo={{
+            departure,
+            arrival,
+            distance: calculatedRoute.distance,
+            duration: calculatedRoute.duration,
+            travelMode,
+          }}
+        />
+      )}
+
       <style jsx global>{`
         .pulse-animation {
           box-shadow: 0 0 0 rgba(0, 121, 255, 0.4);

@@ -202,16 +202,19 @@ export const reactToIncident = async (incidentId: string, reaction: ReactionType
 
 // =================================================================================================================
 
+/**
+ * Supprime un incident (admin seulement)
+ */
 export const deleteIncident = async (incidentId: string): Promise<ApiResponse<Incident>> => {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("employeeSession")?.value;
+    const adminToken = cookieStore.get("adminToken")?.value;
 
-    if (!token) {
+    if (!adminToken) {
       return {
         success: false,
-        message: "Vous devez être connecté pour supprimer un incident",
-        error: "Vous devez être connecté pour supprimer un incident",
+        message: "Vous devez être connecté en tant qu'administrateur pour supprimer un incident",
+        error: "Vous devez être connecté en tant qu'administrateur pour supprimer un incident",
       };
     }
 
@@ -219,14 +222,14 @@ export const deleteIncident = async (incidentId: string): Promise<ApiResponse<In
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${adminToken}`,
       },
     });
 
     if (!response.ok) {
       return {
         success: false,
-        message: "Une erreur est survenue lors de la suppression de l'incident",
+        message: `Une erreur est survenue lors de la suppression de l'incident (${response.status})`,
         error: `Erreur lors de la suppression de l'incident (${response.status}): ${response.statusText}`,
       };
     }
