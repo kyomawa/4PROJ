@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Authentication Service is responsible for handling authentication and token management in the Laynz application. This service:
+The Authentication Service is responsible for handling authentication and token management in the Supmap application. This service:
 
 - Authenticates users against the User Service
 - Generates JWT (JSON Web Tokens) for authenticated users

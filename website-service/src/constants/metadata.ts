@@ -10,24 +10,24 @@ export const baseUrl = "http://localhost";
 export const jsonLd: JsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Laynz",
+  name: "Supmap",
   url: `${baseUrl}/`,
   logo: `${baseUrl}/icon/logo.svg`,
   image: `${baseUrl}/img/websiteimg.png`,
-  description: "Laynz...",
+  description: "Supmap - Redécouvrez le monde de la route.",
 };
 
 export const commonMetadata: Metadata = {
-  applicationName: "Laynz",
+  applicationName: "Supmap",
   creator: "Bryan Cellier",
   metadataBase: new URL(`${baseUrl}/`),
   title: {
-    template: "%s - Laynz",
-    default: "Laynz",
+    template: "%s - Supmap",
+    default: "Supmap",
   },
   authors: { name: "Bryan Cellier", url: `https://bryancellier.fr/` },
   openGraph: {
-    title: "Laynz...",
+    title: "Supmap",
     type: "website",
     url: `${baseUrl}/`,
     images: [
@@ -35,23 +35,23 @@ export const commonMetadata: Metadata = {
         url: `${baseUrl}/img/websiteimg.png`,
         width: "1200",
         height: "630",
-        alt: "Laynz - Redécouvrez le monde de la route.",
+        alt: "Supmap - Redécouvrez le monde de la route.",
       },
     ],
-    description: "...",
+    description: "Supmap - Redécouvrez le monde de la route.",
     siteName: "Akkor Hotel",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@laynz",
-    title: "Laynz - Redécouvrez le monde de la route.",
-    description: "...",
-    creator: "@laynz",
+    site: "@Supmap",
+    title: "Supmap - Redécouvrez le monde de la route.",
+    description: "Supmap - Redécouvrez le monde de la route.",
+    creator: "@Supmap",
     images: {
       width: "1200",
       height: "630",
       url: `${baseUrl}/img/websiteimg.png`,
-      alt: "Laynz - Redécouvrez le monde de la route.",
+      alt: "Supmap - Redécouvrez le monde de la route.",
     },
   },
 };

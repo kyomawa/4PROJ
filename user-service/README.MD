@@ -2,7 +2,7 @@
 
 ## Overview
 
-The User Service manages all user-related operations in the Laynz application, including:
+The User Service manages all user-related operations in the Supmap application, including:
 
 - User registration and account management
 - User profile information storage and retrieval

@@ -86,7 +86,7 @@ The mobile app requires the following environment variables:
 
 ### Running with Docker Compose
 
-The Laynz application is designed to run as a microservices architecture. The mobile app service is part of this architecture and should be launched using Docker Compose:
+The Supmap application is designed to run as a microservices architecture. The mobile app service is part of this architecture and should be launched using Docker Compose:
 
 1. Clone the repository containing all microservices
 2. Copy `.env.example` to `.env` and configure the required variables:
@@ -208,7 +208,7 @@ npx expo build:ios      # For iOS (requires Apple Developer account)
 Docker logs can be helpful for troubleshooting:
 
 ```bash
-docker logs -f laynz-mobile-app-service-1
+docker logs -f Supmap-mobile-app-service-1
 ```
 
 ## Contributing

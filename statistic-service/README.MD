@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Statistics Service is responsible for collecting, analyzing, and presenting statistical data from the Laynz application. This service:
+The Statistics Service is responsible for collecting, analyzing, and presenting statistical data from the Supmap application. This service:
 
 - Collects and analyzes user registration data
 - Tracks traffic incident trends

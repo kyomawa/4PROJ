@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Alert Service is responsible for real-time traffic alert distribution to Laynz application users. This service uses SignalR to establish persistent connections with clients and send them immediate notifications about incidents near their route or current position.
+The Alert Service is responsible for real-time traffic alert distribution to Supmap application users. This service uses SignalR to establish persistent connections with clients and send them immediate notifications about incidents near their route or current position.
 
 ## Technologies
 

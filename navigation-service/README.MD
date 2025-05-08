@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Navigation Service is a core component of the Laynz application, responsible for handling navigation-related functionality including:
+The Navigation Service is a core component of the Supmap application, responsible for handling navigation-related functionality including:
 
 - Route calculation between points with real-time traffic consideration
 - Location geocoding (converting text addresses to geographic coordinates)

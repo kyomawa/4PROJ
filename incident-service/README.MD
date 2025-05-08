@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Incident Service is responsible for managing traffic incidents in the Laynz application. It handles:
+The Incident Service is responsible for managing traffic incidents in the Supmap application. It handles:
 
 - Creation of new incident reports (accidents, bottlenecks, closed roads, etc.)
 - Retrieval of incidents within geographic areas

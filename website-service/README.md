@@ -1,10 +1,10 @@
-# Laynz - Web Navigation Application
+# Supmap - Web Navigation Application
 
 ## Overview
 
-Laynz is a real-time web navigation application similar to Waze, allowing users to receive information about traffic, accidents, and obstacles. The application also enables users to report incidents and receive optimized routes based on current traffic conditions.
+Supmap is a real-time web navigation application similar to Waze, allowing users to receive information about traffic, accidents, and obstacles. The application also enables users to report incidents and receive optimized routes based on current traffic conditions.
 
-This application is part of a microservice ecosystem for the Laynz project, including:
+This application is part of a microservice ecosystem for the Supmap project, including:
 
 - A web application (this repository)
 - A mobile application
@@ -37,8 +37,8 @@ This application is part of a microservice ecosystem for the Laynz project, incl
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your-username/laynz-web.git
-cd laynz-web
+git clone https://github.com/your-username/Supmap-web.git
+cd Supmap-web
 ```
 
 2. Install dependencies:
