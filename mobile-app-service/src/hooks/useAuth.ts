@@ -10,11 +10,16 @@ import {
   SignUpData,
 } from "../lib/api/auth";
 import { updateUserProfile, deleteUserAccount as apiDeleteAccount, UpdateUserData } from "../lib/api/user";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// Guest mode constants
+const GUEST_MODE_KEY = "isGuestMode";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   // ========================================================================================================
 
@@ -22,6 +27,16 @@ export function useAuth() {
     const loadUser = async () => {
       try {
         setLoading(true);
+
+        // Check if guest mode is active
+        const guestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
+        if (guestMode === "true") {
+          setIsGuest(true);
+          setIsLoggedIn(false);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
 
         const auth = await isAuthenticated();
         setIsLoggedIn(auth);
@@ -42,50 +57,92 @@ export function useAuth() {
 
   // ========================================================================================================
 
-  const login = useCallback(async (data: LoginData) => {
+  const setGuestMode = useCallback(async (enabled: boolean): Promise<boolean> => {
     try {
-      setLoading(true);
-      const response = await apiLogin(data);
-
-      if (response) {
-        setUser(response.data);
-        setIsLoggedIn(true);
+      if (enabled) {
+        await AsyncStorage.setItem(GUEST_MODE_KEY, "true");
+        setIsGuest(true);
+        setIsLoggedIn(false);
+        setUser(null);
+        return true;
+      } else {
+        await AsyncStorage.removeItem(GUEST_MODE_KEY);
+        setIsGuest(false);
         return true;
       }
-
-      return false;
     } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
+      console.error("Erreur lors de la configuration du mode invité:", error);
       return false;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   // ========================================================================================================
 
-  const register = useCallback(async (data: SignUpData) => {
-    try {
-      setLoading(true);
-      const response = await apiRegister(data);
+  const login = useCallback(
+    async (data: LoginData) => {
+      try {
+        // If in guest mode, exit guest mode first
+        if (isGuest) {
+          await setGuestMode(false);
+        }
 
-      if (response) {
-        return true;
+        setLoading(true);
+        const response = await apiLogin(data);
+
+        if (response) {
+          setUser(response.data);
+          setIsLoggedIn(true);
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error("Erreur lors de la connexion:", error);
+        return false;
+      } finally {
+        setLoading(false);
       }
+    },
+    [isGuest, setGuestMode]
+  );
 
-      return false;
-    } catch (error) {
-      console.error("Erreur lors de l'inscription:", error);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // ========================================================================================================
+
+  const register = useCallback(
+    async (data: SignUpData) => {
+      try {
+        // If in guest mode, exit guest mode first
+        if (isGuest) {
+          await setGuestMode(false);
+        }
+
+        setLoading(true);
+        const response = await apiRegister(data);
+
+        if (response) {
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error("Erreur lors de l'inscription:", error);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isGuest, setGuestMode]
+  );
 
   // ========================================================================================================
 
   const updateProfile = useCallback(
     async (data: UpdateUserData) => {
+      // Guest users can't update profiles
+      if (isGuest) {
+        return false;
+      }
+
       try {
         setLoading(true);
 
@@ -108,12 +165,17 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [user]
+    [user, isGuest]
   );
 
   // ========================================================================================================
 
   const deleteAccount = useCallback(async () => {
+    // Guest users can't delete accounts
+    if (isGuest) {
+      return false;
+    }
+
     try {
       setLoading(true);
 
@@ -136,13 +198,19 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isGuest]);
 
   // ========================================================================================================
 
   const logout = useCallback(async () => {
     try {
       setLoading(true);
+
+      if (isGuest) {
+        await setGuestMode(false);
+        return true;
+      }
+
       await apiLogout();
       setUser(null);
       setIsLoggedIn(false);
@@ -153,7 +221,7 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isGuest, setGuestMode]);
 
   // ========================================================================================================
 
@@ -161,11 +229,13 @@ export function useAuth() {
     user,
     loading,
     isLoggedIn,
+    isGuest,
     login,
     register,
     logout,
     updateProfile,
     deleteAccount,
+    setGuestMode,
   };
 }
 
