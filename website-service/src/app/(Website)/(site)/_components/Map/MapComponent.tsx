@@ -349,8 +349,8 @@ export default function MapComponent({
             <MapEvents onClick={handleMapClick} onBoundsChange={loadIncidents} />
 
             <TileLayer
-              attribution="Google Maps"
-              url="https://www.google.cn/maps/vt?lyrs=m@189&gl=cn&x={x}&y={y}&z={z}"
+              attribution="Dont know"
+              url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager/{z}/{x}/{y}.png"
             />
             {/* Points départ/arrivée */}
             {departure && (

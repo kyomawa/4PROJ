@@ -12,7 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ChevronsUpDown } from "lucide-react";
 
 export const InputComponent = cn(Input, "rounded-e-lg rounded-s-none");
 
@@ -66,11 +66,13 @@ const CountrySelect = ({ disabled, value, onChange, options }: CountrySelectProp
         <Button
           type="button"
           variant={"outline"}
-          className={cn("flex gap-1 rounded-e-none rounded-s-lg px-3")}
+          className={cn("flex gap-1 rounded-e-none rounded-s-lg px-2")}
           disabled={disabled}
         >
-          <FlagComponent country={value} countryName={value} />
-          {/* <ChevronsUpDown className={cn("-mr-2 size-4 opacity-50", disabled ? "hidden" : "opacity-100")} /> */}
+          <div className="flex gap-1">
+            <FlagComponent country={value} countryName={value} />
+            <ChevronsUpDown className={cn("-mr-1 size-4 opacity-50", disabled ? "hidden" : "opacity-100")} />
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">

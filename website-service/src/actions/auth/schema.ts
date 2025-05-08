@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const registerSchema = z
   .object({
-    name: z
+    username: z
       .string()
       .toLowerCase()
       .trim()

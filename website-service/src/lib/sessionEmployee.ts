@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 
 // =========================================================================================================================================
 
-type SessionPayload = {};
+type SessionPayload = {
+  id?: string;
+  username?: string;
+  email?: string;
+  role?: string;
+};
 
 // =========================================================================================================================================
 
@@ -15,13 +20,8 @@ export async function getEmployeeSession(): Promise<SessionPayload | null> {
 
   if (!session) return null;
 
-  // TODO: ADAPT TO C# APIS
   return JSON.parse(session);
 }
-
-// =========================================================================================================================================
-
-export async function createEmployeeSession(userId: string, role: string) {}
 
 // =========================================================================================================================================
 

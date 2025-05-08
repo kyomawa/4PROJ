@@ -216,3 +216,53 @@ export const changePassword = async (userId: string, formData: FormData): Promis
     };
   }
 };
+
+/**
+ * Supprime un compte utilisateur
+ */
+export const deleteAccount = async (userId: string): Promise<ApiResponse<null>> => {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("userToken")?.value;
+
+    if (!token) {
+      return {
+        success: false,
+        message: "Vous devez être connecté pour supprimer votre compte",
+        error: "Non authentifié",
+      };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/user/user/${userId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: "Une erreur est survenue lors de la suppression du compte",
+        error: `Erreur ${response.status}: ${response.statusText}`,
+      };
+    }
+
+    cookieStore.delete("userToken");
+    cookieStore.delete("session");
+
+    return {
+      success: true,
+      message: "Votre compte a été supprimé avec succès",
+      data: null,
+    };
+  } catch (error) {
+    console.error("Erreur lors de la suppression du compte:", error);
+    return {
+      success: false,
+      message: "Une erreur est survenue lors de la suppression du compte",
+      error: error instanceof Error ? error.message : "Erreur inconnue",
+    };
+  }
+};

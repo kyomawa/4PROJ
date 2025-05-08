@@ -47,12 +47,26 @@ export async function register(formData: FormData): Promise<ApiResponse<null>> {
 
     return {
       success: false,
-      message: `Erreur lors de l'inscription (${response.status}): ${response.statusText}`,
-      error: "Une erreur est survenue lors de l'inscription",
+      message: "Une erreur est survenue lors de l'inscription",
+      error: `Erreur lors de l'inscription (${response.status}): ${response.statusText}`,
     };
   }
 
   await response.json();
+
+  const loginFormData = new FormData();
+  loginFormData.append("email", data.email);
+  loginFormData.append("password", data.password);
+
+  const loginResult = await login(loginFormData);
+
+  if (!loginResult.success) {
+    return {
+      success: true,
+      message: "Inscription réussie mais la connexion automatique a échoué. Veuillez vous connecter manuellement.",
+      data: null,
+    };
+  }
 
   return {
     success: true,

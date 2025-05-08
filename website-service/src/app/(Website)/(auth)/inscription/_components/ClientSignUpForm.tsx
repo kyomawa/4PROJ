@@ -13,9 +13,8 @@ import { useState } from "react";
 import { serialize } from "object-to-formdata";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { registerSchema } from "../../../../actions/authentication/schema";
-import { register } from "../../../../actions/authentication/action";
-import FormInputPhoneNumberField from "@/components/FormFields/FormInputPhoneNumberField";
+import { registerSchema } from "@/actions/auth/schema";
+import { register } from "@/actions/auth/action";
 
 // =============================================================================
 
@@ -25,9 +24,9 @@ export default function ClientSignUpForm() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
-      telephone: "",
+      phoneNumber: "",
       password: "",
       confirmPassword: "",
     },
@@ -36,6 +35,7 @@ export default function ClientSignUpForm() {
   const onSubmit = async (values: z.infer<typeof registerSchema>) => {
     setIsLoading(true);
     const toastId = toast.loading("Inscription en cours.");
+    console.log(values);
     const formData = serialize({ ...values }, { nullsAsUndefineds: true });
     const { success, message } = await register(formData);
 
@@ -54,7 +54,7 @@ export default function ClientSignUpForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full sm:w-4/5 xl:w-[65%] space-y-10">
         <div className="space-y-5">
-          <FormInputField form={form} name="name" title="Nom" placeholder="Votre nom" variant="line" isRequired />
+          <FormInputField form={form} name="username" title="Nom" placeholder="Votre nom" variant="line" isRequired />
           <FormInputField
             form={form}
             name="email"
@@ -63,13 +63,7 @@ export default function ClientSignUpForm() {
             variant="line"
             isRequired
           />
-          <FormInputPhoneNumberField
-            form={form}
-            name="telephone"
-            title="Téléphone"
-            placeholder="Votre téléphone"
-            isRequired
-          />
+          <FormInputField form={form} name="phoneNumber" title="Téléphone" placeholder="Votre téléphone" isRequired />
           <FormPasswordField
             form={form}
             name="password"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateUserProfile, UserData } from "@/actions/user/action";
+import { deleteAccount, updateUserProfile, UserData } from "@/actions/user/action";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,6 @@ import FormPasswordField from "@/components/FormFields/FormPasswordField";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import FormInputPhoneNumberField from "@/components/FormFields/FormInputPhoneNumberField";
 import { UserIcon } from "lucide-react";
 import { toE164 } from "@/utils/phone";
 import {
@@ -45,8 +44,9 @@ type ProfileProps = {
 
 export default function Profile({ data }: ProfileProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const router = useRouter();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -88,6 +88,25 @@ export default function Profile({ data }: ProfileProps) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      const response = await deleteAccount(data.id);
+
+      if (response.success) {
+        toast.success(response.message);
+        router.push("/");
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression du compte:", error);
+      toast.error("Une erreur inattendue est survenue lors de la suppression du compte");
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
@@ -113,15 +132,7 @@ export default function Profile({ data }: ProfileProps) {
               type="email"
               isRequired
             />
-
-            <FormInputPhoneNumberField
-              form={form}
-              name="phoneNumber"
-              title="Téléphone"
-              placeholder="Votre numéro de téléphone"
-              isRequired
-            />
-
+            <FormInputField form={form} name="phoneNumber" title="Téléphone" placeholder="Votre téléphone" isRequired />
             <FormPasswordField
               form={form}
               name="currentPassword"
@@ -167,7 +178,9 @@ export default function Profile({ data }: ProfileProps) {
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annuler</AlertDialogCancel>
                   <AlertDialogAction asChild>
-                    <Button variant="destructive">Supprimer définitivement</Button>
+                    <Button variant="destructive" onClick={handleDeleteAccount} isLoading={isDeletingAccount}>
+                      Supprimer définitivement
+                    </Button>
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

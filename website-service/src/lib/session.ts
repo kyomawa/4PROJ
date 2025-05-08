@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 
 // =========================================================================================================================================s
 
-type SessionPayload = {};
+type SessionPayload = {
+  id?: string;
+  username?: string;
+  email?: string;
+  role?: string;
+};
 
 // =========================================================================================================================================
 
@@ -14,13 +19,8 @@ export async function getSession(): Promise<SessionPayload | null> {
   const session = cookiesStore.get("session")?.value;
   if (!session) return null;
 
-  // TODO: ADAPT TO C# APIS
   return JSON.parse(session);
 }
-
-// =========================================================================================================================================
-
-export async function createSession(userId: string) {}
 
 // =========================================================================================================================================
 
