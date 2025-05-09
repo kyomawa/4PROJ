@@ -7,7 +7,7 @@ RUN apk add --no-cache bash git wget
 
 COPY package*.json ./
 ENV NODE_ENV=production
-RUN npm ci --legacy-peer-deps
+RUN npm i --legacy-peer-deps
 
 COPY . .
 
