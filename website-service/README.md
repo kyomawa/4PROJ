@@ -1,122 +1,202 @@
-# Supmap - Web Navigation Application
+# Supmap Web Service
 
 ## Overview
 
-Supmap is a real-time web navigation application similar to Waze, allowing users to receive information about traffic, accidents, and obstacles. The application also enables users to report incidents and receive optimized routes based on current traffic conditions.
+The Supmap Web Service is the frontend component of the Supmap application, a real-time navigation system similar to Waze. It provides an interactive web interface for users to:
 
-This application is part of a microservice ecosystem for the Supmap project, including:
+- View real-time maps with traffic data and incidents
+- Search for and calculate optimal routes between locations
+- Report traffic incidents and obstacles
+- Validate or refute incidents reported by other users
+- Save and manage favorite routes
+- View detailed statistics (for administrators)
 
-- A web application (this repository)
-- A mobile application
-- Backend APIs (navigation, incidents, users, authentication)
-
-## Main Features
-
-- 🗺️ **Real-time Navigation**: Calculation of optimized routes based on traffic
-- 🚧 **Incident Reporting**: Users can report accidents, traffic jams, road closures, etc.
-- 👍 **Community Validation**: Users can confirm or deny reported incidents
-- 🔄 **Automatic Route Recalculation**: In case of traffic jams or incidents
-- 💰 **Route Personalization**: Options to avoid tolls, highways, etc.
+This service is part of a microservices ecosystem that includes multiple backend services for authentication, user management, navigation, incident tracking, alerting, and statistics.
 
 ## Technologies
 
-- **Frontend**: Next.js 15 (React 19), TypeScript
-- **Styling**: TailwindCSS, Shadcn UI
-- **Mapping**: Google Maps API
-- **Authentication**: JWT via authentication service
-- **API**: Communication with REST microservices
+- **Framework**: Next.js 15 (React 19)
+- **Language**: TypeScript
+- **Styling**: TailwindCSS, Shadcn UI components
+- **State Management**: React hooks and Server Actions
+- **Mapping**: Leaflet
+- **Forms**: React Hook Form with Zod validation
+- **Charts**: Recharts
+- **Authentication**: JWT-based auth via Auth Service
+- **API Communication**: Server-side fetch with Next.js Server Actions
+
+## Features
+
+### Public User Features
+
+- **Interactive Map**: Real-time navigation map with incident markers
+- **Route Planning**: Calculate routes with various parameters (mode of transport, route type, toll avoidance)
+- **Incident Reporting**: Report accidents, traffic jams, road closures, and other obstacles
+- **Community Validation**: Like or dislike incidents to confirm or refute their validity
+- **Route Optimization**: Automatically recalculate routes based on traffic conditions
+- **Itinerary Management**: Save, retrieve, and reuse favorite routes
+- **User Profile**: Manage personal information and preferences
+
+### Administrative Features
+
+- **Incident Management**: View and manage all reported incidents
+- **Statistics Dashboard**: Visualize user registrations, incident types, and congestion patterns
+- **User Analytics**: Monitor platform usage and growth
 
 ## Prerequisites
 
-- Node.js 20+
-- Docker and Docker Compose (for complete environment)
-- Google Maps API key with Maps JavaScript API enabled
+- Node.js 20.x or newer
+- Docker and Docker Compose (for running the full application stack)
+- Git
 
-## Installation
+## Installation and Setup
 
-1. Clone this repository:
+### Local Development Setup
 
-```bash
-git clone https://github.com/your-username/Supmap-web.git
-cd Supmap-web
-```
+1. Clone the repository:
 
-2. Install dependencies:
+   ```bash
+   git clone https://your-repository-url.git
+   cd supmap
+   ```
 
-```bash
-npm install
-```
+2. Install website-service dependencies:
 
-3. Create a `.env.local` file based on `.env.example`:
+   ```bash
+   cd website-service
+   npm install
+   ```
 
-```bash
-cp .env.example .env.local
-```
+3. Create a `.env` file based on `.env.example`:
 
-4. Configure your Google Maps API key and other variables in `.env.local`
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Configure the `.env` file with appropriate values.
 
 5. Start the development server:
-
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
-## Installation with Docker
+### Using Docker Compose (Development)
 
-To run the complete application with all services, use Docker Compose:
+To run the complete application with all services:
 
 ```bash
-# In the root of the main project (where docker-compose.yml is located)
-docker compose up --build
+# From the project root directory
+docker compose watch
+```
+
+This will start all services including the website-service with live reload capabilities. The application will be available at [http://localhost](http://localhost).
+
+## Docker
+
+### Development
+
+The development Docker setup uses:
+
+- Node.js 23-alpine image
+- Hot-reloading for development
+- Volume mounts for source files
+
+```bash
+# Build and run development container
+docker build -f Dockerfile.dev -t supmap-website-dev .
+docker run -p 3000:3000 -v $(pwd):/app supmap-website-dev
+```
+
+### Production
+
+For production deployment, use the Docker Compose production configuration:
+
+```bash
+# From the project root directory
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## Project Structure
 
 ```
-src/
-├── actions/             # Server actions for APIs
-├── app/                 # Next.js application structure
-│   ├── (Website)        # General site layout
-│   │   ├── (auth)       # Authentication pages (login, signup)
-│   │   ├── (site)       # Main site pages (map, profile, etc.)
-│   │   └── layout.tsx   # Common layout for all pages
-├── components/          # Reusable components
-├── constants/           # Constants and static data
-├── lib/                 # Libraries and utilities
-│   ├── api-client.ts    # API client for backend communication
-│   └── cookies.ts       # Utilities for client-side cookie management
-├── types/               # TypeScript types
-└── globals.css          # Global styles with TailwindCSS
+website-service/
+├── src/
+│   ├── actions/            # Server Actions for API communication
+│   │   ├── auth/           # Authentication actions
+│   │   ├── incident/       # Incident reporting and management
+│   │   ├── navigation/     # Route calculation and management
+│   │   ├── statistics/     # Statistics and analytics
+│   │   └── user/           # User profile management
+│   ├── app/                # Next.js application routes
+│   │   ├── (Website)/      # Public website routes
+│   │   │   ├── (auth)/     # Authentication pages (login/signup)
+│   │   │   ├── (site)/     # Main site pages (map, profile, etc.)
+│   │   │   └── layout.tsx  # Website layout
+│   │   ├── (WebApp)/       # Admin panel routes
+│   │   │   └── panel/      # Admin dashboard and tools
+│   ├── components/         # Reusable React components
+│   │   ├── ui/             # UI components (buttons, forms, etc.)
+│   │   └── FormFields/     # Form input components
+│   ├── constants/          # Application constants
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utility functions and services
+│   ├── types/              # TypeScript type definitions
+│   └── utils/              # Helper functions
+└── public/                 # Static assets
+    └── icons/              # Map and UI icons
 ```
 
-## Points to Note
+## Configuration
 
-- The application uses Google Maps and requires a valid API key
-- Communication with microservices is done through REST APIs defined in `.env.local`
-- All backend services must be running for full functionality
+The application requires the following environment variables:
 
-## Development and Testing
+```
+# API Base URLs
+API_BASE_URL=http://traefik  # Internal service communication
+
+# External API Keys (if applicable)
+# No external API keys are required for basic functionality
+
+# Development Settings
+HOST_PORT_TRAEFIK=80         # Port for Traefik
+HOST_PORT_TRAEFIK_DASHBOARD=8080  # Port for Traefik dashboard
+```
+
+## Available Scripts
 
 ```bash
 # Development
-npm run dev
+npm run dev         # Start development server
 
-# Build for production
-npm run build
+# Build
+npm run build       # Build for production
 
-# Start in production mode
-npm run start
+# Production
+npm start           # Start production server
 
 # Linting
-npm run lint
+npm run lint        # Run ESLint
 ```
+
+## Integration with Backend Services
+
+The web service communicates with several backend microservices:
+
+- **Auth Service**: User authentication and JWT token management
+- **User Service**: User profile management
+- **Navigation Service**: Route calculation and optimization
+- **Incident Service**: Traffic incident reporting and retrieval
+- **Alert Service**: Real-time notifications for traffic conditions
+- **Statistics Service**: Data analytics for the admin dashboard
+
+All service URLs are configured in `src/constants/api.ts`.
 
 ## Contributing
 
-Check the contributing guide in [CONTRIBUTING.md](../CONTRIBUTING.md) at the root of the project.
+Please follow the project's coding standards and commit message conventions. Pull requests should include appropriate tests and documentation updates.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](../LICENSE) for more details.
+This project is proprietary and confidential. All rights reserved.
