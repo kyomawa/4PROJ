@@ -96,6 +96,32 @@ await connection.invoke("GetItineraryIncidents", {
 });
 ```
 
+## API Endpoints
+
+### Health Controller
+
+#### `GET /health`
+
+Checks the health status of the service.
+
+**Responses:**
+
+- `200 OK`: Returns a simple status message indicating the service is healthy
+
+**Usage Example:**
+
+```bash
+curl -X GET http://alert.localhost/health
+```
+
+**Response:**
+
+```json
+{
+  "status": "healthy"
+}
+```
+
 ## Rate Limiting Protection
 
 The service implements a rate limiting filter (`RateLimitHubFilter`) that restricts calls to once every 10 seconds per connection, to protect the service from excessive calls.
