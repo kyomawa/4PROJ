@@ -180,7 +180,7 @@ services:
       USER_DB_PSW: ${USER_DB_PSW}
       ASPNETCORE_ENVIRONMENT: Production
     healthcheck:
-      test: ["CMD", "wget -q --spider http://localhost:8080/health || exit 0"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -301,29 +301,25 @@ services:
     networks:
       - 4proj_prod
 
-  # mobile-app-service:
-  #   build:
-  #     context: ./mobile-app-service
-  #     dockerfile: Dockerfile
-  #   stdin_open: true
-  #   tty: true
-  #   restart: unless-stopped
-  #   environment:
-  #     - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-  #     - NODE_ENV=production
-  #     - EXPO_PUBLIC_API_BASE_URL=${EXPO_PUBLIC_API_BASE_URL}
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -q --spider http://localhost:19000 || exit 0"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
-  #     start_period: 20s
-  #   ports:
-  #     - "8081:8081" # Metro bundler HTTP
-  #     - "19000:19000" # Expo
-  #     - "19001:19001" # Expo DevTools
-  #   networks:
-  #     - 4proj_prod
+  mobile-app-service:
+    build:
+      context: ./mobile-app-service
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - NODE_ENV=production
+      - EXPO_PUBLIC_API_BASE_URL=${EXPO_PUBLIC_API_BASE_URL}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:19000 || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - 4proj_prod
 
   website-service:
     build:
