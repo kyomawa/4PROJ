@@ -46,7 +46,7 @@ services:
       MYSQL_USER: ${INCIDENT_DB_USER}
       MYSQL_PASSWORD: ${INCIDENT_DB_PSW}
     volumes:
-      - 4proj-incident-database:/var/lib/mysql
+      - 4proj_prod-incident-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
       interval: 10s
@@ -65,7 +65,7 @@ services:
       MYSQL_USER: ${USER_DB_USER}
       MYSQL_PASSWORD: ${USER_DB_PSW}
     volumes:
-      - 4proj-user-database:/var/lib/mysql
+      - 4proj_prod-user-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${USER_DB_USER}", "-p${USER_DB_PSW}"]
       interval: 10s
@@ -84,7 +84,7 @@ services:
       MYSQL_USER: ${NAV_DB_USER}
       MYSQL_PASSWORD: ${NAV_DB_PSW}
     volumes:
-      - 4proj-nav-database:/var/lib/mysql
+      - 4proj_prod-nav-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
       interval: 10s
@@ -348,6 +348,6 @@ services:
     networks:
       - 4proj_prod
 volumes:
-  4proj-incident-database:
-  4proj-user-database:
-  4proj-nav-database:
+  4proj_prod-incident-database:
+  4proj_prod-user-database:
+  4proj_prod-nav-database:

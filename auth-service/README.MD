@@ -68,6 +68,30 @@ curl -X POST http://auth.localhost/auth \
   }'
 ```
 
+### Health Controller
+
+#### `GET /health`
+
+Checks the health status of the service.
+
+**Responses:**
+
+- `200 OK`: Returns a simple status message indicating the service is healthy
+
+**Usage Example:**
+
+```bash
+curl -X GET http://auth.localhost/health
+```
+
+**Response:**
+
+```json
+{
+  "status": "healthy"
+}
+```
+
 ## Authentication Process
 
 1. The client sends login credentials (email and password) to the `/auth` endpoint

@@ -40,7 +40,7 @@ services:
     ports:
       - "3305:3306"
     volumes:
-      - 4proj-incident-database:/var/lib/mysql
+      - 4proj_dev-incident-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
       interval: 10s
@@ -60,7 +60,7 @@ services:
     ports:
       - "3304:3306"
     volumes:
-      - 4proj-user-database:/var/lib/mysql
+      - 4proj_dev-user-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${USER_DB_USER}", "-p${USER_DB_PSW}"]
       interval: 10s
@@ -80,7 +80,7 @@ services:
     ports:
       - "3303:3306"
     volumes:
-      - 4proj-nav-database:/var/lib/mysql
+      - 4proj_dev-nav-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
       interval: 10s
@@ -375,9 +375,9 @@ services:
       - 4proj_dev
 
 volumes:
-  4proj-incident-database:
-  4proj-user-database:
-  4proj-nav-database:
+  4proj_dev-incident-database:
+  4proj_dev-user-database:
+  4proj_dev-nav-database:
   navigation-service-nuget:
   incident-service-nuget:
   user-service-nuget:
