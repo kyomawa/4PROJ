@@ -26,7 +26,7 @@ export default function RootLayout({
           {/* Manifest of the website */}
           <link rel="manifest" href="/manifests/manifestapp.json" />
           {/* Loading Bar */}
-          <NextTopLoader color="#f83b56" zIndex={10} showSpinner={false} />
+          <NextTopLoader color="#695bf9" zIndex={10} showSpinner={false} />
           {/* Content */}
           {children}
           {/* Toast  */}

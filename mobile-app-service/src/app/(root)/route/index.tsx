@@ -16,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 import { usePreferences } from "../../../contexts/PreferencesContext";
 import { TransportMode, getTransportModeIcon, getTransportModeLabel } from "../../../components/TransportModeSelector";
 import TransportModeSelector from "../../../components/TransportModeSelector";
+import { useFocusEffect } from "@react-navigation/native";
 
 // ========================================================================================================
 
@@ -38,6 +39,8 @@ export default function RouteScreen() {
   const [routeRequestCompleted, setRouteRequestCompleted] = useState(false);
   const [departureAddress, setDepartureAddress] = useState<string>("Ma position");
   const [selectedTransportMode, setSelectedTransportMode] = useState<TransportMode>("car");
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentBoundingBox = useRef<{ minLat: number; maxLat: number; minLon: number; maxLon: number } | null>(null);
 
   const { incidents, fetchIncidents, setSelectedIncident } = useIncidents();
   const { defaultTransportMode } = usePreferences();
@@ -64,6 +67,40 @@ export default function RouteScreen() {
       setNavigationError(null);
     }
   }, [destLat, destLon]);
+
+  // ========================================================================================================
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Start interval when screen is focused and we have a bounding box
+      if (currentBoundingBox.current) {
+        const { minLat, maxLat, minLon, maxLon } = currentBoundingBox.current;
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLon = (minLon + maxLon) / 2;
+        const radius =
+          Math.max(
+            (maxLat - minLat) * 111, // Convert to km
+            (maxLon - minLon) * 111 * Math.cos(centerLat * (Math.PI / 180))
+          ) / 2;
+
+        // Fetch immediately
+        fetchIncidents(centerLat, centerLon, radius);
+
+        // Set up interval
+        intervalRef.current = setInterval(() => {
+          fetchIncidents(centerLat, centerLon, radius);
+        }, 6500);
+      }
+
+      // Clear interval when screen is blurred
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
+    }, [fetchIncidents])
+  );
 
   // ========================================================================================================
 
@@ -164,11 +201,16 @@ export default function RouteScreen() {
       ]);
 
       if (boundingBox) {
-        await fetchIncidents(
-          (boundingBox.minLat + boundingBox.maxLat) / 2,
-          (boundingBox.minLon + boundingBox.maxLon) / 2,
-          10
-        );
+        currentBoundingBox.current = boundingBox;
+        const centerLat = (boundingBox.minLat + boundingBox.maxLat) / 2;
+        const centerLon = (boundingBox.minLon + boundingBox.maxLon) / 2;
+        const radius =
+          Math.max(
+            (boundingBox.maxLat - boundingBox.minLat) * 111,
+            (boundingBox.maxLon - boundingBox.minLon) * 111 * Math.cos(centerLat * (Math.PI / 180))
+          ) / 2;
+
+        await fetchIncidents(centerLat, centerLon, radius);
       }
 
       if (mapRef.current && route.coordinates.length > 0) {
