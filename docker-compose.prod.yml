@@ -1,5 +1,13 @@
+name: 4proj-prod
+
 networks:
-  4proj_prod:
+  main:
+    driver: bridge
+  user_db:
+    driver: bridge
+  incident_db:
+    driver: bridge
+  navigation_db:
     driver: bridge
 
 services:
@@ -35,7 +43,7 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - 4proj_prod
+      - main
 
   incident-db:
     image: "mysql:8.0"
@@ -46,7 +54,7 @@ services:
       MYSQL_USER: ${INCIDENT_DB_USER}
       MYSQL_PASSWORD: ${INCIDENT_DB_PSW}
     volumes:
-      - 4proj_prod-incident-database:/var/lib/mysql
+      - incident-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
       interval: 10s
@@ -54,7 +62,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - 4proj_prod
+      - incident_db
 
   user-db:
     image: "mysql:8.0"
@@ -65,7 +73,7 @@ services:
       MYSQL_USER: ${USER_DB_USER}
       MYSQL_PASSWORD: ${USER_DB_PSW}
     volumes:
-      - 4proj_prod-user-database:/var/lib/mysql
+      - user-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${USER_DB_USER}", "-p${USER_DB_PSW}"]
       interval: 10s
@@ -73,7 +81,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - 4proj_prod
+      - user_db
 
   navigation-db:
     image: "mysql:8.0"
@@ -84,7 +92,7 @@ services:
       MYSQL_USER: ${NAV_DB_USER}
       MYSQL_PASSWORD: ${NAV_DB_PSW}
     volumes:
-      - 4proj_prod-nav-database:/var/lib/mysql
+      - navigation-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
       interval: 10s
@@ -92,7 +100,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - 4proj_prod
+      - navigation_db
 
   navigation-service:
     build:
@@ -119,7 +127,7 @@ services:
       start_period: 30s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
       # API
       - "traefik.http.routers.navigation-api.rule=PathPrefix(`/api/navigation`)"
@@ -130,7 +138,8 @@ services:
       - "traefik.http.routers.navigation-swagger.rule=Host(`navigation.localhost`)"
       - "traefik.http.routers.navigation-swagger.entrypoints=http"
     networks:
-      - 4proj_prod
+      - main
+      - navigation_db
 
   incident-service:
     build:
@@ -153,7 +162,7 @@ services:
       start_period: 30s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
       # API
       - "traefik.http.routers.incident-api.rule=PathPrefix(`/api/incident`)"
@@ -164,7 +173,8 @@ services:
       - "traefik.http.routers.incident-swagger.rule=Host(`incident.localhost`)"
       - "traefik.http.routers.incident-swagger.entrypoints=http"
     networks:
-      - 4proj_prod
+      - main
+      - incident_db
 
   user-service:
     build:
@@ -181,13 +191,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 6
+      start_period: 45s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.user-service.loadbalancer.server.port=8080"
       # API
       - "traefik.http.routers.user-api.rule=PathPrefix(`/api/user`)"
@@ -198,7 +208,8 @@ services:
       - "traefik.http.routers.user-service.rule=Host(`user.localhost`)"
       - "traefik.http.routers.user-service.entrypoints=http"
     networks:
-      - 4proj_prod
+      - main
+      - user_db
 
   auth-service:
     build:
@@ -207,18 +218,18 @@ services:
     restart: unless-stopped
     depends_on:
       user-service:
-        condition: service_healthy
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Production
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 6
+      start_period: 45s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
         # API
       - "traefik.http.routers.auth-api.rule=PathPrefix(`/api/auth`)"
@@ -229,7 +240,7 @@ services:
       - "traefik.http.routers.auth-service.rule=Host(`auth.localhost`)"
       - "traefik.http.routers.auth-service.entrypoints=http"
     networks:
-      - 4proj_prod
+      - main
 
   alert-service:
     build:
@@ -238,18 +249,18 @@ services:
     restart: unless-stopped
     depends_on:
       user-service:
-        condition: service_healthy
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Production
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 6
+      start_period: 45s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.alert-service.loadbalancer.server.port=8080"
         # API
       - "traefik.http.routers.alert-api.rule=PathPrefix(`/api/alert`)"
@@ -260,7 +271,7 @@ services:
       - "traefik.http.routers.alert-service.rule=Host(`alert.localhost`)"
       - "traefik.http.routers.alert-service.entrypoints=http"
     networks:
-      - 4proj_prod
+      - main
 
   statistics-service:
     build:
@@ -288,7 +299,7 @@ services:
       start_period: 30s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.statistics-service.loadbalancer.server.port=8080"
         # API
       - "traefik.http.routers.statistics-api.rule=PathPrefix(`/api/statistics`)"
@@ -299,7 +310,9 @@ services:
       - "traefik.http.routers.statistics-service.rule=Host(`statistics.localhost`)"
       - "traefik.http.routers.statistics-service.entrypoints=http"
     networks:
-      - 4proj_prod
+      - main
+      - user_db
+      - incident_db
 
   mobile-app-service:
     build:
@@ -319,7 +332,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - 4proj_prod
+      - main
 
   website-service:
     build:
@@ -330,7 +343,7 @@ services:
       - NODE_ENV=production
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_prod"
+      - "traefik.docker.network=4proj-prod_main"
       - "traefik.http.services.website-service.loadbalancer.server.port=3000"
       - "traefik.http.routers.website.rule=Host(`localhost`) && !PathPrefix(`/api`)"
       - "traefik.http.routers.website.entrypoints=http"
@@ -342,8 +355,9 @@ services:
       retries: 3
       start_period: 20s
     networks:
-      - 4proj_prod
+      - main
+
 volumes:
-  4proj_prod-incident-database:
-  4proj_prod-user-database:
-  4proj_prod-nav-database:
+  incident-database:
+  user-database:
+  navigation-database:

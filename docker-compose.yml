@@ -1,6 +1,14 @@
+name: 4proj-dev
 networks:
-  4proj_dev:
+  main:
     driver: bridge
+  user_db:
+    driver: bridge
+  incident_db:
+    driver: bridge
+  navigation_db:
+    driver: bridge
+
 services:
   traefik:
     image: traefik:v3.1
@@ -28,7 +36,7 @@ services:
       retries: 10
       start_period: 25s
     networks:
-      - 4proj_dev
+      - main
 
   incident-db:
     image: "mysql:8.0"
@@ -40,7 +48,7 @@ services:
     ports:
       - "3305:3306"
     volumes:
-      - 4proj_dev-incident-database:/var/lib/mysql
+      - incident-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
       interval: 10s
@@ -48,7 +56,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - 4proj_dev
+      - incident_db
 
   user-db:
     image: "mysql:8.0"
@@ -60,7 +68,7 @@ services:
     ports:
       - "3304:3306"
     volumes:
-      - 4proj_dev-user-database:/var/lib/mysql
+      - user-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${USER_DB_USER}", "-p${USER_DB_PSW}"]
       interval: 10s
@@ -68,7 +76,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - 4proj_dev
+      - user_db
 
   navigation-db:
     image: "mysql:8.0"
@@ -80,7 +88,7 @@ services:
     ports:
       - "3303:3306"
     volumes:
-      - 4proj_dev-nav-database:/var/lib/mysql
+      - navigation-database:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
       interval: 10s
@@ -88,7 +96,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - 4proj_dev
+      - navigation_db
 
   navigation-service:
     build:
@@ -112,7 +120,7 @@ services:
       - navigation-service-nuget:/root/.nuget/packages
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
       # API
       - "traefik.http.routers.navigation-api.rule=PathPrefix(`/api/navigation`)"
@@ -129,7 +137,8 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - 4proj_dev
+      - main
+      - navigation_db
 
   incident-service:
     build:
@@ -149,7 +158,7 @@ services:
       - incident-service-nuget:/root/.nuget/packages
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
       # API
       - "traefik.http.routers.incident-api.rule=PathPrefix(`/api/incident`)"
@@ -166,7 +175,8 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - 4proj_dev
+      - main
+      - incident_db
 
   user-service:
     build:
@@ -186,7 +196,7 @@ services:
       - user-service-nuget:/root/.nuget/packages
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.user-service.loadbalancer.server.port=8080"
       # API
       - "traefik.http.routers.user-api.rule=PathPrefix(`/api/user`)"
@@ -204,7 +214,8 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - 4proj_dev
+      - main
+      - user_db
 
   auth-service:
     build:
@@ -218,7 +229,7 @@ services:
       DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
         # API
       - "traefik.http.routers.auth-api.rule=PathPrefix(`/api/auth`)"
@@ -235,7 +246,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - 4proj_dev
+      - main
 
   alert-service:
     build:
@@ -249,7 +260,7 @@ services:
       DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.alert-service.loadbalancer.server.port=8080"
         # API
       - "traefik.http.routers.alert-api.rule=PathPrefix(`/api/alert`)"
@@ -266,7 +277,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - 4proj_dev
+      - main
 
   statistics-service:
     build:
@@ -288,7 +299,7 @@ services:
       INCIDENT_DB_PSW: ${INCIDENT_DB_PSW}
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.statistics-service.loadbalancer.server.port=8080"
         # API
       - "traefik.http.routers.statistics-api.rule=PathPrefix(`/api/statistics`)"
@@ -305,7 +316,9 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - 4proj_dev
+      - main
+      - user_db
+      - incident_db
 
   mobile-app-service:
     build:
@@ -336,7 +349,7 @@ services:
       retries: 5
       start_period: 60s
     networks:
-      - 4proj_dev
+      - main
 
   website-service:
     build:
@@ -360,7 +373,7 @@ services:
       - /app/node_modules
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=4proj_4proj_dev"
+      - "traefik.docker.network=4proj-dev_main"
       - "traefik.http.services.website-service.loadbalancer.server.port=3000"
       - "traefik.http.routers.website.rule=Host(`localhost`) && !PathPrefix(`/api`)"
       - "traefik.http.routers.website.entrypoints=http"
@@ -372,12 +385,12 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - 4proj_dev
+      - main
 
 volumes:
-  4proj_dev-incident-database:
-  4proj_dev-user-database:
-  4proj_dev-nav-database:
+  incident-database:
+  user-database:
+  navigation-database:
   navigation-service-nuget:
   incident-service-nuget:
   user-service-nuget:
