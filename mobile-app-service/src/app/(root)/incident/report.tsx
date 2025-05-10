@@ -7,6 +7,11 @@ import Icon, { IconProps } from "../../../components/Icon";
 import Button from "../../../components/Button";
 import { useIncidents } from "../../../contexts/IncidentContext";
 import { StatusBar } from "expo-status-bar";
+import Accident from "../../../assets/icons/crash.svg";
+import Bottling from "../../../assets/icons/bottling.svg";
+import ClosedRoad from "../../../assets/icons/closed-road.svg";
+import PoliceControl from "../../../assets/icons/police-control.svg";
+import Obstacle from "../../../assets/icons/obstacle.svg";
 
 // ========================================================================================================
 
@@ -111,10 +116,7 @@ export default function ReportIncidentScreen() {
                   : "bg-white border border-neutral-200"
               }`}
             >
-              <Icon
-                name={option.icon}
-                className={`size-6 mr-2 ${selectedIncident === option.type ? "text-primary-500" : "text-neutral-500"}`}
-              />
+              <View className="rounded-full mr-2">{incidentTypeToIcon(option.type)}</View>
               <Text
                 className={`${
                   selectedIncident === option.type ? "text-primary-500 font-satoshi-Bold" : "text-neutral-700"
@@ -138,5 +140,24 @@ export default function ReportIncidentScreen() {
     </SafeAreaView>
   );
 }
+
+// ========================================================================================================
+
+const incidentTypeToIcon = (type: string): JSX.Element => {
+  switch (type) {
+    case "Crash":
+      return <Accident width={24} height={24} />;
+    case "Bottling":
+      return <Bottling width={24} height={24} />;
+    case "ClosedRoad":
+      return <ClosedRoad width={24} height={24} />;
+    case "PoliceControl":
+      return <PoliceControl width={24} height={24} />;
+    case "Obstacle":
+      return <Obstacle width={24} height={24} />;
+    default:
+      return <></>;
+  }
+};
 
 // ========================================================================================================

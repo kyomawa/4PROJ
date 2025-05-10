@@ -1,8 +1,12 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Modal, Alert } from "react-native";
 import Icon from "./Icon";
-import { incidentTypeToIcon } from "../utils/mapUtils";
 import { useIncidents } from "../contexts/IncidentContext";
+import Accident from "../assets/icons/crash.svg";
+import Bottling from "../assets/icons/bottling.svg";
+import ClosedRoad from "../assets/icons/closed-road.svg";
+import PoliceControl from "../assets/icons/police-control.svg";
+import Obstacle from "../assets/icons/obstacle.svg";
 
 // ========================================================================================================
 
@@ -73,8 +77,10 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
         <View className="bg-white w-full p-5 rounded-t-3xl">
           <View className="w-16 h-1 bg-neutral-300 rounded-full mx-auto mb-3" />
           <View className="flex-row items-center mb-12">
-            <View className="bg-primary-50 p-3 rounded-full mr-4">
-              <Icon name={incidentTypeToIcon(selectedIncident.type)} className="text-primary-500 size-6" />
+            <View className="rounded-full mr-4">
+              {/* <View className="bg-primary-50 p-3 rounded-full mr-4"> */}
+              {/* <Icon name={incidentTypeToIcon(selectedIncident.type)} className="text-primary-500 size-6" /> */}
+              {incidentTypeToIcon(selectedIncident.type)}
             </View>
             <View className="flex-1">
               <Text className="text-xl font-satoshi-Bold">{getIncidentLabel(selectedIncident.type)}</Text>
@@ -110,5 +116,24 @@ export default function IncidentDetailsModal({ visible, setIsVisible }: Incident
     </Modal>
   );
 }
+
+// ========================================================================================================
+
+const incidentTypeToIcon = (type: string): JSX.Element => {
+  switch (type) {
+    case "Crash":
+      return <Accident width={20} height={20} />;
+    case "Bottling":
+      return <Bottling width={20} height={20} />;
+    case "ClosedRoad":
+      return <ClosedRoad width={20} height={20} />;
+    case "PoliceControl":
+      return <PoliceControl width={20} height={20} />;
+    case "Obstacle":
+      return <Obstacle width={20} height={20} />;
+    default:
+      return <></>;
+  }
+};
 
 // ========================================================================================================

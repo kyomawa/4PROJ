@@ -8,9 +8,50 @@ import { ReactionType } from "@/types/incident";
 // =================================================================================================================
 
 /**
+ * Récupère tous les incidents
+ */
+export const fetchIncidents = async (): Promise<ApiResponse<Incident[]>> => {
+  try {
+    const cookieStore = await cookies();
+    const adminToken = cookieStore.get("adminToken")?.value;
+
+    const response = await fetch(`${API_BASE_URL}/api/incident/incident`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      cache: "no-cache",
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: `Une erreur est survenue lors de la récupération des incidents`,
+        error: `Erreur lors de la récupération des incidents (${response.status}): ${response.statusText}`,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      message: "Récupération des incidents réussie",
+      data,
+    };
+  } catch (error) {
+    console.error("Erreur lors de la récupération des incidents:", error);
+    return {
+      success: false,
+      message: "Une erreur est survenue lors de la récupération des incidents",
+      error: error instanceof Error ? error.message : "Erreur inconnue lors de la récupération des incidents",
+    };
+  }
+};
+
+/**
  * Récupère les incidents dans une zone géographique
  */
-export const fetchIncidents = async (params: BoundingBoxParams): Promise<ApiResponse<Incident[]>> => {
+export const fetchIncidentsByBoundingBox = async (params: BoundingBoxParams): Promise<ApiResponse<Incident[]>> => {
   try {
     const queryParams = new URLSearchParams({
       minLat: params.minLat.toString(),

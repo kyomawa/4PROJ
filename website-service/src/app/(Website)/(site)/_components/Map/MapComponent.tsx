@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { fetchIncidents, reactToIncident } from "@/actions/incident/action";
+import { fetchIncidentsByBoundingBox, reactToIncident } from "@/actions/incident/action";
 import { calculateRoute } from "@/actions/navigation/action";
 import { IncidentType, incidentTypeLabels, ReactionType } from "@/types/incident";
 import { toast } from "react-hot-toast";
@@ -119,7 +119,7 @@ export default function MapComponent({
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
 
-    const res = await fetchIncidents({
+    const res = await fetchIncidentsByBoundingBox({
       minLat: sw.lat,
       maxLat: ne.lat,
       minLon: sw.lng,
