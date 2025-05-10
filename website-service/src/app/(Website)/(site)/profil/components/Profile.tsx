@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { UserIcon } from "lucide-react";
-import { toE164 } from "@/utils/phone";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +52,7 @@ export default function Profile({ data }: ProfileProps) {
     defaultValues: {
       username: data?.username || "",
       email: data?.email || "",
-      phoneNumber: data?.phoneNumber ? toE164(data.phoneNumber) : "",
+      phoneNumber: data?.phoneNumber ? data.phoneNumber : "",
       currentPassword: "",
     },
   });

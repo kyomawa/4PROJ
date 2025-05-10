@@ -1,0 +1,17 @@
+FROM node:23-alpine
+
+WORKDIR /app
+
+RUN npm install -g expo-cli eas-cli
+
+RUN apk add --no-cache bash git wget
+
+COPY package*.json ./
+
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+EXPOSE 8081 19000 19001
+
+CMD ["npx", "expo", "start", "--tunnel", "--no-dev", "--minify"]

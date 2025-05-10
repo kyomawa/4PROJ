@@ -1,27 +1,3 @@
-import { IconProps } from "../components/Icon";
-
-// ========================================================================================================
-
-// Helper function to convert incident types to icon names
-export const incidentTypeToIcon = (type: string): IconProps["name"] => {
-  switch (type) {
-    case "Crash":
-      return "TriangleAlert";
-    case "Bottling":
-      return "Car";
-    case "ClosedRoad":
-      return "Ban";
-    case "PoliceControl":
-      return "BadgeAlert";
-    case "Obstacle":
-      return "RouteOff";
-    default:
-      return "CircleAlert";
-  }
-};
-
-// ========================================================================================================
-
 // Convert distance in meters to a human-readable format
 export const formatDistance = (distanceInMeters: number): string => {
   if (distanceInMeters < 1000) {

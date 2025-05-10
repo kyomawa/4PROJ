@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { searchLocation } from "@/actions/navigation/action";

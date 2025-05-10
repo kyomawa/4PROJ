@@ -43,21 +43,7 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
     try {
       setIsLoading(true);
       const fetchedIncidents = await fetchNearbyIncidents(latitude, longitude, radiusKm);
-
-      setIncidents((prevIncidents) => {
-        const uniqueIncidents = new Map();
-
-        prevIncidents.forEach((incident) => {
-          uniqueIncidents.set(incident.id, incident);
-        });
-
-        fetchedIncidents.forEach((incident) => {
-          uniqueIncidents.set(incident.id, incident);
-        });
-
-        // Convert back to array
-        return Array.from(uniqueIncidents.values());
-      });
+      setIncidents(fetchedIncidents);
     } catch (error) {
       console.error("Error fetching incidents:", error);
     } finally {
@@ -90,11 +76,6 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
   const reportNewIncident = useCallback(async (data: IncidentPostData): Promise<Incident | null> => {
     try {
       const newIncident = await reportIncident(data);
-
-      if (newIncident) {
-        setIncidents((prevIncidents) => [...prevIncidents, newIncident]);
-      }
-
       return newIncident;
     } catch (error) {
       console.error("Error reporting incident:", error);
