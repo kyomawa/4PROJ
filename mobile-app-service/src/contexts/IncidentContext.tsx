@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, ReactNode, useState, useCallback } from "react";
 import {
   fetchNearbyIncidents,
   fetchActiveIncidents,
@@ -36,20 +36,12 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
-  const [lastFetchCoordinates, setLastFetchCoordinates] = useState<{
-    latitude: number;
-    longitude: number;
-    radiusKm: number;
-  } | null>(null);
 
   // ========================================================================================================
 
   const fetchIncidents = useCallback(async (latitude: number, longitude: number, radiusKm = 5) => {
     try {
       setIsLoading(true);
-      // Store the coordinates for auto-refresh
-      setLastFetchCoordinates({ latitude, longitude, radiusKm });
-
       const fetchedIncidents = await fetchNearbyIncidents(latitude, longitude, radiusKm);
       setIncidents(fetchedIncidents);
     } catch (error) {
@@ -61,41 +53,11 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
 
   // ========================================================================================================
 
-  const refreshIncidents = useCallback(async () => {
-    if (!lastFetchCoordinates) return;
-
-    try {
-      const { latitude, longitude, radiusKm } = lastFetchCoordinates;
-      const fetchedIncidents = await fetchNearbyIncidents(latitude, longitude, radiusKm);
-
-      setIncidents(fetchedIncidents);
-
-      if (selectedIncident && !fetchedIncidents.some((incident) => incident.id === selectedIncident.id)) {
-        setSelectedIncident(null);
-      }
-    } catch (error) {
-      console.error("Error refreshing incidents:", error);
-    }
-  }, [lastFetchCoordinates, selectedIncident]);
-
-  // ========================================================================================================
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      refreshIncidents();
-    }, 6500);
-
-    return () => clearInterval(intervalId);
-  }, [refreshIncidents]);
-
-  // ========================================================================================================
-
   const fetchAllActiveIncidents = useCallback(async () => {
     try {
       setIsLoading(true);
       const activeIncidents = await fetchActiveIncidents();
       setIncidents(activeIncidents);
-      setLastFetchCoordinates(null);
     } catch (error) {
       console.error("Error fetching active incidents:", error);
     } finally {
@@ -107,30 +69,19 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
 
   const clearIncidents = useCallback(() => {
     setIncidents([]);
-    setLastFetchCoordinates(null);
   }, []);
 
   // ========================================================================================================
 
-  const reportNewIncident = useCallback(
-    async (data: IncidentPostData): Promise<Incident | null> => {
-      try {
-        const newIncident = await reportIncident(data);
-
-        if (newIncident && lastFetchCoordinates) {
-          // After reporting, trigger a refresh to get the complete updated list
-          const { latitude, longitude, radiusKm } = lastFetchCoordinates;
-          await fetchIncidents(latitude, longitude, radiusKm);
-        }
-
-        return newIncident;
-      } catch (error) {
-        console.error("Error reporting incident:", error);
-        return null;
-      }
-    },
-    [fetchIncidents, lastFetchCoordinates]
-  );
+  const reportNewIncident = useCallback(async (data: IncidentPostData): Promise<Incident | null> => {
+    try {
+      const newIncident = await reportIncident(data);
+      return newIncident;
+    } catch (error) {
+      console.error("Error reporting incident:", error);
+      return null;
+    }
+  }, []);
 
   // ========================================================================================================
 
@@ -147,15 +98,6 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
           if (selectedIncident?.id === incidentId) {
             setSelectedIncident(updatedIncident);
           }
-
-          // Force a refresh after a short delay to get the latest status
-          // (in case the incident was automatically disabled due to dislikes)
-          setTimeout(() => {
-            if (lastFetchCoordinates) {
-              const { latitude, longitude, radiusKm } = lastFetchCoordinates;
-              refreshIncidents();
-            }
-          }, 2000);
         }
 
         return updatedIncident;
@@ -164,7 +106,7 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
         return null;
       }
     },
-    [selectedIncident, lastFetchCoordinates, refreshIncidents]
+    [selectedIncident]
   );
 
   // ========================================================================================================
@@ -172,15 +114,6 @@ export function IncidentProvider({ children }: IncidentProviderProps) {
   const getVoteCounts = useCallback((incident: Incident) => {
     return getIncidentVoteCounts(incident);
   }, []);
-
-  // ========================================================================================================
-
-  // Effect to handle selected incident deletion
-  useEffect(() => {
-    if (selectedIncident && !incidents.some((incident) => incident.id === selectedIncident.id)) {
-      setSelectedIncident(null);
-    }
-  }, [incidents, selectedIncident]);
 
   // ========================================================================================================
 

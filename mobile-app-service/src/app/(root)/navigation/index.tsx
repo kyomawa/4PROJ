@@ -16,6 +16,7 @@ import { formatDistance, formatDuration, calculateBoundingBox } from "../../../u
 import { StatusBar } from "expo-status-bar";
 import { usePreferences } from "../../../contexts/PreferencesContext";
 import { TransportMode } from "../../../components/TransportModeSelector";
+import { useFocusEffect } from "@react-navigation/native";
 
 // ========================================================================================================
 
@@ -36,6 +37,7 @@ export default function NavigationScreen() {
   const [showIncidentDetails, setShowIncidentDetails] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [recalculationFailed, setRecalculationFailed] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { fetchIncidents, setSelectedIncident, incidents } = useIncidents();
   const { navigationState, setNavigationState, clearNavigation } = useNavigation();
@@ -51,6 +53,48 @@ export default function NavigationScreen() {
 
   const nextStep =
     itinerary?.steps && itinerary.steps.length > currentStepIndex + 1 ? itinerary.steps[currentStepIndex + 1] : null;
+
+  // ========================================================================================================
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Start fetching incidents when screen is focused
+      if (location && itinerary) {
+        const fetchIncidentsForRoute = async () => {
+          const boundingBox = calculateBoundingBox([
+            { latitude: location.coords.latitude, longitude: location.coords.longitude },
+            ...itinerary.coordinates,
+          ]);
+
+          if (boundingBox) {
+            const centerLat = (boundingBox.minLat + boundingBox.maxLat) / 2;
+            const centerLon = (boundingBox.minLon + boundingBox.maxLon) / 2;
+            const radius =
+              Math.max(
+                (boundingBox.maxLat - boundingBox.minLat) * 111,
+                (boundingBox.maxLon - boundingBox.minLon) * 111 * Math.cos(centerLat * (Math.PI / 180))
+              ) / 2;
+
+            await fetchIncidents(centerLat, centerLon, radius);
+          }
+        };
+
+        // Fetch immediately
+        fetchIncidentsForRoute();
+
+        // Set up interval
+        intervalRef.current = setInterval(fetchIncidentsForRoute, 6500);
+      }
+
+      // Clear interval when screen is blurred
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
+    }, [location, itinerary, fetchIncidents])
+  );
 
   // ========================================================================================================
 
@@ -126,8 +170,6 @@ export default function NavigationScreen() {
 
         if (!itinerary && destLat && destLon) {
           await fetchRoute(location, defaultTransportMode);
-        } else if (itinerary) {
-          await fetchIncidentsForRoute(itinerary, location);
         }
       } catch (error) {
         console.error("Error initializing navigation:", error);
@@ -147,27 +189,6 @@ export default function NavigationScreen() {
       Speech.stop();
     };
   }, [defaultTransportMode]);
-
-  // ========================================================================================================
-
-  const fetchIncidentsForRoute = async (route: Itinerary, currentLoc: Location.LocationObject) => {
-    try {
-      const boundingBox = calculateBoundingBox([
-        { latitude: currentLoc.coords.latitude, longitude: currentLoc.coords.longitude },
-        ...route.coordinates,
-      ]);
-
-      if (boundingBox) {
-        await fetchIncidents(
-          (boundingBox.minLat + boundingBox.maxLat) / 2,
-          (boundingBox.minLon + boundingBox.maxLon) / 2,
-          10
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching incidents:", error);
-    }
-  };
 
   // ========================================================================================================
 
@@ -205,8 +226,6 @@ export default function NavigationScreen() {
         },
         startedAt: new Date(),
       });
-
-      await fetchIncidentsForRoute(route, currentLoc);
 
       if (route.steps && route.steps.length > 0) {
         speakInstruction(route.steps[0].instruction);
