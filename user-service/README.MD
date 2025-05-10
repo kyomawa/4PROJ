@@ -230,6 +230,30 @@ curl -X DELETE http://user.localhost/user/3fa85f64-5717-4562-b3fc-2c963f66afa6 \
   -H "Authorization: Bearer {token}"
 ```
 
+### Health Controller
+
+#### `GET /health`
+
+Checks the health status of the service.
+
+**Responses:**
+
+- `200 OK`: Returns a simple status message indicating the service is healthy
+
+**Usage Example:**
+
+```bash
+curl -X GET http://user.localhost/health
+```
+
+**Response:**
+
+```json
+{
+  "status": "healthy"
+}
+```
+
 ## Data Models
 
 ### User

@@ -13,6 +13,7 @@ import MapWithIncidents from "../../../components/MapWithIncidents";
 import { useIncidents } from "../../../contexts/IncidentContext";
 import { useNavigation } from "../../../contexts/NavigationContext";
 import { StatusBar } from "expo-status-bar";
+import { useFocusEffect } from "@react-navigation/native";
 
 // ========================================================================================================
 
@@ -27,6 +28,7 @@ export default function HomeScreen() {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { fetchIncidents, setSelectedIncident, isLoading: isLoadingIncidents, incidents } = useIncidents();
   const { navigationState, hasActiveNavigation } = useNavigation();
@@ -68,6 +70,31 @@ export default function HomeScreen() {
       }
     })();
   }, [fetchIncidents]);
+
+  // ========================================================================================================
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Start interval when screen is focused
+      if (location) {
+        // Fetch immediately when focused
+        fetchIncidents(location.coords.latitude, location.coords.longitude, 5);
+
+        // Set up interval for periodic refresh
+        intervalRef.current = setInterval(() => {
+          fetchIncidents(location.coords.latitude, location.coords.longitude, 5);
+        }, 6500);
+      }
+
+      // Clear interval when screen is blurred
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
+    }, [location, fetchIncidents])
+  );
 
   // ========================================================================================================
 

@@ -29,64 +29,46 @@ export interface ChangePasswordData {
  * Récupère l'utilisateur connecté actuellement
  */
 export const getConnectedUser = async (): Promise<ApiResponse<UserData>> => {
-  try {
-    const cookieStore = await cookies();
-    const userToken = cookieStore.get("userToken")?.value;
-    const session = cookieStore.get("session")?.value;
+  const cookieStore = await cookies();
+  const userToken = cookieStore.get("userToken")?.value;
+  const session = cookieStore.get("session")?.value;
 
-    if (!userToken || !session) {
-      return {
-        success: false,
-        message: "Utilisateur non connecté",
-        error: "Aucune session trouvée",
-      };
-    }
-
-    return {
-      success: true,
-      message: "Utilisateur récupéré avec succès",
-      data: JSON.parse(session) as UserData,
-    };
-  } catch (error) {
-    console.error("Erreur lors de la récupération de l'utilisateur connecté:", error);
+  if (!userToken || !session) {
     return {
       success: false,
-      message: "Erreur lors de la récupération de l'utilisateur",
-      error,
+      message: "Utilisateur non connecté",
+      error: "Aucune session trouvée",
     };
   }
+
+  return {
+    success: true,
+    message: "Utilisateur récupéré avec succès",
+    data: JSON.parse(session) as UserData,
+  };
 };
 
 /**
  * Récupère l'employé (admin) connecté actuellement
  */
 export const getConnectedEmployee = async (): Promise<ApiResponse<UserData>> => {
-  try {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get("adminToken")?.value;
-    const session = cookieStore.get("employeeSession")?.value;
+  const cookieStore = await cookies();
+  const adminToken = cookieStore.get("adminToken")?.value;
+  const session = cookieStore.get("employeeSession")?.value;
 
-    if (!adminToken || !session) {
-      return {
-        success: false,
-        message: "Administrateur non connecté",
-        error: "Aucune session d'administrateur trouvée",
-      };
-    }
-
-    return {
-      success: true,
-      message: "Administrateur récupéré avec succès",
-      data: JSON.parse(session) as UserData,
-    };
-  } catch (error) {
-    console.error("Erreur lors de la récupération de l'administrateur connecté:", error);
+  if (!adminToken || !session) {
     return {
       success: false,
-      message: "Erreur lors de la récupération de l'administrateur",
-      error,
+      message: "Administrateur non connecté",
+      error: "Aucune session d'administrateur trouvée",
     };
   }
+
+  return {
+    success: true,
+    message: "Administrateur récupéré avec succès",
+    data: JSON.parse(session) as UserData,
+  };
 };
 
 /**

@@ -135,6 +135,30 @@ curl -X GET http://statistics.localhost/statistic/congestion \
 ]
 ```
 
+### Health Controller
+
+#### `GET /health`
+
+Checks the health status of the service.
+
+**Responses:**
+
+- `200 OK`: Returns a simple status message indicating the service is healthy
+
+**Usage Example:**
+
+```bash
+curl -X GET http://statistics.localhost/health
+```
+
+**Response:**
+
+```json
+{
+  "status": "healthy"
+}
+```
+
 ## Data Models
 
 ### UserCountByMonthString

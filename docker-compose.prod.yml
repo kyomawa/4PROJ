@@ -1,6 +1,15 @@
+name: 4proj-prod
+
 networks:
-  4proj_prod:
+  main:
     driver: bridge
+  user_db:
+    driver: bridge
+  incident_db:
+    driver: bridge
+  navigation_db:
+    driver: bridge
+
 services:
   traefik:
     image: traefik:v3.1
@@ -14,7 +23,7 @@ services:
       - "--ping=true"
       - "--ping.entrypoint=http"
       - "--api.dashboard=true"
-      - "--log.level=DEBUG"
+      - "--log.level=INFO"
       - "--accesslog=true"
       - "--metrics.prometheus=true"
       - "--metrics.prometheus.addEntryPointsLabels=true"
@@ -34,4 +43,321 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - 4proj_prod
+      - main
+
+  incident-db:
+    image: "mysql:8.0"
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${INCIDENT_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${INCIDENT_DB}
+      MYSQL_USER: ${INCIDENT_DB_USER}
+      MYSQL_PASSWORD: ${INCIDENT_DB_PSW}
+    volumes:
+      - incident-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${INCIDENT_DB_USER}", "-p${INCIDENT_DB_PSW}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - incident_db
+
+  user-db:
+    image: "mysql:8.0"
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${USER_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${USER_DB}
+      MYSQL_USER: ${USER_DB_USER}
+      MYSQL_PASSWORD: ${USER_DB_PSW}
+    volumes:
+      - user-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${USER_DB_USER}", "-p${USER_DB_PSW}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - user_db
+
+  navigation-db:
+    image: "mysql:8.0"
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NAV_DB_ROOT_PSW}
+      MYSQL_DATABASE: ${NAV_DB}
+      MYSQL_USER: ${NAV_DB_USER}
+      MYSQL_PASSWORD: ${NAV_DB_PSW}
+    volumes:
+      - navigation-database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${NAV_DB_USER}", "-p${NAV_DB_PSW}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - navigation_db
+
+  navigation-service:
+    build:
+      context: ./navigation-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      navigation-db:
+        condition: service_healthy
+    environment:
+      TOMTOM_URL: ${TOMTOM_URL}
+      TOMTOM_APIKEY: ${TOMTOM_APIKEY}
+      GEOAPIFY_URL: ${GEOAPIFY_URL}
+      GEOAPIFY_APIKEY: ${GEOAPIFY_APIKEY}
+      NAV_DB: ${NAV_DB}
+      NAV_DB_USER: ${NAV_DB_USER}
+      NAV_DB_PSW: ${NAV_DB_PSW}
+      ASPNETCORE_ENVIRONMENT: Production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.navigation-service.loadbalancer.server.port=8080"
+      # API
+      - "traefik.http.routers.navigation-api.rule=PathPrefix(`/api/navigation`)"
+      - "traefik.http.routers.navigation-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-navigation-prefix.stripprefix.prefixes=/api/navigation"
+      - "traefik.http.routers.navigation-api.middlewares=strip-navigation-prefix"
+      # Swagger
+      - "traefik.http.routers.navigation-swagger.rule=Host(`navigation.localhost`)"
+      - "traefik.http.routers.navigation-swagger.entrypoints=http"
+    networks:
+      - main
+      - navigation_db
+
+  incident-service:
+    build:
+      context: ./incident-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      incident-db:
+        condition: service_healthy
+    environment:
+      INCIDENT_DB: ${INCIDENT_DB}
+      INCIDENT_DB_USER: ${INCIDENT_DB_USER}
+      INCIDENT_DB_PSW: ${INCIDENT_DB_PSW}
+      ASPNETCORE_ENVIRONMENT: Production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.incident-service.loadbalancer.server.port=8080"
+      # API
+      - "traefik.http.routers.incident-api.rule=PathPrefix(`/api/incident`)"
+      - "traefik.http.routers.incident-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-incident-prefix.stripprefix.prefixes=/api/incident"
+      - "traefik.http.routers.incident-api.middlewares=strip-incident-prefix"
+      # Swagger
+      - "traefik.http.routers.incident-swagger.rule=Host(`incident.localhost`)"
+      - "traefik.http.routers.incident-swagger.entrypoints=http"
+    networks:
+      - main
+      - incident_db
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      user-db:
+        condition: service_healthy
+    environment:
+      USER_DB: ${USER_DB}
+      USER_DB_USER: ${USER_DB_USER}
+      USER_DB_PSW: ${USER_DB_PSW}
+      ASPNETCORE_ENVIRONMENT: Production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 45s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.user-service.loadbalancer.server.port=8080"
+      # API
+      - "traefik.http.routers.user-api.rule=PathPrefix(`/api/user`)"
+      - "traefik.http.routers.user-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-user-prefix.stripprefix.prefixes=/api/user"
+      - "traefik.http.routers.user-api.middlewares=strip-user-prefix"
+      # Swagger
+      - "traefik.http.routers.user-service.rule=Host(`user.localhost`)"
+      - "traefik.http.routers.user-service.entrypoints=http"
+    networks:
+      - main
+      - user_db
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      user-service:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 45s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
+        # API
+      - "traefik.http.routers.auth-api.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-auth-prefix.stripprefix.prefixes=/api/auth"
+      - "traefik.http.routers.auth-api.middlewares=strip-auth-prefix"
+      # Swagger
+      - "traefik.http.routers.auth-service.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.auth-service.entrypoints=http"
+    networks:
+      - main
+
+  alert-service:
+    build:
+      context: ./alert-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      user-service:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 45s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.alert-service.loadbalancer.server.port=8080"
+        # API
+      - "traefik.http.routers.alert-api.rule=PathPrefix(`/api/alert`)"
+      - "traefik.http.routers.alert-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-alert-prefix.stripprefix.prefixes=/api/alert"
+      - "traefik.http.routers.alert-api.middlewares=strip-alert-prefix"
+      # Swagger
+      - "traefik.http.routers.alert-service.rule=Host(`alert.localhost`)"
+      - "traefik.http.routers.alert-service.entrypoints=http"
+    networks:
+      - main
+
+  statistics-service:
+    build:
+      context: ./statistic-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      user-db:
+        condition: service_healthy
+      incident-db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      USER_DB: ${USER_DB}
+      USER_DB_USER: ${USER_DB_USER}
+      USER_DB_PSW: ${USER_DB_PSW}
+      INCIDENT_DB: ${INCIDENT_DB}
+      INCIDENT_DB_USER: ${INCIDENT_DB_USER}
+      INCIDENT_DB_PSW: ${INCIDENT_DB_PSW}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.statistics-service.loadbalancer.server.port=8080"
+        # API
+      - "traefik.http.routers.statistics-api.rule=PathPrefix(`/api/statistics`)"
+      - "traefik.http.routers.statistics-api.entrypoints=http"
+      - "traefik.http.middlewares.strip-statistics-prefix.stripprefix.prefixes=/api/statistics"
+      - "traefik.http.routers.statistics-api.middlewares=strip-statistics-prefix"
+      # Swagger
+      - "traefik.http.routers.statistics-service.rule=Host(`statistics.localhost`)"
+      - "traefik.http.routers.statistics-service.entrypoints=http"
+    networks:
+      - main
+      - user_db
+      - incident_db
+
+  mobile-app-service:
+    build:
+      context: ./mobile-app-service
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - NODE_ENV=production
+      - EXPO_PUBLIC_API_BASE_URL=${EXPO_PUBLIC_API_BASE_URL}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:19000 || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - main
+
+  website-service:
+    build:
+      context: ./website-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=4proj-prod_main"
+      - "traefik.http.services.website-service.loadbalancer.server.port=3000"
+      - "traefik.http.routers.website.rule=Host(`localhost`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.website.entrypoints=http"
+      - "traefik.http.routers.website.priority=10"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - main
+
+volumes:
+  incident-database:
+  user-database:
+  navigation-database:

@@ -1,5 +1,5 @@
 {
-  "name": "Supmap",
+  "name": "supmap",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -25,7 +25,7 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "axios": "^1.7.9",
-    "expo": "^53.0.8",
+    "expo": "^53.0.9",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.6",
     "expo-crypto": "^14.0.2",
@@ -52,12 +52,13 @@
     "react-native-maps": "1.20.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
+    "react-native-svg-transformer": "^1.5.1",
     "react-native-screens": "~4.10.0",
+    "react-native-svg": "15.11.2",
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
     "tailwindcss": "^3.4.17",
-    "zod": "^3.24.1",
-    "react-native-svg": "15.11.2"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
