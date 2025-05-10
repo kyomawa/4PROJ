@@ -1,10 +1,14 @@
-import React, { forwardRef, useEffect } from "react";
+import React, { forwardRef } from "react";
 import { View } from "react-native";
-import MapView, { Marker, Polyline, Region, MapViewProps } from "react-native-maps";
+import MapView, { Marker, Polyline, MapViewProps, UrlTile } from "react-native-maps";
 import Icon from "./Icon";
 import { useIncidents } from "../contexts/IncidentContext";
-import { incidentTypeToIcon } from "../utils/mapUtils";
 import { Itinerary } from "../lib/api/navigation";
+import Accident from "../assets/icons/crash.svg";
+import Bottling from "../assets/icons/bottling.svg";
+import ClosedRoad from "../assets/icons/closed-road.svg";
+import PoliceControl from "../assets/icons/police-control.svg";
+import Obstacle from "../assets/icons/obstacle.svg";
 
 // ========================================================================================================
 
@@ -70,9 +74,7 @@ const MapWithIncidents = forwardRef<MapView, MapWithIncidentsProps>(
             }}
             onPress={() => handleIncidentPress(incident.id)}
           >
-            <View className="bg-white p-2 rounded-full shadow-md">
-              <Icon name={incidentTypeToIcon(incident.type)} className="text-red-500 size-5" />
-            </View>
+            <View className="rounded-full shadow-md">{incidentTypeToIcon(incident.type)}</View>
           </Marker>
         ))}
       </MapView>
@@ -81,5 +83,24 @@ const MapWithIncidents = forwardRef<MapView, MapWithIncidentsProps>(
 );
 
 export default MapWithIncidents;
+
+// ========================================================================================================
+
+const incidentTypeToIcon = (type: string): JSX.Element => {
+  switch (type) {
+    case "Crash":
+      return <Accident width={24} height={24} />;
+    case "Bottling":
+      return <Bottling width={24} height={24} />;
+    case "ClosedRoad":
+      return <ClosedRoad width={24} height={24} />;
+    case "PoliceControl":
+      return <PoliceControl width={24} height={24} />;
+    case "Obstacle":
+      return <Obstacle width={24} height={24} />;
+    default:
+      return <></>;
+  }
+};
 
 // ========================================================================================================

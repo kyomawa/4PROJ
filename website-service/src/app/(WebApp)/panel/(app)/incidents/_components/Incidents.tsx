@@ -38,12 +38,11 @@ export type IncidentWithId = {
 
 type IncidentsProps = {
   initialIncidents: IncidentWithId[];
-  error: string | null;
 };
 
 // =============================================================================================
 
-export default function Incidents({ initialIncidents, error }: IncidentsProps) {
+export default function Incidents({ initialIncidents }: IncidentsProps) {
   const [incidents, setIncidents] = useState<IncidentWithId[]>(initialIncidents);
   const [isLoading, setIsLoading] = useState(false);
   const [incidentToDelete, setIncidentToDelete] = useState<string | null>(null);
@@ -125,7 +124,7 @@ export default function Incidents({ initialIncidents, error }: IncidentsProps) {
       cell: ({ row }) => {
         const raw = row.getValue("status") as "Active" | "Inactive";
         return (
-          <Badge className={raw === "Active" ? "bg-green-300 text-green-800" : "bg-red-500 text-red-950"}>
+          <Badge className={raw === "Active" ? "bg-green-300 text-green-800" : "bg-red-400 text-red-950"}>
             {statusLabels[raw]}
           </Badge>
         );
@@ -168,7 +167,6 @@ export default function Incidents({ initialIncidents, error }: IncidentsProps) {
 
   return (
     <main className="flex flex-col gap-y-6 lg:max-w-[calc(100vw-16rem)] max-w-[calc(100vw-2rem)]">
-      {error && <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg">{error}</div>}
       <div className="bg-white rounded-lg">
         <DataTable
           columns={columns}

@@ -1,4 +1,4 @@
-import { fetchActiveIncidents } from "@/actions/incident/action";
+import { fetchIncidents } from "@/actions/incident/action";
 import { incidentTypeLabels } from "@/types/incident";
 import { Incident } from "@/actions/incident/types";
 import Incidents from "./_components/Incidents";
@@ -25,9 +25,8 @@ type IncidentWithId = {
 
 export default async function IncidentsPage() {
   let incidents: IncidentWithId[] = [];
-  let error: string | null = null;
 
-  const response = await fetchActiveIncidents();
+  const response = await fetchIncidents();
 
   if (response.success && response.data) {
     incidents = response.data.map((incident: Incident) => {
@@ -44,11 +43,9 @@ export default async function IncidentsPage() {
         dislikesCount,
       };
     });
-  } else {
-    error = "Erreur lors du chargement des incidents.";
   }
 
-  return <Incidents initialIncidents={incidents} error={error} />;
+  return <Incidents initialIncidents={incidents} />;
 }
 
 // =============================================================================================
