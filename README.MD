@@ -117,6 +117,9 @@ For development with live reload capabilities:
    - 📈 Statistics service: [http://statistics.localhost](http://statistics.localhost)
    - 📊 Traefik dashboard: [http://localhost:8080](http://localhost:8080)
 
+4. **Inability to interact with API (cannot login/create account or get itinerary) on mobile app in production**
+   - Replace line ```CMD ["npx", "expo", "start", "--tunnel", "--no-dev", "--minify"]``` by ```CMD ["npx", "expo", "start", "--tunnel"]``` in Dockerfile
+
 ## 🔧 Troubleshooting
 
 ### 📱 Mobile App Connection Issues
