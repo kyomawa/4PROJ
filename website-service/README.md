@@ -192,11 +192,3 @@ The web service communicates with several backend microservices:
 - **Statistics Service**: Data analytics for the admin dashboard
 
 All service URLs are configured in `src/constants/api.ts`.
-
-## Contributing
-
-Please follow the project's coding standards and commit message conventions. Pull requests should include appropriate tests and documentation updates.
-
-## License
-
-This project is proprietary and confidential. All rights reserved.

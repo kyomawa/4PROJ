@@ -31,7 +31,7 @@ This client application communicates with various backend microservices to provi
 ### Authentication
 
 - User registration and login
-- Social login (Google, Facebook)
+- Authentication as Guest
 - Profile management and settings
 - Secure token storage
 
@@ -210,12 +210,3 @@ Docker logs can be helpful for troubleshooting:
 ```bash
 docker logs -f Supmap-mobile-app-service-1
 ```
-
-## Contributing
-
-When contributing to this mobile app service:
-
-1. Follow the existing code structure and naming conventions
-2. Use the provided component library for UI elements
-3. Ensure new features work on both iOS and Android
-4. Test thoroughly before submitting pull requests
